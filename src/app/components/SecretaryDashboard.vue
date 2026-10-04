@@ -54,6 +54,7 @@
       <StudentsManagement v-else-if="activeTab === 'students'" />
       <DaycareManagement v-else-if="activeTab === 'daycare'" />
       <SchoolCalendar v-else-if="activeTab === 'schoolcalendar'" />
+      <AttendanceManagement v-else-if="activeTab === 'attendance'" />
       <TeachersManagement v-else-if="activeTab === 'teachers'" />
       <ScheduleManagement v-else-if="activeTab === 'schedule'" />
       <PaymentsManagement v-else-if="activeTab === 'payments'" />
@@ -63,15 +64,15 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { LogOut, Users, DollarSign, Calendar, BookOpen, UserPlus, LayoutDashboard, Baby } from 'lucide-vue-next';
+import { LogOut, Users, DollarSign, Calendar, BookOpen, UserPlus, LayoutDashboard, Baby, UserCheck } from 'lucide-vue-next';
 import DashboardOverview from './DashboardOverview.vue';
 import StudentsManagement from './StudentsManagement.vue';
 import DaycareManagement from './DaycareManagement.vue';
 import TeachersManagement from './TeachersManagement.vue';
 import ScheduleManagement from './ScheduleManagement.vue';
+import AttendanceManagement from './AttendanceManagement.vue';
 import PaymentsManagement from './PaymentsManagement.vue';
 import SchoolCalendar from './SchoolCalendar.vue';
-import { v } from 'vue-router/dist/router-CWoNjPRp.mjs';
 
 defineProps<{
   userName: string;
@@ -81,17 +82,18 @@ defineEmits<{
   (e: 'logout'): void;
 }>();
 
-type Tab = 'dashboard' | 'students' | 'daycare' | 'teachers' | 'schedule' | 'payments' |'schoolcalendar';
+type Tab = 'dashboard' | 'students' | 'daycare' | 'teachers' | 'schedule' | 'attendance' | 'payments' | 'schoolcalendar';
 
 const activeTab = ref<Tab>('dashboard');
 
 const tabs = [
   { id: 'dashboard' as Tab, label: 'Tableau de bord', icon: LayoutDashboard },
   { id: 'students' as Tab, label: 'Élèves', icon: Users },
+  { id: 'attendance' as Tab, label: 'Présences & Groupes', icon: UserCheck },
   { id: 'daycare' as Tab, label: 'Élèves de garde', icon: Baby },
   { id: 'teachers' as Tab, label: 'Enseignants', icon: UserPlus },
   { id: 'schedule' as Tab, label: 'Emploi du temps', icon: Calendar },
   { id: 'payments' as Tab, label: 'Paiements', icon: DollarSign },
-  { id: 'schoolcalendar' as Tab, label: 'Calendrier scolaire', icon: Calendar, SchoolCalendar }
+  { id: 'schoolcalendar' as Tab, label: 'Calendrier scolaire', icon: Calendar }
 ];
 </script>

@@ -20,12 +20,11 @@ return new class extends Migration
             $table->unsignedTinyInteger('level');
 
             // Classe : أ / ب / ج / د
-            $table->string('section', 10);
+            $table->string('section', 4);
 
             $table->timestamps();
 
-            // Empêche par exemple deux "3ème ب"
-            // dans la même école
+
             $table->unique([
                 'school_id',
                 'level',

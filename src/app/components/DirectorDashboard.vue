@@ -56,6 +56,7 @@
       <TeachersManagement v-else-if="activeTab === 'teachers'" />
       <ScheduleManagement v-else-if="activeTab === 'schedule'" />
       <SchoolCalendar v-else-if="activeTab === 'schoolcalendar'" />
+      <AttendanceManagement v-else-if="activeTab === 'attendance'" />
       <PaymentsManagement v-else-if="activeTab === 'payments'" />
       <FinancialReports v-else-if="activeTab === 'reports'" />
     </div>
@@ -64,12 +65,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { LogOut, Users, DollarSign, Calendar, BookOpen, BarChart3, UserPlus, LayoutDashboard, Baby } from 'lucide-vue-next';
+import { LogOut, Users, DollarSign, Calendar, BookOpen, BarChart3, UserPlus, LayoutDashboard, Baby, UserCheck } from 'lucide-vue-next';
 import DashboardOverview from './DashboardOverview.vue';
 import StudentsManagement from './StudentsManagement.vue';
 import DaycareManagement from './DaycareManagement.vue';
 import TeachersManagement from './TeachersManagement.vue';
 import ScheduleManagement from './ScheduleManagement.vue';
+import AttendanceManagement from './AttendanceManagement.vue';
 import PaymentsManagement from './PaymentsManagement.vue';
 import FinancialReports from './FinancialReports.vue';
 import SchoolCalendar from './SchoolCalendar.vue';
@@ -82,13 +84,14 @@ defineEmits<{
   (e: 'logout'): void;
 }>();
 
-type Tab = 'dashboard' | 'students' | 'daycare' | 'teachers' | 'schedule' | 'payments' | 'reports'| 'schoolcalendar';
+type Tab = 'dashboard' | 'students' | 'daycare' | 'teachers' | 'schedule' | 'attendance' | 'payments' | 'reports'| 'schoolcalendar';
 
 const activeTab = ref<Tab>('dashboard');
 
 const tabs = [
   { id: 'dashboard' as Tab, label: 'Tableau de bord', icon: LayoutDashboard },
   { id: 'students' as Tab, label: 'Élèves', icon: Users },
+  { id: 'attendance' as Tab, label: 'Présences & Groupes', icon: UserCheck },
   { id: 'daycare' as Tab, label: 'Élèves de garde', icon: Baby },
   { id: 'teachers' as Tab, label: 'Enseignants', icon: UserPlus },
   { id: 'schedule' as Tab, label: 'Emploi du temps', icon: Calendar },

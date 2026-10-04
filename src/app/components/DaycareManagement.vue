@@ -131,6 +131,10 @@
             <span>⏰</span>
             <span>{{ child.schedule }}</span>
           </div>
+          <div class="flex items-center gap-2">
+            <span>💰</span>
+            <span>{{ child.monthlyFee ? child.monthlyFee + ' TND / mois' : 'Tarif mensuel à définir' }}</span>
+          </div>
         </div>
 
         <div class="flex gap-2 pt-2 border-t border-gray-100">
@@ -189,6 +193,16 @@
           <div class="col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
             <p class="text-xs text-gray-400">Horaires de garde</p>
             <p class="font-medium text-gray-900">{{ selectedChild.schedule }}</p>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+            <p class="text-xs text-gray-400">Tarif mensuel</p>
+            <p class="font-medium text-gray-900">
+              {{ selectedChild.monthlyFee ? selectedChild.monthlyFee + ' TND' : 'À définir' }}
+            </p>
+          </div>
+          <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
+            <p class="text-xs text-gray-400">Début de la garde</p>
+            <p class="font-medium text-gray-900">{{ selectedChild.startDate || 'Non renseigné' }}</p>
           </div>
         </div>
         <div class="flex justify-end pt-2">
@@ -270,6 +284,31 @@
             />
           </div>
 
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Tarif mensuel (TND)</label>
+              <input
+                v-model.number="formData.monthlyFee"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Ex: 150"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Début de la garde</label>
+              <input
+                v-model="formData.startDate"
+                type="date"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              />
+            </div>
+          </div>
+          <p class="text-[11px] text-gray-500 -mt-2">
+            Le début de la garde sert à compter les mois non payés (page Paiements).
+          </p>
+
           <div v-if="errorMessage" class="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
             {{ errorMessage }}
           </div>
@@ -309,6 +348,8 @@ interface DaycareChild {
   phone: string;
   schedule: string;
   status: 'present' | 'absent';
+  monthlyFee?: number;
+  startDate?: string | null;
 }
 
 const children = ref<DaycareChild[]>([]);
@@ -323,13 +364,17 @@ const showModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
+const todayString = () => new Date().toISOString().split('T')[0];
+
 const formData = ref({
   name: '',
   age: 7,
   parentName: '',
   phone: '',
   schedule: 'Lun-Ven 8h-17h',
-  status: 'present' as 'present' | 'absent'
+  status: 'present' as 'present' | 'absent',
+  monthlyFee: 0,
+  startDate: todayString()
 });
 
 async function loadChildren() {
@@ -369,7 +414,9 @@ function openAddModal() {
     parentName: '',
     phone: '',
     schedule: 'Lun-Ven 8h-17h',
-    status: 'present'
+    status: 'present',
+    monthlyFee: 0,
+    startDate: todayString()
   };
   showModal.value = true;
 }
@@ -384,7 +431,9 @@ function openEditModal(child: DaycareChild) {
     parentName: child.parentName,
     phone: child.phone,
     schedule: child.schedule,
-    status: child.status
+    status: child.status,
+    monthlyFee: child.monthlyFee ?? 0,
+    startDate: child.startDate ?? ''
   };
   showModal.value = true;
 }
@@ -392,15 +441,20 @@ function openEditModal(child: DaycareChild) {
 async function saveChild() {
   submitting.value = true;
   errorMessage.value = '';
+  const payload = {
+    ...formData.value,
+    monthlyFee: Number(formData.value.monthlyFee) || 0,
+    startDate: formData.value.startDate || null
+  };
   try {
     if (isEditing.value && editingId.value) {
-      const res = await api.put(`/api/daycare/${editingId.value}`, formData.value);
+      const res = await api.put(`/api/daycare/${editingId.value}`, payload);
       const idx = children.value.findIndex(c => c.id === editingId.value);
       if (idx !== -1) {
         children.value[idx] = res.data;
       }
     } else {
-      const res = await api.post('/api/daycare', formData.value);
+      const res = await api.post('/api/daycare', payload);
       children.value.unshift(res.data);
     }
     showModal.value = false;

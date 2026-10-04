@@ -12,9 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('school_calendar_imports', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+    $table->id();
+
+    $table->string('file_name');
+    $table->string('file_path');
+    $table->string('file_type')->nullable(); // pdf, jpg, png
+
+    $table->timestamps();
+});
     }
 
     /**

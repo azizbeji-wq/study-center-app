@@ -1,18 +1,31 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h2 class="text-2xl font-bold text-gray-900">Gestion des Enseignants</h2>
-        <p class="text-sm text-gray-500 mt-1">{{ teachers.length }} enseignants</p>
+        <p class="text-sm text-gray-500 mt-1">
+          {{ teachers.length }} enseignants • Rémunération par séance (% ou montant fixe)
+        </p>
       </div>
-      <button
-        @click="openAddModal"
-        class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-      >
-        <Plus class="w-4 h-4" />
-        Ajouter un enseignant
-      </button>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          @click="loadSampleTeachers"
+          class="flex items-center gap-2 px-3.5 py-2 bg-indigo-50 text-indigo-700 font-medium rounded-lg hover:bg-indigo-100 transition-colors border border-indigo-200 text-sm shadow-xs"
+          title="Charger des exemples de professeurs tunisiens"
+        >
+          <Sparkles class="w-4 h-4 text-indigo-600" />
+          Charger Exemples
+        </button>
+
+        <button
+          @click="openAddModal"
+          class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+        >
+          <Plus class="w-4 h-4" />
+          Ajouter un enseignant
+        </button>
+      </div>
     </div>
 
     <!-- Search -->
@@ -72,24 +85,22 @@
         </div>
 
         <div class="pt-2 border-t border-gray-100">
-          <div class="grid grid-cols-2 gap-3">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Users class="w-4 h-4 text-blue-600" />
-              </div>
-              <div>
-                <p class="text-[10px] uppercase font-semibold text-gray-400">Élèves</p>
-                <p class="text-sm font-bold text-gray-900">{{ teacher.studentCount }}</p>
-              </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-blue-50/70 p-2 rounded-lg border border-blue-100">
+              <p class="text-[10px] uppercase font-semibold text-gray-500">Élèves</p>
+              <p class="text-sm font-bold text-gray-900">{{ teacher.studentCount }}</p>
             </div>
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
-                <Calendar class="w-4 h-4 text-purple-600" />
-              </div>
-              <div>
-                <p class="text-[10px] uppercase font-semibold text-gray-400">Leçons/sem</p>
-                <p class="text-sm font-bold text-gray-900">{{ teacher.weeklyLessons }}</p>
-              </div>
+            <div class="bg-purple-50/70 p-2 rounded-lg border border-purple-100">
+              <p class="text-[10px] uppercase font-semibold text-gray-500">Leçons/sem</p>
+              <p class="text-sm font-bold text-gray-900">{{ teacher.weeklyLessons }}</p>
+            </div>
+            <div class="bg-emerald-50/70 p-2 rounded-lg border border-emerald-100">
+              <p class="text-[10px] uppercase font-semibold text-emerald-700">Gain / Séance</p>
+              <p class="text-xs font-bold text-emerald-800 mt-0.5">
+                {{ teacher.remuneration_type === 'percentage' || (teacher.rate_percentage && teacher.rate_percentage > 0)
+                    ? (teacher.rate_percentage || 70) + '%'
+                    : (teacher.salary_per_lesson || 30) + ' TND' }}
+              </p>
             </div>
           </div>
         </div>
@@ -106,10 +117,17 @@
       class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4"
       @click="showModal = false"
     >
-      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full" @click.stop>
-        <h3 class="text-xl font-bold text-gray-900 mb-4">
-          {{ isEditing ? "Modifier l'enseignant" : 'Ajouter un enseignant' }}
-        </h3>
+      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full space-y-4" @click.stop>
+        <div class="flex items-center justify-between border-b pb-3 border-gray-100">
+          <div>
+            <h3 class="text-xl font-bold text-gray-900">
+              {{ isEditing ? "Modifier l'enseignant" : 'Ajouter un enseignant' }}
+            </h3>
+            <p class="text-xs text-gray-500">Programme tunisien & Mode de rémunération par séance</p>
+          </div>
+          <button @click="showModal = false" class="text-gray-400 hover:text-gray-600 text-lg">×</button>
+        </div>
+
         <form @submit.prevent="saveTeacher" class="space-y-4">
           <div>
             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Nom complet *</label>
@@ -121,16 +139,29 @@
               class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
+
+          <!-- Tunisian Subject Select -->
           <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Matière *</label>
-            <input
-              v-model="formData.subject"
-              type="text"
-              required
-              placeholder="Ex: Mathématiques"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Matière enseignée (Système Tunisien) *
+              </label>
+              <span class="text-[11px] text-indigo-600 font-medium">Collège & Lycée</span>
+            </div>
+            <div class="relative">
+              <select
+                v-model="formData.subject"
+                required
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium text-gray-900"
+              >
+                <option value="" disabled>Sélectionner une matière</option>
+                <option v-for="sub in tunisianSubjects" :key="sub" :value="sub">
+                  {{ sub }}
+                </option>
+              </select>
+            </div>
           </div>
+
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Téléphone *</label>
@@ -138,7 +169,7 @@
                 v-model="formData.phone"
                 type="text"
                 required
-                placeholder="Ex: 20 111 222"
+                placeholder="Ex: 21 345 678"
                 class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
@@ -148,20 +179,81 @@
                 v-model.number="formData.weeklyLessons"
                 type="number"
                 min="0"
-                placeholder="Ex: 8"
+                placeholder="Ex: 4"
                 class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
           </div>
+
           <div>
             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Email *</label>
             <input
               v-model="formData.email"
               type="email"
               required
-              placeholder="Ex: karim@email.com"
+              placeholder="Ex: karim.belhadj@email.tn"
               class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
+          </div>
+
+          <!-- Gain par séance (Pourcentage % ou montant fixe TND) -->
+          <div class="bg-emerald-50/70 p-4 rounded-xl border border-emerald-200/80 space-y-3">
+            <label class="block text-xs font-bold text-emerald-900 uppercase tracking-wider">
+              Gain de l'enseignant par séance
+            </label>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Type de rémunération</label>
+                <select
+                  v-model="formData.remuneration_type"
+                  class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="percentage">Pourcentage (%) du groupe</option>
+                  <option value="fixed">Montant Fixe (TND / séance)</option>
+                </select>
+              </div>
+
+              <div>
+                <template v-if="formData.remuneration_type === 'percentage'">
+                  <label class="block text-xs font-semibold text-gray-700 mb-1">
+                    Part Enseignant (%) *
+                  </label>
+                  <input
+                    v-model.number="formData.rate_percentage"
+                    type="number"
+                    min="1"
+                    max="100"
+                    step="1"
+                    placeholder="Ex: 70%"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500"
+                  />
+                </template>
+                <template v-else>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1">
+                    Tarif par séance (TND) *
+                  </label>
+                  <input
+                    v-model.number="formData.salary_per_lesson"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="Ex: 35 TND"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500"
+                  />
+                </template>
+              </div>
+            </div>
+
+            <!-- Gain simulator badge -->
+            <div class="text-[11px] text-emerald-800 bg-white/80 p-2 rounded-lg border border-emerald-200">
+              <span v-if="formData.remuneration_type === 'percentage'">
+                💡 <strong>Calcul automatique :</strong> Sur une séance de groupe de 100 TND récoltés, le professeur touchera <strong>{{ formData.rate_percentage || 70 }} TND</strong> et le centre conservera {{ 100 - (formData.rate_percentage || 70) }} TND.
+              </span>
+              <span v-else>
+                💡 <strong>Tarif fixe :</strong> L'enseignant touchera <strong>{{ formData.salary_per_lesson || 30 }} TND</strong> pour chaque séance assurée, quel que soit le nombre d'élèves.
+              </span>
+            </div>
           </div>
 
           <div v-if="errorMessage" class="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
@@ -192,8 +284,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Plus, Search, Edit2, Trash2, Users, Calendar } from 'lucide-vue-next';
+import { Plus, Search, Edit2, Trash2, Users, Calendar, Sparkles } from 'lucide-vue-next';
 import api from '../utils/api';
+import { ALL_TUNISIAN_SUBJECTS, SAMPLE_TEACHERS_TUNISIA } from '../utils/tunisianEducation';
 
 interface Teacher {
   id: number;
@@ -203,8 +296,12 @@ interface Teacher {
   email: string;
   studentCount: number;
   weeklyLessons: number;
+  remuneration_type?: 'percentage' | 'fixed';
+  rate_percentage?: number;
+  salary_per_lesson?: number;
 }
 
+const tunisianSubjects = ALL_TUNISIAN_SUBJECTS;
 const teachers = ref<Teacher[]>([]);
 const searchTerm = ref('');
 const loading = ref(false);
@@ -215,12 +312,24 @@ const showModal = ref(false);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
 
-const formData = ref({
+const formData = ref<{
+  name: string;
+  subject: string;
+  phone: string;
+  email: string;
+  weeklyLessons: number;
+  remuneration_type: 'percentage' | 'fixed';
+  rate_percentage: number;
+  salary_per_lesson: number;
+}>({
   name: '',
-  subject: '',
+  subject: 'Mathématiques',
   phone: '',
   email: '',
-  weeklyLessons: 0
+  weeklyLessons: 4,
+  remuneration_type: 'percentage',
+  rate_percentage: 70,
+  salary_per_lesson: 35
 });
 
 function getInitial(name: string): string {
@@ -255,10 +364,13 @@ function openAddModal() {
   errorMessage.value = '';
   formData.value = {
     name: '',
-    subject: '',
+    subject: tunisianSubjects[0],
     phone: '',
     email: '',
-    weeklyLessons: 4
+    weeklyLessons: 4,
+    remuneration_type: 'percentage',
+    rate_percentage: 70,
+    salary_per_lesson: 35
   };
   showModal.value = true;
 }
@@ -272,9 +384,42 @@ function openEditModal(teacher: Teacher) {
     subject: teacher.subject,
     phone: teacher.phone,
     email: teacher.email,
-    weeklyLessons: teacher.weeklyLessons || 0
+    weeklyLessons: teacher.weeklyLessons || 0,
+    remuneration_type: teacher.remuneration_type || (teacher.rate_percentage ? 'percentage' : 'fixed'),
+    rate_percentage: teacher.rate_percentage || 70,
+    salary_per_lesson: teacher.salary_per_lesson || 35
   };
   showModal.value = true;
+}
+
+async function loadSampleTeachers() {
+  if (!confirm('Voulez-vous charger des exemples d\'enseignants tunisiens avec leurs matières et pourcentages ?')) return;
+
+  loading.value = true;
+  try {
+    for (const sample of SAMPLE_TEACHERS_TUNISIA) {
+      const exists = teachers.value.some(t => t.name.toLowerCase() === sample.name.toLowerCase());
+      if (!exists) {
+        const res = await api.post('/api/teachers', sample);
+        teachers.value.unshift(res.data);
+      }
+    }
+  } catch (e) {
+    console.error('Erreur import exemples:', e);
+    // Add locally to view immediately
+    SAMPLE_TEACHERS_TUNISIA.forEach((sample, i) => {
+      if (!teachers.value.some(t => t.name.toLowerCase() === sample.name.toLowerCase())) {
+        teachers.value.unshift({
+          id: Date.now() + i,
+          ...sample,
+          remuneration_type: sample.remuneration_type as 'percentage' | 'fixed',
+          studentCount: 8
+        });
+      }
+    });
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function saveTeacher() {

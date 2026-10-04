@@ -16,7 +16,11 @@ return new class extends Migration
             $table->string('name');
             $table->string('level');
             $table->string('phone');
+            $table->string('status')->default('active');
             $table->timestamps();
+            $table->boolean('is_remise')->default(false);
+            $table->decimal('remise')->default(0);
+            $table->string('parent_phone')->nullable();
         });
     }
 

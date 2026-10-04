@@ -17,7 +17,9 @@ return new class extends Migration
             $table->string('month');
             $table->decimal('amount', 8, 2);
             $table->string('date')->nullable();
-            $table->string('status'); // paid / pending / overdue
+            $table->string('status')->default('pending'); // paid / pending / overdue
+            $table->boolean('is_primaire')->default(false);
+            $table->boolean('is_secondaire')->default(false);
             $table->timestamps();
         });
     }

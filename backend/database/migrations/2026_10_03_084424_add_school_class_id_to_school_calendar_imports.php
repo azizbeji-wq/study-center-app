@@ -8,26 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('daycare_children', function (Blueprint $table) {
-
+        Schema::table('school_calendar_imports', function (Blueprint $table) {
             $table->foreignId('school_class_id')
                 ->nullable()
+                ->after('id')
                 ->constrained('school_classes')
-                ->nullOnDelete();
+                ->cascadeOnDelete();
         });
     }
 
     public function down(): void
     {
-        Schema::table('daycare_children', function (Blueprint $table) {
-
-            $table->dropForeign([
-                'school_class_id'
-            ]);
-
-            $table->dropColumn(
-                'school_class_id'
-            );
+        Schema::table('school_calendar_imports', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('school_class_id');
         });
     }
 };

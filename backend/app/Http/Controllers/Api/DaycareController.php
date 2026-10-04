@@ -4,27 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\DaycareChild;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DaycareController extends Controller
 {
     public function index()
     {
-        $children = DaycareChild::all();
-        
-        $formatted = $children->map(function ($c) {
-            return [
-                'id' => $c->id,
-                'name' => $c->name,
-                'age' => $c->age,
-                'parentName' => $c->parent_name,
-                'phone' => $c->phone,
-                'schedule' => $c->schedule,
-                'status' => $c->status,
-            ];
-        });
-
-        return response()->json($formatted);
+        return response()->json(DaycareChild::all()->map(fn ($c) => $this->format($c)));
     }
 
     public function store(Request $request)
@@ -36,25 +23,14 @@ class DaycareController extends Controller
             'phone' => 'required|string|max:255',
             'schedule' => 'required|string|max:255',
             'status' => 'nullable|string|in:present,absent',
+            'monthlyFee' => 'nullable|numeric|min:0',
+            'startDate' => 'nullable|date',
         ]);
 
-        // Map parentName to parent_name
-        if (isset($data['parentName'])) {
-            $data['parent_name'] = $data['parentName'];
-            unset($data['parentName']);
-        }
+        $child = new DaycareChild();
+        $child->forceFill($this->toAttributes($data))->save();
 
-        $child = DaycareChild::create($data);
-
-        return response()->json([
-            'id' => $child->id,
-            'name' => $child->name,
-            'age' => $child->age,
-            'parentName' => $child->parent_name,
-            'phone' => $child->phone,
-            'schedule' => $child->schedule,
-            'status' => $child->status,
-        ], 201);
+        return response()->json($this->format($child), 201);
     }
 
     public function update(Request $request, $id)
@@ -68,24 +44,13 @@ class DaycareController extends Controller
             'phone' => 'sometimes|required|string|max:255',
             'schedule' => 'sometimes|required|string|max:255',
             'status' => 'sometimes|required|string|in:present,absent',
+            'monthlyFee' => 'nullable|numeric|min:0',
+            'startDate' => 'nullable|date',
         ]);
 
-        if (isset($data['parentName'])) {
-            $data['parent_name'] = $data['parentName'];
-            unset($data['parentName']);
-        }
+        $child->forceFill($this->toAttributes($data))->save();
 
-        $child->update($data);
-
-        return response()->json([
-            'id' => $child->id,
-            'name' => $child->name,
-            'age' => $child->age,
-            'parentName' => $child->parent_name,
-            'phone' => $child->phone,
-            'schedule' => $child->schedule,
-            'status' => $child->status,
-        ]);
+        return response()->json($this->format($child));
     }
 
     public function destroy($id)
@@ -94,5 +59,42 @@ class DaycareController extends Controller
         $child->delete();
 
         return response()->json(['message' => 'Enfant de garde supprimé avec succès']);
+    }
+
+    /** Convertit les noms de champs du front (camelCase) vers ceux de la base. */
+    private function toAttributes(array $data): array
+    {
+        $map = [
+            'parentName' => 'parent_name',
+            'monthlyFee' => 'monthly_fee',
+            'startDate'  => 'start_date',
+        ];
+
+        $attributes = [];
+        foreach ($data as $key => $value) {
+            $attributes[$map[$key] ?? $key] = $value;
+        }
+
+        // monthly_fee n'accepte pas NULL
+        if (array_key_exists('monthly_fee', $attributes) && $attributes['monthly_fee'] === null) {
+            $attributes['monthly_fee'] = 0;
+        }
+
+        return $attributes;
+    }
+
+    private function format(DaycareChild $c): array
+    {
+        return [
+            'id' => $c->id,
+            'name' => $c->name,
+            'age' => $c->age,
+            'parentName' => $c->parent_name,
+            'phone' => $c->phone,
+            'schedule' => $c->schedule,
+            'status' => $c->status,
+            'monthlyFee' => (float) $c->monthly_fee,
+            'startDate' => $c->start_date ? Carbon::parse($c->start_date)->toDateString() : null,
+        ];
     }
 }

@@ -3,15 +3,15 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Gestion des Élèves</h2>
-        <p class="text-sm text-gray-500 mt-1">{{ students.length }} élèves inscrits</p>
+        <h2 class="text-2xl font-bold text-gray-900">Gestion des Eleves</h2>
+        <p class="text-sm text-gray-500 mt-1">{{ students.length }} eleves inscrits</p>
       </div>
       <button
         @click="openAddModal"
         class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
       >
         <Plus class="w-4 h-4" />
-        Ajouter un élève
+        Ajouter un eleve
       </button>
     </div>
 
@@ -38,40 +38,74 @@
           <tr>
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nom</th>
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Niveau</th>
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Matières</th>
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Téléphone</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Matieres</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Frais mensuel</th>
             <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <tr v-for="student in filteredStudents" :key="student.id" class="hover:bg-gray-50/80 transition-colors">
-            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ student.name }}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ student.level }}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">
+                  {{ student.name.charAt(0) }}
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-gray-900">{{ student.name }}</span>
+                    <span
+                      v-if="student.is_remise"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800"
+                    >
+                      Remise {{ student.remise }}{{ student.discount_type === 'percentage' ? '%' : ' TND' }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-gray-500">Tél: {{ student.phone }}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="space-y-1">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  {{ student.group_name || 'Non assigné' }}
+                </span>
+                <p class="text-xs text-gray-600 font-medium">{{ student.level }}</p>
+              </div>
+            </td>
             <td class="px-6 py-4">
               <div class="flex flex-wrap gap-1.5">
                 <span
                   v-for="(sub, idx) in (student.subjects || []).slice(0, 2)"
                   :key="idx"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-md border border-gray-200"
                 >
                   <BookOpen class="w-3 h-3 text-indigo-500" />
                   {{ sub.subject }}
                 </span>
                 <span v-if="(student.subjects || []).length > 2" class="inline-flex px-2 py-0.5 text-xs font-medium text-gray-500 bg-gray-100 rounded-md">
-                  +{{ student.subjects.length - 2 }}
+                  +{{ (student.subjects || []).length - 2 }}
                 </span>
                 <span v-if="!student.subjects || student.subjects.length === 0" class="text-xs text-gray-400">
                   Aucune
                 </span>
               </div>
             </td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ student.phone }}</td>
+            <td class="px-6 py-4">
+              <div class="text-xs space-y-0.5">
+                <p :class="['text-sm font-bold', feeValue(student) > 0 ? 'text-gray-900' : 'text-gray-400']">
+                  {{ feeValue(student) > 0 ? feeValue(student) + ' TND' : 'À définir' }}
+                </p>
+                <p v-if="student.is_remise && feeValue(student) > 0" class="text-emerald-600 text-[11px] font-medium">
+                  Après remise (Brut: {{ student.calculated_fee?.gross ?? 0 }} TND)
+                </p>
+              </div>
+            </td>
             <td class="px-6 py-4 text-right">
               <div class="flex items-center justify-end gap-1.5">
                 <button
                   @click="selectedStudent = student"
                   class="p-1.5 hover:bg-gray-100 text-gray-600 hover:text-indigo-600 rounded-lg transition-colors"
-                  title="Voir détails"
+                  title="Voir details"
                 >
                   <Eye class="w-4 h-4" />
                 </button>
@@ -102,44 +136,64 @@
 
     <!-- Student Details Modal -->
     <div v-if="selectedStudent" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="selectedStudent = null">
-      <div class="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl space-y-5" @click.stop>
+      <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-5" @click.stop>
         <div class="flex items-center justify-between border-b pb-3 border-gray-100">
-          <h3 class="text-xl font-bold text-gray-900">Détails de l'élève</h3>
-          <button @click="selectedStudent = null" class="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
-        </div>
-        <div class="space-y-4">
           <div>
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Nom complet</p>
-            <p class="text-lg font-medium text-gray-900 mt-0.5">{{ selectedStudent.name }}</p>
+            <h3 class="text-xl font-bold text-gray-900">{{ selectedStudent.name }}</h3>
+            <p class="text-xs text-gray-500">Groupe: {{ selectedStudent.group_name || 'Non assigné' }} • {{ selectedStudent.level }}</p>
           </div>
-          <div class="grid grid-cols-2 gap-4 bg-gray-50 p-3.5 rounded-lg border border-gray-100">
+          <button @click="selectedStudent = null" class="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Discount & Calculation Card -->
+          <div class="bg-linear-to-r from-indigo-50 to-purple-50 p-4 rounded-xl border border-indigo-100 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-gray-600">Tarif brut:</span>
+              <span class="font-semibold text-gray-900">{{ selectedStudent.calculated_fee?.gross ?? selectedStudent.base_fee ?? 0 }} TND</span>
+            </div>
+            <div v-if="selectedStudent.is_remise" class="flex justify-between items-center text-xs text-amber-700">
+              <span>Remise accordée ({{ selectedStudent.remise }}{{ selectedStudent.discount_type === 'percentage' ? '%' : ' TND' }}):</span>
+              <span class="font-bold">-{{ selectedStudent.calculated_fee?.discount ?? 0 }} TND</span>
+            </div>
+            <div class="pt-2 border-t border-indigo-200/60 flex justify-between items-center">
+              <span class="text-sm font-bold text-gray-900">Total Mensuel à Payer:</span>
+              <span class="text-lg font-black text-indigo-700">{{ feeValue(selectedStudent) }} TND</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-100 text-xs">
             <div>
-              <p class="text-xs text-gray-500">Niveau</p>
-              <p class="font-medium text-gray-800 mt-0.5">{{ selectedStudent.level }}</p>
+              <p class="text-gray-500">Téléphone élève</p>
+              <p class="font-semibold text-gray-800 mt-0.5">{{ selectedStudent.phone }}</p>
             </div>
             <div>
-              <p class="text-xs text-gray-500">Téléphone</p>
-              <p class="font-medium text-gray-800 mt-0.5">{{ selectedStudent.phone }}</p>
+              <p class="text-gray-500">Présences / Séances</p>
+              <p class="font-semibold text-gray-800 mt-0.5">
+                {{ selectedStudent.attendance_stats?.present || 0 }} présents sur {{ selectedStudent.attendance_stats?.total || 0 }}
+              </p>
             </div>
           </div>
+
           <div>
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Matières et Enseignants</p>
             <div v-if="selectedStudent.subjects && selectedStudent.subjects.length > 0" class="space-y-2">
               <div
                 v-for="(sub, idx) in selectedStudent.subjects"
                 :key="idx"
-                class="flex items-center justify-between p-3 bg-indigo-50/50 rounded-lg border border-indigo-100/70"
+                class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200"
               >
                 <div class="flex items-center gap-2">
                   <BookOpen class="w-4 h-4 text-indigo-600" />
                   <span class="text-sm font-medium text-gray-900">{{ sub.subject }}</span>
                 </div>
-                <span class="text-sm text-gray-600">{{ sub.teacher }}</span>
+                <span class="text-xs text-gray-600 bg-white px-2 py-1 rounded border">{{ sub.teacher }}</span>
               </div>
             </div>
             <p v-else class="text-sm text-gray-400 italic">Aucune matière assignée.</p>
           </div>
         </div>
+
         <div class="flex justify-end pt-2">
           <button @click="selectedStudent = null" class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200">
             Fermer
@@ -150,76 +204,240 @@
 
     <!-- Add/Edit Student Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="closeModal">
-      <div class="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl" @click.stop>
-        <h3 class="text-xl font-bold text-gray-900 mb-4">
-          {{ isEditing ? "Modifier l'élève" : 'Ajouter un élève' }}
-        </h3>
-        <form @submit.prevent="saveStudent" class="space-y-4">
+      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[92vh] flex flex-col" @click.stop>
+        <div class="flex items-center justify-between border-b pb-3 border-gray-100">
           <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Nom complet *</label>
-            <input
-              v-model="formData.name"
-              type="text"
-              required
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
-              placeholder="Ex: Ahmed Ben Ali"
-            />
+            <h3 class="text-xl font-bold text-gray-900">
+              {{ isEditing ? "Modifier l'élève" : 'Inscrire un nouvel élève' }}
+            </h3>
+            <p class="text-xs text-gray-500">Système éducatif tunisien (Collège & Lycée), groupe et tarification</p>
           </div>
+          <button @click="closeModal" class="text-gray-400 hover:text-gray-600 text-lg">×</button>
+        </div>
 
-          <div class="grid grid-cols-2 gap-3">
+        <form @submit.prevent="saveStudent" class="space-y-4 flex-1 overflow-y-auto pr-1">
+          <!-- Personal Info -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Niveau *</label>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Nom complet *</label>
               <input
-                v-model="formData.level"
+                v-model="formData.name"
                 type="text"
                 required
                 class="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
-                placeholder="Ex: 7ème année"
+                placeholder="Ex: Yassine Trabelsi"
               />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Téléphone *</label>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Téléphone de l'élève *</label>
               <input
                 v-model="formData.phone"
                 type="text"
                 required
                 class="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
-                placeholder="Ex: 20 123 456"
+                placeholder="Ex: 21 345 678"
               />
             </div>
           </div>
 
-        
+          <!-- Tunisian Level & Group -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-gray-50/70 p-3.5 rounded-xl border border-gray-200">
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                Niveau scolaire (Tunisie) *
+              </label>
+              <select
+                v-model="formData.level"
+                @change="onLevelChange"
+                required
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              >
+                <option value="" disabled>Sélectionner un niveau</option>
+                <optgroup label="Collège (Base)">
+                  <option
+                    v-for="lvl in tunisianLevels.filter(l => l.cycle === 'college')"
+                    :key="lvl.id"
+                    :value="lvl.name"
+                  >
+                    {{ lvl.name }}
+                  </option>
+                </optgroup>
+                <optgroup label="Secondaire & Baccalauréat">
+                  <option
+                    v-for="lvl in tunisianLevels.filter(l => l.cycle === 'lycee')"
+                    :key="lvl.id"
+                    :value="lvl.name"
+                  >
+                    {{ lvl.name }}
+                  </option>
+                </optgroup>
+              </select>
+            </div>
 
-          <!-- Subject enrollments -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                Groupe *
+              </label>
+              <div class="relative">
+                <input
+                  v-model="formData.group_name"
+                  list="group-suggestions"
+                  required
+                  placeholder="Ex: M1, Sc2..."
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase font-semibold"
+                />
+                <datalist id="group-suggestions">
+                  <option v-for="grp in suggestedGroups" :key="grp" :value="grp" />
+                </datalist>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarif mensuel forfaitaire (toujours visible) -->
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Tarif mensuel forfaitaire (TND)</label>
+            <input
+              v-model.number="formData.base_fee"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            />
+            <p class="text-[11px] text-gray-500 mt-1">Laissez 0 pour utiliser la somme des prix mensuels des matières.</p>
+          </div>
+
+          <!-- Remise / Discount -->
+          <div class="bg-amber-50/50 p-3.5 rounded-xl border border-amber-200/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <input
+                  id="has-remise"
+                  v-model="formData.is_remise"
+                  type="checkbox"
+                  class="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                />
+                <label for="has-remise" class="text-xs font-bold text-amber-900 uppercase tracking-wider cursor-pointer">
+                  Accorder une Remise (Discount)
+                </label>
+              </div>
+              <span v-if="formData.is_remise" class="text-xs font-medium text-amber-700">
+                Remise activée
+              </span>
+            </div>
+
+            <div v-if="formData.is_remise" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-amber-200/60">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Type de remise</label>
+                <select
+                  v-model="formData.discount_type"
+                  class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="fixed">Montant Fixe (TND)</option>
+                  <option value="percentage">Pourcentage (%)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">
+                  Valeur de la remise ({{ formData.discount_type === 'percentage' ? '%' : 'TND' }}) *
+                </label>
+                <input
+                  v-model.number="formData.remise"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  required
+                  placeholder="Ex: 20"
+                  class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            <!-- Discount Realtime Preview -->
+            <div v-if="formData.is_remise && calculatedNetPreview !== null" class="flex items-center justify-between text-xs px-2 py-1 bg-white/70 rounded-md border border-amber-200 text-amber-900 font-medium">
+              <span>Montant après déduction:</span>
+              <span class="text-sm font-bold text-indigo-700">{{ calculatedNetPreview }} TND</span>
+            </div>
+          </div>
+
+          <!-- Subjects Selection (Tunisian Curriculum) -->
           <div>
             <div class="flex items-center justify-between mb-2">
-              <label class="text-xs font-semibold text-gray-700 uppercase tracking-wider">Matières & Enseignants</label>
+              <div>
+                <label class="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Matières sélectionnées & Enseignants
+                </label>
+                <p class="text-[11px] text-gray-500">Matières du programme officiel tunisien</p>
+              </div>
               <button
                 type="button"
                 @click="addSubjectRow"
-                class="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+                class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1"
               >
                 <Plus class="w-3 h-3" /> Ajouter matière
               </button>
             </div>
+
             <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-              <div v-for="(sub, idx) in formData.subjects" :key="idx" class="flex items-center gap-2">
-                <input
-                  v-model="sub.subject"
-                  type="text"
-                  required
-                  placeholder="Matière"
-                  class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                />
-                <select
-                  v-model="sub.teacher_id"
-                  required
-                  class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                >
-                  <option :value="undefined" disabled>Choisir enseignant</option>
-                  <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }} ({{ t.subject }})</option>
-                </select>
+              <div v-for="(sub, idx) in formData.subjects" :key="idx" class="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-200">
+                <!-- Subject Select/Input -->
+                <div class="flex-1">
+                  <input
+                    v-model="sub.subject_name"
+                    @change="onSubjectNameChange(sub)"
+                    list="tunisian-subjects"
+                    required
+                    placeholder="Nom matière"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <datalist id="tunisian-subjects">
+                    <option v-for="s in availableLevelSubjects" :key="s" :value="s" />
+                  </datalist>
+                </div>
+
+                <!-- Teacher Select -->
+                <div class="flex-1">
+                  <select
+                    v-model="sub.teacher_id"
+                    required
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option :value="undefined" disabled>Professeur</option>
+                    <option v-for="t in teacherOptionsFor(sub.subject_name).list" :key="t.id" :value="t.id">{{ t.name }} ({{ t.subject }})</option>
+                  </select>
+                  <p
+                    v-if="sub.subject_name && !teacherOptionsFor(sub.subject_name).matched"
+                    class="text-[10px] text-amber-700 mt-0.5"
+                  >
+                    Aucun prof déclaré pour cette matière
+                  </p>
+                </div>
+
+                <!-- Price per month -->
+                <div class="w-24">
+                  <input
+                    v-model.number="sub.price_per_month"
+                    type="number"
+                    min="0"
+                    placeholder="TND/Mois"
+                    title="Prix mensuel de la matière"
+                    class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <!-- Price per session -->
+                <div class="w-24">
+                  <input
+                    v-model.number="sub.price_per_session"
+                    type="number"
+                    min="0"
+                    placeholder="TND/Séance"
+                    title="Prix par séance pour suivi présence"
+                    class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
                 <button
                   type="button"
                   @click="removeSubjectRow(idx)"
@@ -260,20 +478,49 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Plus, Search, Edit2, Trash2, Eye, BookOpen } from 'lucide-vue-next';
+import { Plus, Search, Edit2, Trash2, Eye, BookOpen, Tag, Users } from 'lucide-vue-next';
 import api from '../utils/api';
+import { filterTeachersBySubject } from '../utils/teacherSubjects';
+import {
+  TUNISIAN_LEVELS,
+  COMMON_TUNISIAN_GROUPS,
+  getSubjectsForLevel,
+  getSuggestedGroups
+} from '../utils/tunisianEducation';
 
 interface SubjectEnrollment {
-  subject: string;
+  id?: number;
+  subject?: string;
   teacher?: string;
   teacher_id?: number;
+  group_name?: string;
+  price_per_month?: number;
+  price_per_session?: number;
 }
 
 interface Student {
   id: number;
   name: string;
   level: string;
+  group_name?: string;
   phone: string;
+  parent_phone?: string;
+  status?: string;
+  is_remise?: boolean;
+  remise?: number;
+  discount_type?: 'percentage' | 'fixed';
+  base_fee?: number;
+  calculated_fee?: {
+    gross: number;
+    discount: number;
+    netPayable: number;
+  };
+  attendance_stats?: {
+    total: number;
+    present: number;
+    absent: number;
+    excused: number;
+  };
   subjects: SubjectEnrollment[];
 }
 
@@ -281,8 +528,10 @@ interface Teacher {
   id: number;
   name: string;
   subject: string;
+  subjects?: string[];
 }
 
+const tunisianLevels = TUNISIAN_LEVELS;
 const students = ref<Student[]>([]);
 const teachers = ref<Teacher[]>([]);
 const searchTerm = ref('');
@@ -298,39 +547,117 @@ const editingId = ref<number | null>(null);
 const formData = ref<{
   name: string;
   level: string;
+  group_name: string;
   phone: string;
-  subjects: Array<{ subject: string; teacher_id?: number }>;
+  parent_phone: string;
+  status: string;
+  is_remise: boolean;
+  remise: number;
+  discount_type: 'percentage' | 'fixed';
+  base_fee: number;
+  subjects: Array<{
+    subject_name: string;
+    teacher_id?: number;
+    group_name?: string;
+    price_per_month?: number;
+    price_per_session?: number;
+  }>;
 }>({
   name: '',
-  level: '',
+  level: TUNISIAN_LEVELS[3].name, // Default: 1ère Année Secondaire
+  group_name: 'S1',
   phone: '',
+  parent_phone: '',
+  status: 'active',
+  is_remise: false,
+  remise: 0,
+  discount_type: 'fixed',
+  base_fee: 0,
   subjects: []
 });
+
+const suggestedGroups = computed(() => {
+  return getSuggestedGroups(formData.value.level);
+});
+
+const availableLevelSubjects = computed(() => {
+  return getSubjectsForLevel(formData.value.level);
+});
+
+function onLevelChange() {
+  const groups = getSuggestedGroups(formData.value.level);
+  if (groups.length > 0 && (!formData.value.group_name || !groups.includes(formData.value.group_name))) {
+    formData.value.group_name = groups[0];
+  }
+}
+
+const calculatedNetPreview = computed(() => {
+  if (!formData.value.is_remise) return null;
+  const subjectsTotal = formData.value.subjects.reduce(
+    (sum, s) => sum + (Number(s.price_per_month) || 0), 0
+  );
+  const base = Number(formData.value.base_fee) > 0 ? Number(formData.value.base_fee) : subjectsTotal;
+  const rem = Number(formData.value.remise) || 0;
+  if (formData.value.discount_type === 'percentage') {
+    return Math.max(0, Math.round((base - (base * rem) / 100) * 100) / 100);
+  }
+  return Math.max(0, Math.round((base - rem) * 100) / 100);
+});
+
+const filteredStudents = computed(() => {
+  if (!searchTerm.value) return students.value;
+  const term = searchTerm.value.toLowerCase();
+  return students.value.filter(s =>
+    s.name.toLowerCase().includes(term) ||
+    s.level.toLowerCase().includes(term) ||
+    (s.group_name && s.group_name.toLowerCase().includes(term)) ||
+    s.phone.toLowerCase().includes(term)
+  );
+});
+
+// Montant mensuel à payer (après remise) ; 0 si aucun prix n'est défini
+function feeValue(student: Student): number {
+  return Number(student.calculated_fee?.netPayable ?? student.base_fee ?? 0);
+}
 
 async function loadData() {
   loading.value = true;
   try {
     const [studentsRes, teachersRes] = await Promise.all([
       api.get('/api/students'),
-      api.get('/api/teachers')
+      api.get('/api/teachers'),
     ]);
     students.value = studentsRes.data;
     teachers.value = teachersRes.data;
   } catch (e: any) {
-    console.error('Erreur chargement élèves:', e);
+    console.error('Erreur chargement:', e);
   } finally {
     loading.value = false;
   }
 }
 
-onMounted(loadData);
-
-const filteredStudents = computed(() => {
-  return students.value.filter((student) =>
-    student.name.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    student.level.toLowerCase().includes(searchTerm.value.toLowerCase())
-  );
+onMounted(() => {
+  loadData();
 });
+
+// Enseignants qui donnent la matière choisie (un enseignant peut donner plusieurs matières)
+function teacherOptionsFor(subjectName: string) {
+  return filterTeachersBySubject(teachers.value, subjectName);
+}
+
+function defaultTeacherFor(subjectName: string): number | undefined {
+  return teacherOptionsFor(subjectName).list[0]?.id;
+}
+
+function onSubjectNameChange(sub: { subject_name: string; teacher_id?: number }) {
+  const { list, matched } = teacherOptionsFor(sub.subject_name);
+  if (sub.teacher_id && !list.some(t => t.id === sub.teacher_id)) {
+    sub.teacher_id = undefined;
+  }
+  if (!sub.teacher_id && matched && list.length === 1) {
+    sub.teacher_id = list[0].id;
+  }
+}
 
 function openAddModal() {
   isEditing.value = false;
@@ -338,9 +665,19 @@ function openAddModal() {
   errorMessage.value = '';
   formData.value = {
     name: '',
-    level: '',
+    level: TUNISIAN_LEVELS[4].name, // 2ème Sciences
+    group_name: 'Sc1',
     phone: '',
-    subjects: []
+    parent_phone: '',
+    status: 'active',
+    is_remise: false,
+    remise: 0,
+    discount_type: 'fixed',
+    base_fee: 0,
+    subjects: [
+      { subject_name: 'Mathématiques', teacher_id: defaultTeacherFor('Mathématiques'), price_per_month: 60, price_per_session: 15 },
+      { subject_name: 'Sciences Physiques', teacher_id: defaultTeacherFor('Sciences Physiques'), price_per_month: 60, price_per_session: 15 }
+    ]
   };
   showModal.value = true;
 }
@@ -352,10 +689,20 @@ function openEditModal(student: Student) {
   formData.value = {
     name: student.name,
     level: student.level,
+    group_name: student.group_name || 'M1',
     phone: student.phone,
-    subjects: (student.subjects || []).map(s => ({
-      subject: s.subject,
-      teacher_id: s.teacher_id
+    parent_phone: student.parent_phone || '',
+    status: student.status || 'active',
+    is_remise: !!student.is_remise,
+    remise: student.remise || 0,
+    discount_type: student.discount_type || 'fixed',
+    base_fee: student.base_fee ?? 0,
+    subjects: (student.subjects || []).map((s: any) => ({
+      subject_name: s.subject ?? '',
+      teacher_id: s.teacher_id,
+      group_name: s.group_name || student.group_name,
+      price_per_month: s.price_per_month || 0,
+      price_per_session: s.price_per_session || 0,
     }))
   };
   showModal.value = true;
@@ -367,9 +714,13 @@ function closeModal() {
 }
 
 function addSubjectRow() {
+  const subjects = availableLevelSubjects.value;
   formData.value.subjects.push({
-    subject: '',
-    teacher_id: teachers.value.length > 0 ? teachers.value[0].id : undefined
+    subject_name: subjects[0] || 'Mathématiques',
+    teacher_id: defaultTeacherFor(subjects[0] || 'Mathématiques'),
+    group_name: formData.value.group_name,
+    price_per_month: 50,
+    price_per_session: 15
   });
 }
 
@@ -380,20 +731,37 @@ function removeSubjectRow(index: number) {
 async function saveStudent() {
   submitting.value = true;
   errorMessage.value = '';
+  const payload = {
+    name: formData.value.name,
+    level: formData.value.level,
+    group_name: formData.value.group_name,
+    phone: formData.value.phone,
+    parent_phone: formData.value.parent_phone,
+    status: formData.value.status,
+    is_remise: formData.value.is_remise,
+    remise: formData.value.remise,
+    discount_type: formData.value.discount_type,
+    base_fee: formData.value.base_fee,
+    subjects: formData.value.subjects.map(s => ({
+      subject: s.subject_name,
+      teacher_id: s.teacher_id,
+      group_name: s.group_name || formData.value.group_name,
+      price_per_month: s.price_per_month,
+      price_per_session: s.price_per_session,
+    }))
+  };
   try {
     if (isEditing.value && editingId.value) {
-      const res = await api.put(`/api/students/${editingId.value}`, formData.value);
+      const res = await api.put(`/api/students/${editingId.value}`, payload);
       const idx = students.value.findIndex(s => s.id === editingId.value);
-      if (idx !== -1) {
-        students.value[idx] = res.data;
-      }
+      if (idx !== -1) students.value[idx] = res.data;
     } else {
-      const res = await api.post('/api/students', formData.value);
+      const res = await api.post('/api/students', payload);
       students.value.unshift(res.data);
     }
     closeModal();
   } catch (e: any) {
-    console.error('Erreur sauvegarde élève:', e);
+    console.error('Erreur sauvegarde eleve:', e);
     errorMessage.value = e.response?.data?.message || 'Erreur lors de la sauvegarde';
   } finally {
     submitting.value = false;
@@ -401,16 +769,14 @@ async function saveStudent() {
 }
 
 async function deleteStudent(id: number) {
-  if (!confirm('Voulez-vous vraiment supprimer cet élève ?')) return;
+  if (!confirm('Voulez-vous vraiment supprimer cet eleve ?')) return;
   try {
     await api.delete(`/api/students/${id}`);
     students.value = students.value.filter(s => s.id !== id);
-    if (selectedStudent.value?.id === id) {
-      selectedStudent.value = null;
-    }
+    if (selectedStudent.value?.id === id) selectedStudent.value = null;
   } catch (e: any) {
     console.error('Erreur suppression:', e);
-    alert('Erreur lors de la suppression de l\'élève');
+    alert("Erreur lors de la suppression de l'eleve");
   }
 }
 </script>

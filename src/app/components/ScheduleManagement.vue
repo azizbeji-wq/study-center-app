@@ -34,6 +34,18 @@
       </button>
     </div>
 
+    <!-- Group Filter -->
+    <div v-if="groupOptions.length > 0" class="flex items-center gap-2">
+      <label class="text-xs font-semibold text-gray-700 uppercase tracking-wider">Groupe</label>
+      <select
+        v-model="selectedGroup"
+        class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+      >
+        <option value="">Tous les groupes</option>
+        <option v-for="g in groupOptions" :key="g" :value="g">{{ g }}</option>
+      </select>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="flex justify-center py-12">
       <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
@@ -79,7 +91,15 @@
               <div class="text-sm font-bold text-gray-900 mt-1">{{ item.subject }}</div>
               <div class="text-xs font-medium text-gray-600 mt-0.5">{{ item.teacher }}</div>
               <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
-                <span class="bg-gray-100 px-2 py-0.5 rounded font-medium">{{ item.level }}</span>
+                <span class="flex items-center gap-1.5">
+                  <span class="bg-gray-100 px-2 py-0.5 rounded font-medium">{{ item.level }}</span>
+                  <span
+                    v-if="item.group_name"
+                    class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded font-semibold"
+                  >
+                    {{ item.group_name }}
+                  </span>
+                </span>
                 <span class="font-medium text-gray-600">{{ item.room }}</span>
               </div>
             </div>
@@ -97,7 +117,7 @@
         <h3 class="text-xl font-bold text-gray-900 mb-4">
           {{ isEditing ? 'Modifier la séance' : 'Planifier un cours' }}
         </h3>
-        <form @submit.prevent="saveSchedule" class="space-y-4">
+        <form @submit.prevent="saveSchedule()" class="space-y-4">
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Jour *</label>
@@ -122,24 +142,31 @@
 
           <div>
             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Matière *</label>
-            <input
-              v-model="formData.subject"
-              type="text"
-              required
-              placeholder="Ex: Mathématiques"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
+              <select
+                v-model="formData.subject"
+                required
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium text-gray-900"
+              >
+                <option value="" disabled>Sélectionner une matière</option>
+                <option v-for="sub in tunisianSubjects " :key="sub" :value="sub">
+                  {{ sub }}
+                </option>
+              </select>
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Enseignant *</label>
             <input
               v-model="formData.teacher"
+              list="schedule-teachers"
               type="text"
               required
               placeholder="Ex: Prof. Karim Belhadj"
               class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
+            <datalist id="schedule-teachers">
+              <option v-for="name in teacherSuggestions" :key="name" :value="name" />
+            </datalist>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -165,8 +192,38 @@
             </div>
           </div>
 
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Groupe</label>
+            <input
+              v-model="formData.group_name"
+              list="schedule-groups"
+              type="text"
+              placeholder="Ex: M1 (laisser vide pour tout le niveau)"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            />
+            <datalist id="schedule-groups">
+              <option v-for="g in groupSuggestions" :key="g" :value="g" />
+            </datalist>
+            <p class="text-[11px] text-gray-500 mt-1">
+              Choisissez le nom exactement comme dans la fiche des élèves (M1 et m1 sont deux groupes différents).
+            </p>
+          </div>
+
           <div v-if="errorMessage" class="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
             {{ errorMessage }}
+          </div>
+
+          <div v-if="conflictMessage" class="text-xs text-amber-900 bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-2">
+            <p class="font-semibold">{{ conflictMessage }}</p>
+            <p>Vous pouvez enregistrer malgré cet avertissement.</p>
+            <button
+              type="button"
+              @click="saveSchedule(true)"
+              :disabled="submitting"
+              class="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded-lg hover:bg-amber-700 disabled:opacity-50"
+            >
+              Enregistrer quand même
+            </button>
           </div>
 
           <div class="flex justify-end gap-2 pt-3 border-t border-gray-100">
@@ -192,9 +249,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Plus, Edit2, Trash2 } from 'lucide-vue-next';
 import api from '../utils/api';
+import { ALL_TUNISIAN_SUBJECTS, COMMON_TUNISIAN_GROUPS } from '../utils/tunisianEducation';
+import { filterTeachersBySubject } from '../utils/teacherSubjects';
 
 interface ScheduleItem {
   id: number;
@@ -204,17 +263,23 @@ interface ScheduleItem {
   teacher: string;
   level: string;
   room: string;
+  group_name?: string | null;
 }
 
 const schedules = ref<ScheduleItem[]>([]);
 const loading = ref(false);
 const submitting = ref(false);
 const errorMessage = ref('');
+const tunisianSubjects = ALL_TUNISIAN_SUBJECTS;
 
 const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 const levels = ['Tous', '7ème', '8ème', '9ème', '1ère', 'Bac'];
 
 const selectedLevel = ref('Tous');
+const selectedGroup = ref('');
+const allTeachers = ref<Array<{ name: string; subject?: string; subjects?: string[] }>>([]);
+const studentGroups = ref<string[]>([]);
+const conflictMessage = ref('');
 
 const showModal = ref(false);
 const isEditing = ref(false);
@@ -226,8 +291,12 @@ const formData = ref({
   subject: '',
   teacher: '',
   level: '7ème',
+  group_name: '',
   room: 'Salle 101'
 });
+
+// Un conflit affiché disparaît dès que le formulaire est modifié
+watch(formData, () => { conflictMessage.value = ''; }, { deep: true });
 
 async function loadSchedules() {
   loading.value = true;
@@ -241,13 +310,49 @@ async function loadSchedules() {
   }
 }
 
-onMounted(loadSchedules);
+async function loadLookups() {
+  try {
+    const [tRes, sRes] = await Promise.all([
+      api.get('/api/teachers').catch(() => ({ data: [] })),
+      api.get('/api/students').catch(() => ({ data: [] }))
+    ]);
+    allTeachers.value = tRes.data || [];
+    studentGroups.value = Array.from(
+      new Set((sRes.data || []).map((s: any) => s.group_name).filter(Boolean))
+    ) as string[];
+  } catch (e) {
+    console.error('Erreur chargement enseignants / groupes:', e);
+  }
+}
+
+onMounted(() => {
+  loadSchedules();
+  loadLookups();
+});
+
+// Groupes présents dans l'emploi du temps (pour le filtre)
+const groupOptions = computed(() =>
+  Array.from(new Set(schedules.value.map(s => s.group_name).filter(Boolean))) as string[]
+);
+
+// Enseignants proposés : ceux qui donnent la matière saisie (un enseignant peut donner plusieurs matières)
+const teacherSuggestions = computed(() =>
+  filterTeachersBySubject(allTeachers.value, formData.value.subject).list.map(t => t.name)
+);
+
+// Suggestions dans le formulaire : groupes des élèves + groupes usuels
+const groupSuggestions = computed(() =>
+  Array.from(new Set([...studentGroups.value, ...groupOptions.value, ...COMMON_TUNISIAN_GROUPS]))
+);
 
 const filteredSchedule = computed(() => {
-  if (selectedLevel.value === 'Tous') {
-    return schedules.value;
-  }
-  return schedules.value.filter((item) => item.level.toLowerCase().includes(selectedLevel.value.toLowerCase()));
+  return schedules.value.filter((item) => {
+    const matchesLevel =
+      selectedLevel.value === 'Tous' ||
+      item.level.toLowerCase().includes(selectedLevel.value.toLowerCase());
+    const matchesGroup = !selectedGroup.value || item.group_name === selectedGroup.value;
+    return matchesLevel && matchesGroup;
+  });
 });
 
 const scheduleByDay = computed(() => {
@@ -261,12 +366,14 @@ function openAddModal() {
   isEditing.value = false;
   editingId.value = null;
   errorMessage.value = '';
+  conflictMessage.value = '';
   formData.value = {
     day: 'Lundi',
     time: '08:00 - 10:00',
     subject: '',
     teacher: '',
     level: '7ème',
+    group_name: '',
     room: 'Salle 101'
   };
   showModal.value = true;
@@ -282,29 +389,44 @@ function openEditModal(item: ScheduleItem) {
     subject: item.subject,
     teacher: item.teacher,
     level: item.level,
+    group_name: item.group_name ?? '',
     room: item.room
   };
+  conflictMessage.value = '';
   showModal.value = true;
 }
 
-async function saveSchedule() {
+async function saveSchedule(force: boolean = false) {
   submitting.value = true;
   errorMessage.value = '';
+  if (!force) conflictMessage.value = '';
+
+  const payload = {
+    ...formData.value,
+    group_name: formData.value.group_name.trim() || null,
+    force
+  };
+
   try {
     if (isEditing.value && editingId.value) {
-      const res = await api.put(`/api/schedules/${editingId.value}`, formData.value);
+      const res = await api.put(`/api/schedules/${editingId.value}`, payload);
       const idx = schedules.value.findIndex(s => s.id === editingId.value);
       if (idx !== -1) {
         schedules.value[idx] = res.data;
       }
     } else {
-      const res = await api.post('/api/schedules', formData.value);
+      const res = await api.post('/api/schedules', payload);
       schedules.value.push(res.data);
     }
+    conflictMessage.value = '';
     showModal.value = false;
   } catch (e: any) {
-    console.error('Erreur enregistrement cours:', e);
-    errorMessage.value = e.response?.data?.message || 'Erreur lors de l\'enregistrement';
+    if (e.response?.status === 409) {
+      conflictMessage.value = e.response.data?.message || "Conflit d'horaire.";
+    } else {
+      console.error('Erreur enregistrement cours:', e);
+      errorMessage.value = e.response?.data?.message || "Erreur lors de l'enregistrement";
+    }
   } finally {
     submitting.value = false;
   }

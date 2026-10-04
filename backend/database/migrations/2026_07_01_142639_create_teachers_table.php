@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('phone');
             $table->string('email');
             $table->integer('weekly_lessons')->default(0);
+            $table->decimal('salary_per_lesson', 8, 2)->default(0);
             $table->timestamps();
         });
     }

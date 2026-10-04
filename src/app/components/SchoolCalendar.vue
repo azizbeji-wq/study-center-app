@@ -1,672 +1,760 @@
 <template>
   <div class="space-y-6">
 
-    <!-- Header -->
-    <div class="flex items-center justify-between">
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">
-          Emplois du temps des écoles primaires
-        </h2>
-
-        <p class="text-sm text-gray-500 mt-1">
-          Consultez les emplois du temps des écoles primaires importées
+        <h2 class="text-2xl font-bold text-gray-900">Emplois du temps des écoles primaires</h2>
+        <p class="text-sm text-gray-500 mt-0.5">
+          Importez le fichier d'une classe, puis retrouvez-le ici en un clic.
         </p>
       </div>
+
+      <button
+        @click="openImport"
+        class="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm text-sm"
+      >
+        <Upload class="w-4 h-4" />
+        Importer un emploi du temps
+      </button>
     </div>
 
-    <!-- School Selection -->
+    <!-- Message de succès -->
+    <div
+      v-if="successMessage"
+      class="text-sm text-green-800 bg-green-50 p-3 rounded-lg border border-green-200"
+    >
+      {{ successMessage }}
+    </div>
+
+    <!-- Recherche -->
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-      <label
-        for="school"
-        class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2"
-      >
-        École primaire
-      </label>
+      <p class="text-sm font-semibold text-gray-700 mb-3">Rechercher un emploi du temps</p>
 
-      <select
-        id="school"
-        v-model="selectedSchoolId"
-        @change="onSchoolChange"
-        class="w-full md:w-96 px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-      >
-        <option :value="null">
-          Sélectionner une école
-        </option>
-
-        <option
-          v-for="school in schools"
-          :key="school.id"
-          :value="school.id"
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <select
+          v-model="filterSchoolId"
+          aria-label="École"
+          class="px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
         >
-          {{ school.name }}
-        </option>
-      </select>
+          <option :value="null">Toutes les écoles</option>
+          <option v-for="school in schools" :key="school.id" :value="school.id">
+            {{ school.name }}
+          </option>
+        </select>
 
-      <!-- Loading schools -->
-      <p
-        v-if="loadingSchools"
-        class="text-sm text-gray-500 mt-3"
-      >
-        Chargement des écoles...
-      </p>
+        <select
+          v-model="filterLevel"
+          aria-label="Niveau"
+          class="px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+        >
+          <option :value="null">Tous les niveaux</option>
+          <option v-for="lvl in levels" :key="lvl" :value="lvl">{{ formatLevel(lvl) }}</option>
+        </select>
 
-      <!-- Error -->
+        <select
+          v-model="filterSection"
+          aria-label="Classe"
+          class="px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+        >
+          <option :value="null">Toutes les classes</option>
+          <option v-for="sec in sections" :key="sec" :value="sec">Classe {{ sec }}</option>
+        </select>
+      </div>
+
       <div
         v-if="errorMessage"
-        class="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200 mt-3"
+        class="mt-3 text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200"
       >
         {{ errorMessage }}
       </div>
-
-      <!-- No school -->
-      <p
-        v-if="!loadingSchools && !errorMessage && schools.length === 0"
-        class="text-sm text-orange-600 mt-3"
-      >
-        Aucune école enregistrée.
-      </p>
     </div>
 
-    <!-- No School Selected -->
+    <!-- Chargement -->
+    <div v-if="loadingList" class="flex justify-center py-10">
+      <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+
+    <!-- Aucun résultat -->
     <div
-      v-if="!selectedSchool"
+      v-else-if="imports.length === 0"
       class="bg-gray-50 border border-gray-200 rounded-xl p-10 text-center"
     >
-      <div class="text-4xl mb-3">
-        🏫
-      </div>
-
-      <h3 class="font-semibold text-gray-800">
-        Aucune école sélectionnée
-      </h3>
-
+      <h3 class="font-semibold text-gray-800">Aucun emploi du temps trouvé</h3>
       <p class="text-sm text-gray-500 mt-1">
-        Sélectionnez une école primaire pour afficher son emploi du temps.
+        Aucun fichier ne correspond à cette recherche. Importez-en un avec le bouton ci-dessus.
       </p>
     </div>
 
-    <!-- School Selected -->
-    <template v-if="selectedSchool">
-
-      <!-- School Info -->
-      <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
-        <p class="text-xs text-indigo-500 uppercase font-semibold">
-          École sélectionnée
-        </p>
-
-        <h3 class="text-lg font-bold text-indigo-900 mt-1">
-          {{ selectedSchool.name }}
-        </h3>
-
-        <p
-          v-if="selectedSchool.address"
-          class="text-sm text-indigo-700 mt-1"
-        >
-          {{ selectedSchool.address }}
-        </p>
-      </div>
-
-      <!-- Level Filter -->
-      <div>
-        <h3 class="text-sm font-semibold text-gray-700 mb-3">
-          Niveau scolaire
-        </h3>
-
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="level in levels"
-            :key="level"
-            @click="selectLevel(level)"
-            :class="[
-              'px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-xs',
-              selectedLevel === level
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-            ]"
-          >
-            {{ formatLevel(level) }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Loading Classes -->
-      <div
-        v-if="loadingClasses"
-        class="flex justify-center py-8"
+    <!-- Cartes -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <article
+        v-for="item in imports"
+        :key="item.id"
+        class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-col"
       >
-        <div
-          class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"
-        ></div>
-      </div>
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+            <FileText v-if="isPdf(item)" class="w-5 h-5" />
+            <ImageIcon v-else class="w-5 h-5" />
+          </div>
 
-      <!-- Sections -->
-      <div
-        v-if="selectedLevel !== null && !loadingClasses"
-        class="bg-white border border-gray-200 rounded-xl shadow-sm p-5"
-      >
-        <h3 class="text-sm font-semibold text-gray-700 mb-3">
-          Classe
-        </h3>
-
-        <div
-          v-if="availableSections.length > 0"
-          class="flex flex-wrap gap-2"
-        >
-          <button
-            v-for="section in availableSections"
-            :key="section"
-            @click="selectSection(section)"
-            :class="[
-              'px-6 py-2 rounded-lg text-lg font-semibold transition-colors shadow-xs',
-              selectedSection === section
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-            ]"
-          >
-            {{ section }}
-          </button>
-        </div>
-
-        <div
-          v-else
-          class="text-sm text-gray-400 text-center py-6"
-        >
-          Aucune classe disponible pour ce niveau
-        </div>
-      </div>
-
-      <!-- Calendar Loading -->
-      <div
-        v-if="loadingCalendar"
-        class="flex justify-center py-12"
-      >
-        <div
-          class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"
-        ></div>
-      </div>
-
-      <!-- Schedule -->
-      <template v-if="selectedClassId && !loadingCalendar">
-
-        <!-- Schedule Header -->
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900">
-              Emploi du temps
+          <div class="min-w-0">
+            <h3 class="text-base font-bold text-gray-900">
+              {{ formatLevel(item.level) }} - Classe {{ item.section }}
             </h3>
+            <p class="text-sm text-gray-600 truncate">{{ item.school_name }}</p>
+          </div>
+        </div>
 
-            <p class="text-sm text-gray-500 mt-1">
-              {{ selectedSchool.name }}
-              •
-              {{ formatLevel(selectedLevel!) }}
-              •
-              Classe {{ selectedSection }}
+        <p class="text-xs text-gray-500 mt-3 truncate">{{ item.file_name }}</p>
+        <p class="text-xs text-gray-400 mt-0.5">Importé le {{ formatDate(item.created_at) }}</p>
+
+        <div class="mt-4 flex gap-2">
+          <button
+            @click="openViewer(item)"
+            class="flex-1 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-sm rounded-lg border border-indigo-200 transition-colors"
+          >
+            Voir plus
+          </button>
+          <button
+            @click="openEdit(item)"
+            aria-label="Modifier"
+            title="Modifier"
+            class="p-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Pencil class="w-4 h-4" />
+          </button>
+          <button
+            @click="askDelete(item)"
+            aria-label="Supprimer"
+            title="Supprimer"
+            class="p-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            <Trash2 class="w-4 h-4" />
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Fenêtre de consultation du fichier -->
+    <div
+      v-if="viewerItem"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      @click="closeViewer"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col"
+        @click.stop
+      >
+        <div class="flex items-start justify-between gap-3 p-5 border-b border-gray-100">
+          <div class="min-w-0">
+            <h3 class="text-lg font-bold text-gray-900">
+              {{ formatLevel(viewerItem.level) }} - Classe {{ viewerItem.section }}
+            </h3>
+            <p class="text-sm text-gray-500 truncate">
+              {{ viewerItem.school_name }} - {{ viewerItem.file_name }}
             </p>
           </div>
-
-          <span
-            class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full"
+          <button
+            @click="closeViewer"
+            aria-label="Fermer"
+            class="text-gray-400 hover:text-gray-600 p-1"
           >
-            {{ formatLevel(selectedLevel!) }} - {{ selectedSection }}
-          </span>
+            <X class="w-5 h-5" />
+          </button>
         </div>
 
-        <!-- No Schedule -->
-        <div
-          v-if="courses.length === 0"
-          class="bg-white border border-gray-200 rounded-xl p-10 text-center shadow-sm"
-        >
-          <div class="text-3xl mb-3">
-            📅
+        <div class="flex-1 overflow-auto p-5 bg-gray-50 min-h-[300px]">
+          <div v-if="viewerLoading" class="flex justify-center py-16">
+            <div class="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
 
-          <h3 class="text-sm font-semibold text-gray-700">
-            Aucun emploi du temps
-          </h3>
-
-          <p class="text-xs text-gray-400 mt-1">
-            Aucun emploi du temps importé pour cette classe.
+          <p v-else-if="viewerError" class="text-sm text-red-600 text-center py-16">
+            {{ viewerError }}
           </p>
+
+          <template v-else-if="viewerUrl">
+            <iframe
+              v-if="isPdf(viewerItem)"
+              :src="viewerUrl"
+              title="Emploi du temps"
+              class="w-full h-[68vh] rounded-lg border border-gray-200 bg-white"
+            ></iframe>
+            <img
+              v-else
+              :src="viewerUrl"
+              alt="Emploi du temps"
+              class="max-w-full mx-auto rounded-lg border border-gray-200 bg-white"
+            />
+          </template>
         </div>
 
-        <!-- Schedule Grid -->
-        <div
-          v-else
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
-          <div
-            v-for="daySchedule in scheduleByDay"
-            :key="daySchedule.day"
-            class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm flex flex-col"
+        <div class="flex flex-wrap justify-end gap-2 p-4 border-t border-gray-100">
+          <a
+            v-if="viewerUrl"
+            :href="viewerUrl"
+            target="_blank"
+            rel="noopener"
+            class="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
           >
-            <!-- Day Header -->
-            <div
-              class="bg-indigo-600 px-4 py-3 flex items-center justify-between"
+            <ExternalLink class="w-4 h-4" />
+            Ouvrir dans un onglet
+          </a>
+          <a
+            v-if="viewerUrl"
+            :href="viewerUrl"
+            :download="viewerItem.file_name"
+            class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+          >
+            <Download class="w-4 h-4" />
+            Télécharger
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fenêtre d'import / de modification -->
+    <div
+      v-if="showImportModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      @click="closeImport"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto"
+        @click.stop
+      >
+        <div class="flex items-start justify-between border-b border-gray-100 pb-3">
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">{{ modalTitle }}</h3>
+            <p class="text-xs text-gray-500">{{ modalSubtitle }}</p>
+          </div>
+          <button @click="closeImport" aria-label="Fermer" class="text-gray-400 hover:text-gray-600 p-1">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">École *</label>
+          <select
+            v-model="importSchoolId"
+            class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          >
+            <option :value="null">Choisir une école...</option>
+            <option v-for="school in schools" :key="school.id" :value="school.id">
+              {{ school.name }}
+            </option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Niveau *</label>
+            <select
+              v-model.number="importLevel"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
-              <h3 class="text-sm font-bold text-white tracking-wide">
-                {{ daySchedule.day }}
-              </h3>
-
-              <span class="text-xs text-indigo-200 font-medium">
-                {{ daySchedule.items.length }} cours
-              </span>
-            </div>
-
-            <!-- Courses -->
-            <div class="p-4 space-y-3 flex-1 bg-gray-50/50">
-
-              <template v-if="daySchedule.items.length > 0">
-                <div
-                  v-for="item in daySchedule.items"
-                  :key="item.id"
-                  class="border-l-4 border-indigo-500 pl-3.5 pr-2 py-2.5 bg-white rounded-lg border border-gray-200/80 shadow-xs"
-                >
-                  <!-- Time -->
-                  <div class="text-xs font-semibold text-indigo-600">
-                    {{ formatTime(item.start_time) }}
-                    -
-                    {{ formatTime(item.end_time) }}
-                  </div>
-
-                  <!-- Subject -->
-                  <div class="text-sm font-bold text-gray-900 mt-1">
-                    {{ item.subject }}
-                  </div>
-
-                  <!-- Teacher -->
-                  <div
-                    v-if="item.teacher_name"
-                    class="text-xs font-medium text-gray-600 mt-1"
-                  >
-                    👨‍🏫 {{ item.teacher_name }}
-                  </div>
-
-                  <!-- Room -->
-                  <div
-                    v-if="item.room"
-                    class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 text-xs text-gray-500"
-                  >
-                    <span class="bg-gray-100 px-2 py-0.5 rounded font-medium">
-                      Salle
-                    </span>
-
-                    <span class="font-medium text-gray-600">
-                      {{ item.room }}
-                    </span>
-                  </div>
-                </div>
-              </template>
-
-              <div
-                v-else
-                class="text-xs text-gray-400 text-center py-8"
-              >
-                Aucun cours ce jour
-              </div>
-
-            </div>
+              <option v-for="lvl in levels" :key="lvl" :value="lvl">{{ formatLevel(lvl) }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Classe *</label>
+            <select
+              v-model="importSection"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            >
+              <option v-for="sec in sections" :key="sec" :value="sec">Classe {{ sec }}</option>
+            </select>
           </div>
         </div>
 
-        <!-- Daycare Children -->
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">
+            {{ isEditing ? 'Nouveau fichier (facultatif)' : 'Fichier *' }}
+          </label>
 
-          <!-- Header -->
-          <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-            <div>
-              <h3 class="text-sm font-bold text-gray-900">
-                Élèves de garde concernés
-              </h3>
+          <p
+            v-if="isEditing && editingItem"
+            class="text-xs text-gray-500 mb-2"
+          >
+            Fichier actuel : <span class="font-semibold text-gray-700">{{ editingItem.file_name }}</span>.
+            Laissez vide pour le conserver.
+          </p>
 
-              <p class="text-xs text-gray-500 mt-1">
-                {{ formatLevel(selectedLevel!) }}
-                -
-                Classe {{ selectedSection }}
+          <div
+            @dragover.prevent="dragOver = true"
+            @dragleave.prevent="dragOver = false"
+            @drop.prevent="handleFileDrop"
+            @click="triggerFileInput"
+            :class="[
+              'border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors',
+              dragOver ? 'border-indigo-600 bg-indigo-50/50' : 'border-gray-300 hover:border-indigo-400 bg-gray-50/50'
+            ]"
+          >
+            <input
+              ref="fileInput"
+              type="file"
+              accept=".pdf,image/jpeg,image/png"
+              class="hidden"
+              @change="handleFileChange"
+            />
+
+            <div v-if="!selectedFile" class="space-y-2">
+              <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 mx-auto flex items-center justify-center">
+                <FileText class="w-6 h-6" />
+              </div>
+              <p class="text-sm font-semibold text-gray-700">
+                Cliquez pour choisir un fichier ou glissez-le ici
               </p>
             </div>
 
-            <span
-              class="px-3 py-1 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full"
-            >
-              {{ daycareChildren.length }} élève(s)
-            </span>
-          </div>
-
-          <!-- Children -->
-          <div
-            v-if="daycareChildren.length > 0"
-            class="divide-y divide-gray-100"
-          >
-            <div
-              v-for="child in daycareChildren"
-              :key="child.id"
-              class="flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors"
-            >
-              <div
-                class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center"
+            <div v-else class="flex items-center justify-between p-3 bg-white rounded-lg border border-indigo-200">
+              <div class="text-left min-w-0">
+                <p class="text-sm font-bold text-gray-900 truncate">{{ selectedFile.name }}</p>
+                <p class="text-xs text-gray-500">{{ (selectedFile.size / 1024).toFixed(1) }} Ko</p>
+              </div>
+              <button
+                type="button"
+                @click.stop="clearFile"
+                class="text-xs text-red-600 hover:underline font-semibold shrink-0 ml-3"
               >
-                <span class="text-sm font-bold text-orange-600">
-                  {{ getInitial(child.name) }}
-                </span>
-              </div>
-
-              <div>
-                <p class="text-sm font-semibold text-gray-900">
-                  {{ child.name }}
-                </p>
-
-                <p class="text-xs text-gray-500">
-                  Élève de garde
-                </p>
-              </div>
+                Retirer
+              </button>
             </div>
           </div>
-
-          <!-- No Children -->
-          <div
-            v-else
-            class="text-xs text-gray-400 text-center py-10"
-          >
-            Aucun élève de garde concerné par cette classe
-          </div>
-
         </div>
-      </template>
 
-      <!-- Select Section Message -->
-      <div
-        v-if="
-          selectedLevel !== null &&
-          !selectedClassId &&
-          !loadingClasses
-        "
-        class="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center"
-      >
-        <p class="text-sm text-gray-500">
-          Sélectionnez une classe pour consulter son emploi du temps.
-        </p>
+        <div
+          v-if="importError"
+          class="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200"
+        >
+          {{ importError }}
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-100">
+          <button
+            type="button"
+            @click="closeImport"
+            class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            :disabled="!canSave || isUploading"
+            @click="saveImport"
+            class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+          >
+            {{ submitLabel }}
+          </button>
+        </div>
       </div>
+    </div>
 
-    </template>
+    <!-- Confirmation de suppression -->
+    <div
+      v-if="itemToDelete"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      @click="cancelDelete"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full space-y-4" @click.stop>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Supprimer cet emploi du temps ?</h3>
+          <p class="text-sm text-gray-600 mt-2">
+            {{ formatLevel(itemToDelete.level) }} - Classe {{ itemToDelete.section }},
+            {{ itemToDelete.school_name }}.
+            Le fichier <span class="font-semibold">{{ itemToDelete.file_name }}</span>
+            sera supprimé définitivement.
+          </p>
+        </div>
+
+        <div
+          v-if="deleteError"
+          class="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200"
+        >
+          {{ deleteError }}
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button
+            type="button"
+            @click="cancelDelete"
+            class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            :disabled="isDeleting"
+            @click="confirmDelete"
+            class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            {{ isDeleting ? 'Suppression...' : 'Supprimer' }}
+          </button>
+        </div>
+      </div>
+    </div>
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import api from '../utils/api';
+import {
+  Upload,
+  FileText,
+  Image as ImageIcon,
+  X,
+  Download,
+  ExternalLink,
+  Pencil,
+  Trash2
+} from 'lucide-vue-next';
 
 interface School {
   id: number;
   name: string;
-  address?: string;
 }
 
-interface SchoolClass {
+interface CalendarImport {
   id: number;
+  file_name: string;
+  file_type: string | null;
+  created_at: string;
   school_id: number;
+  school_name: string;
   level: number;
   section: string;
 }
 
-interface Course {
-  id: number;
-  school_class_id: number;
-  day: string;
-  start_time: string;
-  end_time: string;
-  subject: string;
-  teacher_name?: string;
-  room?: string;
-}
-
-interface DaycareChild {
-  id: number;
-  name: string;
-}
+const levels = [1, 2, 3, 4, 5, 6];
+const sections = ['أ', 'ب', 'ج', 'د'];
+const MAX_SIZE = 10 * 1024 * 1024;
+const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
 const schools = ref<School[]>([]);
-const schoolClasses = ref<SchoolClass[]>([]);
-const courses = ref<Course[]>([]);
-const daycareChildren = ref<DaycareChild[]>([]);
-
-const loadingSchools = ref(false);
-const loadingClasses = ref(false);
-const loadingCalendar = ref(false);
+const imports = ref<CalendarImport[]>([]);
+const loadingList = ref(false);
 const errorMessage = ref('');
+const successMessage = ref('');
 
-const selectedSchoolId = ref<number | null>(null);
-const selectedLevel = ref<number | null>(null);
-const selectedSection = ref<string | null>(null);
-const selectedClassId = ref<number | null>(null);
+const filterSchoolId = ref<number | null>(null);
+const filterLevel = ref<number | null>(null);
+const filterSection = ref<string | null>(null);
 
-const levels = [1, 2, 3, 4, 5, 6];
+const viewerItem = ref<CalendarImport | null>(null);
+const viewerUrl = ref('');
+const viewerLoading = ref(false);
+const viewerError = ref('');
 
-const days = [
-  'Lundi',
-  'Mardi',
-  'Mercredi',
-  'Jeudi',
-  'Vendredi',
-  'Samedi'
-];
+const showImportModal = ref(false);
+const editingItem = ref<CalendarImport | null>(null);
+const importSchoolId = ref<number | null>(null);
+const importLevel = ref(1);
+const importSection = ref('أ');
+const selectedFile = ref<File | null>(null);
+const dragOver = ref(false);
+const isUploading = ref(false);
+const importError = ref('');
+const fileInput = ref<HTMLInputElement | null>(null);
 
-const selectedSchool = computed(() => {
-  if (selectedSchoolId.value === null) {
-    return null;
+const itemToDelete = ref<CalendarImport | null>(null);
+const isDeleting = ref(false);
+const deleteError = ref('');
+
+const isEditing = computed(() => editingItem.value !== null);
+
+const canSave = computed(
+  () => importSchoolId.value !== null && (isEditing.value || selectedFile.value !== null)
+);
+
+const modalTitle = computed(() =>
+  isEditing.value ? "Modifier l'emploi du temps" : 'Importer un emploi du temps'
+);
+
+const modalSubtitle = computed(() =>
+  isEditing.value
+    ? 'Changez la classe ou remplacez le fichier'
+    : 'PDF, JPG ou PNG - 10 Mo maximum'
+);
+
+const submitLabel = computed(() => {
+  if (isUploading.value) {
+    return isEditing.value ? 'Enregistrement...' : 'Import en cours...';
   }
-
-  return (
-    schools.value.find(
-      school =>
-        Number(school.id) === Number(selectedSchoolId.value)
-    ) ?? null
-  );
-});
-
-const availableSections = computed(() => {
-  if (selectedLevel.value === null) {
-    return [];
-  }
-
-  const sections = schoolClasses.value
-    .filter(
-      schoolClass =>
-        Number(schoolClass.level) ===
-        Number(selectedLevel.value)
-    )
-    .map(
-      schoolClass => schoolClass.section
-    );
-
-  return [...new Set(sections)];
-});
-
-const scheduleByDay = computed(() => {
-  return days.map((day) => ({
-    day,
-    items: courses.value
-      .filter((course) => course.day === day)
-      .sort((a, b) =>
-        a.start_time.localeCompare(b.start_time)
-      )
-  }));
+  return isEditing.value ? 'Enregistrer' : 'Importer';
 });
 
 function formatLevel(level: number) {
-  if (level === 1) {
-    return '1ère année';
-  }
-
-  return `${level}ème année`;
+  return level === 1 ? '1ère année' : `${level}ème année`;
 }
 
-function formatTime(time?: string) {
-  if (!time) {
-    return '';
-  }
-
-  return time.substring(0, 5);
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
+  });
 }
 
-function getInitial(name: string) {
-  if (!name) {
-    return '?';
-  }
+function isPdf(item: CalendarImport) {
+  return (item.file_type ?? '').includes('pdf') || item.file_name.toLowerCase().endsWith('.pdf');
+}
 
-  return name.charAt(0).toUpperCase();
+function extractError(e: any, fallback: string) {
+  const errors = e?.response?.data?.errors;
+  if (errors) {
+    const first = Object.values(errors)[0] as string[];
+    if (first?.length) return first[0];
+  }
+  return e?.response?.data?.message || fallback;
+}
+
+function showSuccess(message: string) {
+  successMessage.value = message;
+  setTimeout(() => {
+    if (successMessage.value === message) successMessage.value = '';
+  }, 6000);
 }
 
 async function loadSchools() {
-  loadingSchools.value = true;
-  errorMessage.value = '';
-
   try {
     const res = await api.get('/api/schools');
-
     schools.value = res.data;
-
-    console.log('Écoles chargées:', res.data);
-  } catch (e: any) {
-    console.error(
-      'Erreur chargement écoles:',
-      e
-    );
-
-    errorMessage.value =
-      e.response?.data?.message ||
-      'Impossible de charger les écoles.';
-
-    schools.value = [];
-  } finally {
-    loadingSchools.value = false;
+  } catch (e) {
+    errorMessage.value = extractError(e, 'Impossible de charger la liste des écoles.');
   }
 }
 
-async function onSchoolChange() {
-  selectedLevel.value = null;
-  selectedSection.value = null;
-  selectedClassId.value = null;
-
-  schoolClasses.value = [];
-  courses.value = [];
-  daycareChildren.value = [];
-
+async function loadImports() {
+  loadingList.value = true;
   errorMessage.value = '';
 
-  if (!selectedSchoolId.value) {
+  try {
+    const res = await api.get('/api/school-calendar-imports', {
+      params: {
+        school_id: filterSchoolId.value ?? undefined,
+        level: filterLevel.value ?? undefined,
+        section: filterSection.value ?? undefined
+      }
+    });
+    imports.value = res.data;
+  } catch (e) {
+    imports.value = [];
+    errorMessage.value = extractError(e, 'Impossible de charger les emplois du temps.');
+  } finally {
+    loadingList.value = false;
+  }
+}
+
+watch([filterSchoolId, filterLevel, filterSection], loadImports);
+
+/* Consultation */
+
+async function openViewer(item: CalendarImport) {
+  viewerItem.value = item;
+  viewerUrl.value = '';
+  viewerError.value = '';
+  viewerLoading.value = true;
+
+  try {
+    const res = await api.get(`/api/school-calendar-imports/${item.id}/file`, {
+      responseType: 'blob'
+    });
+    viewerUrl.value = URL.createObjectURL(res.data);
+  } catch (e) {
+    viewerError.value = 'Impossible de charger le fichier. Réessayez dans un instant.';
+  } finally {
+    viewerLoading.value = false;
+  }
+}
+
+function closeViewer() {
+  if (viewerUrl.value) {
+    URL.revokeObjectURL(viewerUrl.value);
+  }
+  viewerUrl.value = '';
+  viewerItem.value = null;
+  viewerError.value = '';
+}
+
+/* Création et modification */
+
+function openImport() {
+  editingItem.value = null;
+  importSchoolId.value = filterSchoolId.value;
+  importLevel.value = filterLevel.value ?? 1;
+  importSection.value = filterSection.value ?? 'A';
+  selectedFile.value = null;
+  importError.value = '';
+  showImportModal.value = true;
+}
+
+function openEdit(item: CalendarImport) {
+  editingItem.value = item;
+  importSchoolId.value = item.school_id;
+  importLevel.value = item.level;
+  importSection.value = item.section;
+  selectedFile.value = null;
+  importError.value = '';
+  showImportModal.value = true;
+}
+
+function closeImport() {
+  showImportModal.value = false;
+  editingItem.value = null;
+  selectedFile.value = null;
+  importError.value = '';
+}
+
+function triggerFileInput() {
+  fileInput.value?.click();
+}
+
+function setFile(file: File) {
+  importError.value = '';
+
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    importError.value = 'Format non accepté. Choisissez un PDF, un JPG ou un PNG.';
+    return;
+  }
+  if (file.size > MAX_SIZE) {
+    importError.value = 'Fichier trop volumineux. La taille maximale est de 10 Mo.';
     return;
   }
 
-  loadingClasses.value = true;
+  selectedFile.value = file;
+}
+
+function clearFile() {
+  selectedFile.value = null;
+  if (fileInput.value) fileInput.value.value = '';
+}
+
+function handleFileChange(e: Event) {
+  const input = e.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    setFile(input.files[0]);
+  }
+}
+
+function handleFileDrop(e: DragEvent) {
+  dragOver.value = false;
+  if (e.dataTransfer?.files?.[0]) {
+    setFile(e.dataTransfer.files[0]);
+  }
+}
+
+// Laisse le navigateur envoyer le formulaire en multipart/form-data
+// (sinon axios peut le convertir en JSON et le fichier est perdu).
+const multipartConfig = {
+  transformRequest: [
+    (data: any, headers: any) => {
+      if (headers) {
+        if (typeof headers.delete === 'function') {
+          headers.delete('Content-Type');
+        } else {
+          delete headers['Content-Type'];
+          delete headers['content-type'];
+        }
+      }
+      return data;
+    }
+  ]
+};
+
+async function saveImport() {
+  if (importSchoolId.value === null) return;
+  if (!isEditing.value && !selectedFile.value) return;
+
+  isUploading.value = true;
+  importError.value = '';
+
+  const wasEditing = isEditing.value;
 
   try {
-    const res = await api.get(
-      `/api/schools/${selectedSchoolId.value}/classes`
+    const formData = new FormData();
+    if (selectedFile.value) {
+      formData.append('file', selectedFile.value);
+    }
+    formData.append('school_id', String(importSchoolId.value));
+    formData.append('level', String(importLevel.value));
+    formData.append('section', importSection.value);
+
+    if (wasEditing && editingItem.value) {
+      await api.post(
+        `/api/school-calendar-imports/${editingItem.value.id}`,
+        formData,
+        multipartConfig
+      );
+    } else {
+      await api.post('/api/school-calendar-imports', formData, multipartConfig);
+    }
+
+    const schoolName = schools.value.find(s => s.id === importSchoolId.value)?.name ?? '';
+    const where = `${formatLevel(importLevel.value)}, classe ${importSection.value}, ${schoolName}`;
+    showSuccess(
+      wasEditing
+        ? `Emploi du temps modifié : ${where}.`
+        : `Emploi du temps importé : ${where}.`
     );
 
-    schoolClasses.value = res.data;
+    filterSchoolId.value = importSchoolId.value;
+    filterLevel.value = importLevel.value;
+    filterSection.value = importSection.value;
 
-    console.log(
-      'Classes chargées:',
-      res.data
+    closeImport();
+    await loadImports();
+  } catch (e) {
+    importError.value = extractError(
+      e,
+      wasEditing
+        ? 'La modification a échoué. Réessayez.'
+        : "L'import a échoué. Vérifiez le fichier et réessayez."
     );
-  } catch (e: any) {
-    console.error(
-      'Erreur chargement classes:',
-      e
-    );
-
-    errorMessage.value =
-      e.response?.data?.message ||
-      'Impossible de charger les classes.';
-
-    schoolClasses.value = [];
   } finally {
-    loadingClasses.value = false;
+    isUploading.value = false;
   }
 }
 
-function selectLevel(level: number) {
-  selectedLevel.value = level;
+/* Suppression */
 
-  selectedSection.value = null;
-  selectedClassId.value = null;
-
-  courses.value = [];
-  daycareChildren.value = [];
+function askDelete(item: CalendarImport) {
+  itemToDelete.value = item;
+  deleteError.value = '';
 }
 
-async function selectSection(section: string) {
-  selectedSection.value = section;
-
-  const schoolClass = schoolClasses.value.find(
-    item =>
-      Number(item.level) === Number(selectedLevel.value) &&
-      item.section === section
-  );
-
-  if (!schoolClass) {
-    errorMessage.value =
-      'Classe introuvable.';
-
-    selectedClassId.value = null;
-
-    return;
-  }
-
-  selectedClassId.value = schoolClass.id;
-
-  await loadClassInformation(
-    schoolClass.id
-  );
+function cancelDelete() {
+  if (isDeleting.value) return;
+  itemToDelete.value = null;
+  deleteError.value = '';
 }
 
-async function loadClassInformation(
-  classId: number
-) {
-  loadingCalendar.value = true;
-  errorMessage.value = '';
+async function confirmDelete() {
+  if (!itemToDelete.value) return;
 
-  courses.value = [];
-  daycareChildren.value = [];
+  isDeleting.value = true;
+  deleteError.value = '';
 
   try {
-    const res = await api.get(
-      `/api/school-classes/${classId}/calendar`
-    );
-
-    courses.value =
-      res.data.calendar ?? [];
-
-    daycareChildren.value =
-      res.data.daycare_children ?? [];
-
-    console.log(
-      'Emploi du temps:',
-      courses.value
-    );
-
-    console.log(
-      'Élèves de garde:',
-      daycareChildren.value
-    );
-  } catch (e: any) {
-    console.error(
-      'Erreur chargement emploi du temps:',
-      e
-    );
-
-    errorMessage.value =
-      e.response?.data?.message ||
-      "Impossible de charger l'emploi du temps.";
-
-    courses.value = [];
-    daycareChildren.value = [];
+    await api.delete(`/api/school-calendar-imports/${itemToDelete.value.id}`);
+    itemToDelete.value = null;
+    showSuccess('Emploi du temps supprimé.');
+    await loadImports();
+  } catch (e) {
+    deleteError.value = extractError(e, 'La suppression a échoué. Réessayez.');
   } finally {
-    loadingCalendar.value = false;
+    isDeleting.value = false;
   }
 }
 
-onMounted(loadSchools);
+onMounted(async () => {
+  await loadSchools();
+  await loadImports();
+});
+
+onBeforeUnmount(() => {
+  if (viewerUrl.value) URL.revokeObjectURL(viewerUrl.value);
+});
 </script>

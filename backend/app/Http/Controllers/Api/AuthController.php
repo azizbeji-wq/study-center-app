@@ -10,9 +10,9 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        // 1. Support role-based quick login
+        // 1. Support role-based quick login (uniquement en environnement local)
         $role = $request->input('role');
-        if ($role === 'director' || $role === 'secretary') {
+        if (app()->environment('local') && in_array($role, ['director', 'secretary'], true)) {
             $email = $role === 'director' ? 'director@studycenter.com' : 'secretary@studycenter.com';
             if (Auth::attempt(['email' => $email, 'password' => $role . '123'])) {
                 $user = Auth::user();
