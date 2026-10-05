@@ -52,7 +52,7 @@ class SchoolCalendarController extends Controller
         $data = $request->validate([
             'school_id' => ['required', 'integer', 'exists:schools,id'],
             'level'     => ['required', 'integer', 'between:1,6'],
-            'section'   => ['required', 'in:A,B,C,D'],
+            'section'   => ['required', 'string', 'max:10'],
             'file'      => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ]);
 
@@ -91,7 +91,7 @@ class SchoolCalendarController extends Controller
         $data = $request->validate([
             'school_id' => ['required', 'integer', 'exists:schools,id'],
             'level'     => ['required', 'integer', 'between:1,6'],
-            'section'   => ['required', 'in:A,B,C,D'],
+            'section'   => ['required', 'string', 'max:10'],
             'file'      => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ]);
 

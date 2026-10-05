@@ -38,7 +38,24 @@ class AuthController extends Controller
 
             if (Auth::attempt($credentials)) {
                 $user = Auth::user();
+
+                if (isset($user->is_active) && !$user->is_active) {
+                    return response()->json([
+                        'message' => 'Ce compte a été désactivé par la direction. Veuillez contacter le Directeur.'
+                    ], 403);
+                }
+
                 $token = $user->createToken('auth_token')->plainTextToken;
+
+                \App\Models\ActivityLog::record(
+                    $user,
+                    'account',
+                    'login',
+                    "Connexion de {$user->name} (" . ($user->role === 'secretary' ? 'Secrétaire' : 'Directeur') . ")",
+                    ['email' => $user->email],
+                    $request->ip()
+                );
+
                 return response()->json([
                     'status' => 'success',
                     'user' => [
@@ -52,7 +69,7 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Identifiants invalides'
+            'message' => 'Adresse email ou mot de passe incorrect.'
         ], 401);
     }
 

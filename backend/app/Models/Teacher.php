@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Teacher extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'name',
         'subject',          // Ancien champ texte conservé (compatibilité front)
@@ -17,6 +19,15 @@ class Teacher extends Model
         'salary_per_lesson',
         'remuneration_type',
         'rate_percentage',
+        'payout_status',
+        'payout_date',
+        'payout_month',
+        'payout_amount',
+    ];
+
+    protected $casts = [
+        'payout_date' => 'date',
+        'payout_amount' => 'decimal:2',
     ];
 
     // ─── Relations ───────────────────────────────────────────────────────────────

@@ -7,6 +7,8 @@ use App\Models\Student;
 use App\Models\StudentSubjectEnrollment;
 use App\Models\Subject;
 use App\Models\Teacher;
+use App\Models\User;
+use Laravel\Sanctum\Sanctum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -22,6 +24,13 @@ use Tests\TestCase;
 class SubjectMigrationTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $user = User::factory()->create(['role' => 'director']);
+        Sanctum::actingAs($user);
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // A. Structure des tables

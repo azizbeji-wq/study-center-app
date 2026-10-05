@@ -1,0 +1,162 @@
+================================================================================
+                    CENTRE D'ÉTUDES & GARDERIE PÉRISCOLAIRE
+                        RÉSUMÉ EXÉCUTIF DU PROJET
+================================================================================
+
+Date de mise à jour : 05 Octobre 2026
+Version du projet   : 1.2.0 (Production Ready)
+Contexte métier     : Établissement de soutien scolaire et garderie (Tunisie)
+
+--------------------------------------------------------------------------------
+1. PRÉSENTATION GÉNÉRALE DU SYSTÈME
+--------------------------------------------------------------------------------
+Cette application web complète a été conçue pour digitaliser l'ensemble de la
+gestion administrative, pédagogique et financière d'un centre d'études.
+
+Elle couvre deux activités complémentaires :
+  1. Le soutien scolaire (du primaire au secondaire / Baccalauréat).
+  2. La garderie scolaire (accueil périscolaire, demi-pension, temps plein).
+
+Le système optimise le suivi quotidien en calculant automatiquement les séances
+effectuées, les créances en attente et les alertes de retard de paiement, tout
+en offrant un portail différencié selon le profil de l'utilisateur.
+
+
+--------------------------------------------------------------------------------
+2. PROFILS UTILISATEURS & ACCÈS (RBAC)
+--------------------------------------------------------------------------------
+L'application propose deux espaces avec des niveaux de permissions stricts :
+
+A. ESPACE DIRECTEUR (Accès complet)
+   - Visualisation de toutes les métriques financières et comptables.
+   - Gestion globale des élèves, enfants de garderie et enseignants.
+   - Configuration des tarifs par défaut et catalogue des matières.
+   - Droits exclusifs de suppression (élèves, profs, paiements, calendriers).
+   - Accès aux rapports de rentabilité et comptabilité avancée.
+
+B. ESPACE SECRÉTAIRE (Accès opérationnel)
+   - Inscription et mise à jour des fiches élèves et garderie.
+   - Pointage rapide des présences par groupe ou par séance.
+   - Enregistrement des paiements et édition immédiate des reçus pour les parents.
+   - Consultation des emplois du temps et calendriers scolaires.
+   - Restriction : Aucune suppression définitive ni accès aux données comptables
+     sensibles (protection garantie par le middleware backend 'role:director').
+
+COMPTES DE DÉMONSTRATION / TESTS :
+  - Directeur  : director@studycenter.com  /  director123
+  - Secrétaire : secretary@studycenter.com /  secretary123
+
+
+--------------------------------------------------------------------------------
+3. ARCHITECTURE TECHNIQUE
+--------------------------------------------------------------------------------
+L'application repose sur une pile technologique moderne, performante et fiable :
+
+FRONTEND :
+  - Framework       : Vue.js 3 (Composition API avec TypeScript et <script setup>)
+  - Styles & Design : Tailwind CSS v4 + Lucide Icons
+  - Routage         : Vue Router avec synchronisation dynamique de l'URL (#tabs)
+  - Requêtes HTTP   : Axios avec intercepteurs pour jetons Bearer et gestion 401
+  - Outillage       : Vite (compilation ultra rapide)
+
+BACKEND :
+  - Framework       : Laravel 12 (PHP 8.2+)
+  - Authentification: Laravel Sanctum (sécurité par jetons d'API)
+  - Données         : Base relationnelle avec Eloquent ORM
+  - Protection      : Middleware RBAC, Validation stricte FormRequest
+
+
+--------------------------------------------------------------------------------
+4. FONCTIONNALITÉS MAJEURES DÉPLOYÉES
+--------------------------------------------------------------------------------
+
+1. GESTION DES ÉLÈVES & REMISES
+   - Fiche complète avec coordonnées de l'élève et du parent tuteur.
+   - Affectation par groupe et par niveau scolaire.
+   - Gestion des réductions personnalisées : montant fixe (TND) ou pourcentage (%).
+   - Inscriptions multi-matières associées à des enseignants distincts.
+
+2. GESTION DE LA GARDERIE
+   - Suivi mensuel des enfants inscrits.
+   - Calcul des frais de garde en fonction du planning horaire.
+
+3. PRÉSENCES EN LOT (BATCH ATTENDANCE)
+   - Feuille de présence interactive par groupe et matière.
+   - Pointage en un clic : Présent, Absent, Excusé, En retard.
+   - Sauvegarde atomique sous transaction de base de données.
+
+4. MOTEUR DE CALCUL DES CRÉANCES (/api/payment-dues)
+   - Calcule automatiquement les séances réellement suivies par l'élève.
+   - Déduit les séances déjà réglées par enseignant.
+   - Convertit les forfaits mensuels en prix par séance (forfait / 4).
+   - Déclenche les alertes visuelles :
+       * Vert   : À jour
+       * Jaune  : En attente (dès 4 séances impayées / 1 mois de garderie)
+       * Rouge  : En retard critique (> 7 séances impayées / > 2 mois garderie)
+
+5. REÇUS DE PAIEMENT IMPRIMABLES
+   - Génération instantanée d'un reçu officiel lors de l'encaissement.
+   - Données incluses : N° de reçu unique, nom élève, prestation, période,
+     quantité de séances réglées, montant en Dinars Tunisiens (TND).
+   - Bouton "Imprimer le reçu" formaté pour imprimante ou export PDF direct.
+   - Emplacement pour signature du parent et cachet de l'établissement.
+
+6. CALENDRIER & EMPLOIS DU TEMPS
+   - Import et consultation des emplois du temps des écoles primaires
+     (formats PDF, JPG, PNG).
+
+
+--------------------------------------------------------------------------------
+5. GARANTIES DE SÉCURITÉ & AMÉLIORATIONS APPORTÉES
+--------------------------------------------------------------------------------
+  * Transactions atomiques (DB::transaction) :
+    Toute modification multi-tables (élève + matières, présences en lot,
+    paiements) est exécutée de façon indivisible. Zéro risque de données
+    corrompues en cas de coupure réseau.
+
+  * Conservation de l'historique comptable (SoftDeletes) :
+    La suppression d'un élève ou d'un paiement applique un archivage logique
+    (colonne 'deleted_at'). Les historiques de caisse et bilans restent exacts.
+
+  * Navigation avec historique navigateur (Hash Routing) :
+    Les onglets sont reliés à l'URL (#students, #payments, #attendance...).
+    Les boutons Précédent/Suivant fonctionnent et le rafraîchissement conserve
+    l'écran actif.
+
+  * Pagination API :
+    Les listes volumineuses acceptent '?paginate=true&per_page=25' pour
+    garantir une fluidité maximale même avec plusieurs milliers de présences.
+
+
+--------------------------------------------------------------------------------
+6. GUIDE DE DÉMARRAGE RAPIDE
+--------------------------------------------------------------------------------
+
+PRÉREQUIS :
+  - PHP 8.2 ou supérieur
+  - Node.js (v18+) et npm
+  - Base de données MySQL ou SQLite
+
+LANCEMENT EN ENVIRONNEMENT DE DÉVELOPPEMENT :
+
+1. Démarrer le serveur Backend (Laravel) :
+   > cd backend
+   > composer install (si première installation)
+   > php artisan migrate
+   > php artisan serve
+   Le backend tourne sur : http://127.0.0.1:8000
+
+2. Démarrer le serveur Frontend (Vue 3 / Vite) :
+   > cd .. (racine du projet)
+   > npm install (si première installation)
+   > npm run dev
+   L'interface est accessible sur : http://localhost:5173
+
+3. Exécution des tests automatisés :
+   > cd backend
+   > php artisan test
+   (28 tests automatisés couvrant les contrôles de rôles, calculs et API)
+
+--------------------------------------------------------------------------------
+                            FIN DU RÉSUMÉ EXÉCUTIF
+================================================================================

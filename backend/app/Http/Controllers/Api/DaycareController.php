@@ -30,6 +30,15 @@ class DaycareController extends Controller
         $child = new DaycareChild();
         $child->forceFill($this->toAttributes($data))->save();
 
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'daycare',
+            'created',
+            "Inscription en garderie : {$child->name} ({$child->age} ans)",
+            ['child_id' => $child->id, 'parent' => $child->parent_name],
+            $request->ip()
+        );
+
         return response()->json($this->format($child), 201);
     }
 
@@ -50,13 +59,32 @@ class DaycareController extends Controller
 
         $child->forceFill($this->toAttributes($data))->save();
 
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'daycare',
+            'updated',
+            "Mise à jour enfant de garderie : {$child->name}",
+            ['child_id' => $child->id],
+            $request->ip()
+        );
+
         return response()->json($this->format($child));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $child = DaycareChild::findOrFail($id);
+        $name = $child->name;
         $child->delete();
+
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'daycare',
+            'deleted',
+            "Suppression de l'enfant en garderie : {$name}",
+            ['child_id' => $id],
+            $request->ip()
+        );
 
         return response()->json(['message' => 'Enfant de garde supprimé avec succès']);
     }

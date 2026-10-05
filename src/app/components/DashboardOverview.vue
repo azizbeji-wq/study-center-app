@@ -95,11 +95,19 @@
             :key="teacher.name"
             class="flex items-center justify-between p-3.5 bg-gray-50/75 rounded-xl border border-gray-100"
           >
-            <div class="flex-1">
-              <p class="text-sm font-bold text-gray-900">{{ teacher.name }}</p>
-              <p class="text-xs text-indigo-600 font-medium">{{ teacher.subject }}</p>
+            <div class="flex-1 min-w-0 pr-3">
+              <p class="text-sm font-bold text-gray-900 truncate">{{ teacher.name }}</p>
+              <p class="text-xs text-indigo-600 font-medium truncate">{{ teacher.subject }}</p>
+              <div v-if="showRevenue && teacher.teacher_share !== undefined" class="mt-1 flex items-center gap-2 text-[11px]">
+                <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  💰 Part: {{ teacher.teacher_share }} TND/m
+                </span>
+                <span v-if="teacher.center_share !== undefined" class="text-indigo-700 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                  Centre: +{{ teacher.center_share }} TND
+                </span>
+              </div>
             </div>
-            <div class="flex gap-4 text-right">
+            <div class="flex gap-4 text-right shrink-0">
               <div>
                 <p class="text-sm font-bold text-gray-900">{{ teacher.students }}</p>
                 <p class="text-[10px] uppercase font-semibold text-gray-400">élèves</p>
@@ -118,7 +126,13 @@
 
       <!-- Recent Activity -->
       <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Activité Récente</h3>
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <Activity class="w-5 h-5 text-indigo-600" />
+            <h3 class="text-lg font-bold text-gray-900">Activité Récente</h3>
+          </div>
+          <span class="text-xs text-gray-400 font-medium">Historique en direct</span>
+        </div>
         <div class="space-y-3">
           <div
             v-for="activity in recentActivity"
@@ -127,19 +141,45 @@
           >
             <div
               :class="[
-                'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
-                activity.type === 'payment' ? 'bg-green-100 text-green-600' :
+                'w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0',
+                activity.type === 'payment' ? 'bg-emerald-100 text-emerald-600' :
                 activity.type === 'student' ? 'bg-blue-100 text-blue-600' :
+                activity.type === 'daycare' ? 'bg-amber-100 text-amber-600' :
+                activity.type === 'expense' ? 'bg-rose-100 text-rose-600' :
+                activity.type === 'teacher' ? 'bg-teal-100 text-teal-600' :
+                activity.type === 'account' ? 'bg-indigo-100 text-indigo-600' :
+                activity.type === 'attendance' ? 'bg-cyan-100 text-cyan-600' :
                 'bg-purple-100 text-purple-600'
               ]"
             >
-              <DollarSign v-if="activity.type === 'payment'" class="w-4 h-4" />
-              <Users v-if="activity.type === 'student'" class="w-4 h-4" />
-              <Calendar v-if="activity.type === 'schedule'" class="w-4 h-4" />
+              <DollarSign v-if="activity.type === 'payment'" class="w-4.5 h-4.5" />
+              <Users v-else-if="activity.type === 'student'" class="w-4.5 h-4.5" />
+              <Baby v-else-if="activity.type === 'daycare'" class="w-4.5 h-4.5" />
+              <Receipt v-else-if="activity.type === 'expense'" class="w-4.5 h-4.5" />
+              <UserPlus v-else-if="activity.type === 'teacher'" class="w-4.5 h-4.5" />
+              <ShieldCheck v-else-if="activity.type === 'account'" class="w-4.5 h-4.5" />
+              <UserCheck v-else-if="activity.type === 'attendance'" class="w-4.5 h-4.5" />
+              <Calendar v-else class="w-4.5 h-4.5" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900">{{ activity.message }}</p>
-              <p class="text-xs text-gray-400 mt-0.5">{{ activity.time }}</p>
+              <p class="text-sm font-semibold text-gray-900 leading-snug">{{ activity.message }}</p>
+              <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                <!-- Badge de l'utilisateur qui a fait l'action -->
+                <span
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold"
+                  :class="activity.user_role === 'secretary'
+                    ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                    : 'bg-indigo-50 text-indigo-700 border border-indigo-200'"
+                >
+                  <User class="w-3 h-3" />
+                  <span>Par {{ activity.user_name || 'Directeur' }}</span>
+                  <span class="text-[10px] font-medium opacity-80">({{ activity.user_role === 'secretary' ? 'Secrétaire' : 'Directeur' }})</span>
+                </span>
+                <span class="text-xs text-gray-400 flex items-center gap-1">
+                  <Clock class="w-3 h-3" />
+                  {{ activity.time }}
+                </span>
+              </div>
             </div>
           </div>
           <div v-if="recentActivity.length === 0" class="text-center py-6 text-sm text-gray-400">
@@ -153,7 +193,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Users, UserPlus, DollarSign, Calendar, TrendingUp, BookOpen, Baby } from 'lucide-vue-next';
+import { Users, UserPlus, DollarSign, Calendar, TrendingUp, BookOpen, Baby, Activity, User, Clock, Receipt, ShieldCheck, UserCheck } from 'lucide-vue-next';
 import api from '../utils/api';
 
 const props = withDefaults(defineProps<{
@@ -176,8 +216,26 @@ const statsData = ref({
   weeklyLessons: 0,
 });
 
-const topTeachers = ref<Array<{ name: string; subject: string; students: number; lessons: number }>>([]);
-const recentActivity = ref<Array<{ id: string | number; type: string; message: string; time: string }>>([]);
+const topTeachers = ref<Array<{
+  name: string;
+  subject: string;
+  students: number;
+  lessons: number;
+  teacher_share?: number;
+  center_share?: number;
+}>>([]);
+
+interface ActivityItem {
+  id: string | number;
+  type: string;
+  message: string;
+  time: string;
+  user_name?: string;
+  user_role?: string;
+  action?: string;
+}
+
+const recentActivity = ref<ActivityItem[]>([]);
 
 async function loadStats() {
   loading.value = true;

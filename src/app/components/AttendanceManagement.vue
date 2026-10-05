@@ -309,13 +309,22 @@
               <label class="block text-xs font-semibold text-gray-700 mb-1">Enseignant</label>
               <select
                 v-model="batchForm.teacher_id"
-                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                :disabled="!batchForm.subject_name || batchTeacherOptions.list.length === 0"
+                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
               >
-                <option :value="undefined">Sélectionner prof</option>
-                <option v-for="t in batchTeacherOptions.list" :key="t.id" :value="t.id">{{ t.name }}</option>
+                <option :value="undefined">
+                  {{ !batchForm.subject_name
+                      ? 'Sélectionnez d’abord une matière'
+                      : (batchTeacherOptions.list.length === 0
+                          ? "Il n'y a pas d'enseignant"
+                          : 'Sélectionner prof...') }}
+                </option>
+                <option v-for="t in batchTeacherOptions.list" :key="t.id" :value="t.id">
+                  {{ t.name }} ({{ t.subject }})
+                </option>
               </select>
-              <p v-if="batchForm.subject_name && !batchTeacherOptions.matched" class="text-[11px] text-amber-700 mt-1">
-                Aucun enseignant déclaré pour « {{ batchForm.subject_name }} » : liste complète affichée.
+              <p v-if="batchForm.subject_name && !batchTeacherOptions.matched" class="text-[11px] text-rose-600 font-semibold mt-1 flex items-center gap-1">
+                <span>⚠️ Il n'y a pas d'enseignant pour cette matière</span>
               </p>
             </div>
           </div>
@@ -486,7 +495,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import {
   Calendar,
   CheckCircle2,
@@ -618,6 +627,15 @@ const studentsInSelectedGroup = computed(() => {
 const batchTeacherOptions = computed(() =>
   filterTeachersBySubject(teachers.value, batchForm.value.subject_name)
 );
+
+watch(() => batchForm.value.subject_name, (newSub: string) => {
+  const { list } = filterTeachersBySubject(teachers.value, newSub);
+  if (batchForm.value.teacher_id && !list.some(t => t.id === batchForm.value.teacher_id)) {
+    batchForm.value.teacher_id = list.length === 1 ? list[0].id : undefined;
+  } else if (!batchForm.value.teacher_id && list.length === 1) {
+    batchForm.value.teacher_id = list[0].id;
+  }
+});
 
 const filteredAttendances = computed(() => {
   return attendances.value.filter(a => {

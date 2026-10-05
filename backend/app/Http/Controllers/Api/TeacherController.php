@@ -10,22 +10,12 @@ class TeacherController extends Controller
 {
     public function index(Request $request)
     {
-        $teachers = Teacher::withCount('enrollments')->get();
+        $teachers = Teacher::withCount('enrollments')
+            ->with('enrollments')
+            ->get();
 
         $formatted = $teachers->map(function ($t) use ($request) {
-            return $this->hideSalary($request, [
-                'id' => $t->id,
-                'name' => $t->name,
-                'subject' => $t->subject,
-                'subjects' => $this->splitSubjects($t->subject),
-                'phone' => $t->phone,
-                'email' => $t->email,
-                'studentCount' => $t->enrollments_count,
-                'weeklyLessons' => $t->weekly_lessons,
-                'remuneration_type' => $t->remuneration_type ?? 'percentage',
-                'rate_percentage' => (float) ($t->rate_percentage ?? 70),
-                'salary_per_lesson' => (float) ($t->salary_per_lesson ?? 35),
-            ]);
+            return $this->formatTeacher($request, $t);
         });
 
         return response()->json($formatted);
@@ -62,20 +52,18 @@ class TeacherController extends Controller
         }
 
         $teacher = Teacher::create($data);
+        $teacher->load('enrollments');
 
-        return response()->json($this->hideSalary($request, [
-            'id' => $teacher->id,
-            'name' => $teacher->name,
-            'subject' => $teacher->subject,
-            'subjects' => $this->splitSubjects($teacher->subject),
-            'phone' => $teacher->phone,
-            'email' => $teacher->email,
-            'studentCount' => 0,
-            'weeklyLessons' => $teacher->weekly_lessons,
-            'remuneration_type' => $teacher->remuneration_type ?? 'percentage',
-            'rate_percentage' => (float) ($teacher->rate_percentage ?? 70),
-            'salary_per_lesson' => (float) ($teacher->salary_per_lesson ?? 35),
-        ]), 201);
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'teacher',
+            'created',
+            "Nouvel enseignant ajouté : {$teacher->name} ({$teacher->subject})",
+            ['teacher_id' => $teacher->id, 'subject' => $teacher->subject],
+            $request->ip()
+        );
+
+        return response()->json($this->formatTeacher($request, $teacher), 201);
     }
 
     public function update(Request $request, $id)
@@ -84,7 +72,7 @@ class TeacherController extends Controller
 
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'subject' => 'sometimes|required|string|max:255',
+            'subject' => 'sometimes|nullable|string|max:255',
             'subjects' => 'nullable|array|min:1',
             'subjects.*' => 'string|max:100',
             'phone' => 'sometimes|required|string|max:255',
@@ -108,28 +96,139 @@ class TeacherController extends Controller
         }
 
         $teacher->update($data);
+        $teacher->load('enrollments');
 
-        return response()->json($this->hideSalary($request, [
-            'id' => $teacher->id,
-            'name' => $teacher->name,
-            'subject' => $teacher->subject,
-            'subjects' => $this->splitSubjects($teacher->subject),
-            'phone' => $teacher->phone,
-            'email' => $teacher->email,
-            'studentCount' => $teacher->enrollments()->count(),
-            'weeklyLessons' => $teacher->weekly_lessons,
-            'remuneration_type' => $teacher->remuneration_type ?? 'percentage',
-            'rate_percentage' => (float) ($teacher->rate_percentage ?? 70),
-            'salary_per_lesson' => (float) ($teacher->salary_per_lesson ?? 35),
-        ]));
+        return response()->json($this->formatTeacher($request, $teacher));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $teacher = Teacher::findOrFail($id);
+        $name = $teacher->name;
         $teacher->delete();
 
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'teacher',
+            'deleted',
+            "Suppression de l'enseignant : {$name}",
+            ['teacher_id' => $id],
+            $request->ip()
+        );
+
         return response()->json(['message' => 'Enseignant supprimé avec succès']);
+    }
+
+    /**
+     * Permet au directeur de marquer si l'enseignant a pris son argent ou non.
+     * POST /api/teachers/{id}/toggle-payout
+     */
+    public function togglePayout(Request $request, $id)
+    {
+        if ($request->user()->role !== 'director') {
+            return response()->json(['message' => 'Accès réservé au directeur.'], 403);
+        }
+
+        $teacher = Teacher::findOrFail($id);
+
+        $data = $request->validate([
+            'status' => 'nullable|string|in:paid,pending',
+            'date'   => 'nullable|date',
+            'month'  => 'nullable|string|max:100',
+            'amount' => 'nullable|numeric|min:0',
+        ]);
+
+        $newStatus = $data['status'] ?? (($teacher->payout_status === 'paid') ? 'pending' : 'paid');
+
+        $teacher->payout_status = $newStatus;
+        if ($newStatus === 'paid') {
+            $teacher->payout_date = $data['date'] ?? now()->toDateString();
+            $teacher->payout_month = $data['month'] ?? ($teacher->payout_month ?: now()->format('Y-m'));
+            if (isset($data['amount'])) {
+                $teacher->payout_amount = $data['amount'];
+            }
+            $teacher->payout_by_user_id = $request->user()?->id;
+            $teacher->payout_by_user_name = $request->user()?->name ?? 'Directeur Fondateur';
+        } else {
+            $teacher->payout_date = null;
+            $teacher->payout_by_user_id = null;
+            $teacher->payout_by_user_name = null;
+        }
+
+        $teacher->save();
+        $teacher->load('enrollments');
+
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'teacher',
+            'payout',
+            $newStatus === 'paid'
+                ? "Rémunération de {$teacher->name} marquée payée (" . ($teacher->payout_amount ?? 0) . " TND remis)"
+                : "Rémunération de {$teacher->name} remise en attente",
+            ['teacher_id' => $teacher->id, 'status' => $newStatus, 'amount' => $teacher->payout_amount],
+            $request->ip()
+        );
+
+        return response()->json([
+            'message' => $newStatus === 'paid' ? 'Rémunération marquée comme payée (l\'enseignant a pris son argent).' : 'Rémunération remise en attente.',
+            'teacher' => $this->formatTeacher($request, $teacher),
+        ]);
+    }
+
+    /**
+     * Formate un enseignant avec le calcul détaillé de sa part et de la marge du centre.
+     */
+    private function formatTeacher(Request $request, Teacher $t): array
+    {
+        $enrollmentsCount = (int) ($t->enrollments_count ?? $t->enrollments()->count());
+        $monthlyGross = (float) $t->enrollments->sum('price_per_month');
+        if ($monthlyGross == 0 && $enrollmentsCount > 0) {
+            $monthlyGross = $enrollmentsCount * 60;
+        }
+
+        $remType = $t->remuneration_type ?? 'percentage';
+        $ratePct = (float) ($t->rate_percentage ?? 70);
+        $salaryPerLesson = (float) ($t->salary_per_lesson ?? 35);
+        $weeklyLessons = (int) ($t->weekly_lessons ?? 4);
+        $monthlyLessons = max(1, $weeklyLessons * 4);
+
+        if ($remType === 'percentage') {
+            $teacherShare = round(($monthlyGross * $ratePct) / 100, 2);
+            $centerShare = round($monthlyGross - $teacherShare, 2);
+            $perSessionEst = round($teacherShare / $monthlyLessons, 2);
+        } else {
+            $teacherShare = round($monthlyLessons * $salaryPerLesson, 2);
+            $centerShare = round(max(0, $monthlyGross - $teacherShare), 2);
+            $perSessionEst = $salaryPerLesson;
+        }
+
+        $payoutDateStr = $t->payout_date instanceof \DateTimeInterface 
+            ? $t->payout_date->format('Y-m-d') 
+            : ($t->payout_date ?: null);
+
+        return $this->hideSalary($request, [
+            'id' => $t->id,
+            'name' => $t->name,
+            'subject' => $t->subject,
+            'subjects' => $this->splitSubjects($t->subject),
+            'phone' => $t->phone,
+            'email' => $t->email,
+            'studentCount' => $enrollmentsCount,
+            'weeklyLessons' => $weeklyLessons,
+            'monthlyLessons' => $monthlyLessons,
+            'remuneration_type' => $remType,
+            'rate_percentage' => $ratePct,
+            'salary_per_lesson' => $salaryPerLesson,
+            'monthly_gross_revenue' => $monthlyGross,
+            'teacher_share' => $teacherShare,
+            'center_share' => $centerShare,
+            'per_session_share' => $perSessionEst,
+            'payout_status' => $t->payout_status ?: 'pending',
+            'payout_date' => $payoutDateStr,
+            'payout_month' => $t->payout_month,
+            'payout_amount' => $t->payout_amount ? (float) $t->payout_amount : $teacherShare,
+            'payout_by_user_name' => $t->payout_by_user_name ?: ($t->payout_status === 'paid' ? 'Directeur Fondateur' : null),
+        ]);
     }
 
     /**
@@ -137,8 +236,21 @@ class TeacherController extends Controller
      */
     private function hideSalary(Request $request, array $row): array
     {
-        if ($request->user()->role !== 'director') {
-            unset($row['remuneration_type'], $row['rate_percentage'], $row['salary_per_lesson']);
+        if ($request->user() && $request->user()->role !== 'director') {
+            unset(
+                $row['remuneration_type'],
+                $row['rate_percentage'],
+                $row['salary_per_lesson'],
+                $row['monthly_gross_revenue'],
+                $row['teacher_share'],
+                $row['center_share'],
+                $row['per_session_share'],
+                $row['payout_status'],
+                $row['payout_date'],
+                $row['payout_month'],
+                $row['payout_amount'],
+                $row['payout_by_user_name']
+            );
         }
 
         return $row;

@@ -45,6 +45,15 @@ class ScheduleController extends Controller
         $item = new ScheduleItem();
         $item->forceFill($data)->save();
 
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'schedule',
+            'created',
+            "Cours planifié : {$item->subject} par {$item->teacher} ({$item->day} de {$item->time}, Salle {$item->room})",
+            ['schedule_id' => $item->id, 'subject' => $item->subject, 'day' => $item->day],
+            $request->ip()
+        );
+
         return response()->json($item, 201);
     }
 
@@ -82,13 +91,33 @@ class ScheduleController extends Controller
 
         $item->forceFill($data)->save();
 
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'schedule',
+            'updated',
+            "Cours modifié : {$item->subject} ({$item->day} {$item->time})",
+            ['schedule_id' => $item->id],
+            $request->ip()
+        );
+
         return response()->json($item);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $item = ScheduleItem::findOrFail($id);
+        $subject = $item->subject;
+        $day = $item->day;
         $item->delete();
+
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'schedule',
+            'deleted',
+            "Suppression du cours {$subject} ({$day})",
+            ['schedule_id' => $id],
+            $request->ip()
+        );
 
         return response()->json(['message' => 'Cours supprimé avec succès']);
     }

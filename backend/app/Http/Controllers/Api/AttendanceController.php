@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\Pricing;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
@@ -32,6 +33,11 @@ class AttendanceController extends Controller
         }
         if ($request->filled('session_date')) {
             $query->where('session_date', $request->session_date);
+        }
+
+        if ($request->boolean('paginate') || $request->filled('page')) {
+            $perPage = (int) $request->input('per_page', 25);
+            return response()->json($query->paginate($perPage));
         }
 
         $attendances = $query->get();
@@ -83,23 +89,35 @@ class AttendanceController extends Controller
             'records.*.notes'      => 'nullable|string',
         ]);
 
-        $saved = [];
-        foreach ($data['records'] as $record) {
-            $item = Attendance::updateOrCreate(
-                [
-                    'student_id'   => $record['student_id'],
-                    'subject_name' => $data['subject_name'],
-                    'session_date' => $data['session_date'],
-                ],
-                [
-                    'teacher_id'   => $data['teacher_id'] ?? null,
-                    'group_name'   => $data['group_name'] ?? null,
-                    'status'       => $record['status'],
-                    'notes'        => $record['notes'] ?? null,
-                ]
-            );
-            $saved[] = $item;
-        }
+        $saved = DB::transaction(function () use ($data) {
+            $saved = [];
+            foreach ($data['records'] as $record) {
+                $item = Attendance::updateOrCreate(
+                    [
+                        'student_id'   => $record['student_id'],
+                        'subject_name' => $data['subject_name'],
+                        'session_date' => $data['session_date'],
+                    ],
+                    [
+                        'teacher_id'   => $data['teacher_id'] ?? null,
+                        'group_name'   => $data['group_name'] ?? null,
+                        'status'       => $record['status'],
+                        'notes'        => $record['notes'] ?? null,
+                    ]
+                );
+                $saved[] = $item;
+            }
+            return $saved;
+        });
+
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'attendance',
+            'recorded',
+            "Appel de présence validé pour {$data['date']} ({$data['level']}, {$data['subject']} : " . count($saved) . " élèves pointés)",
+            ['date' => $data['date'], 'level' => $data['level'], 'subject' => $data['subject'], 'count' => count($saved)],
+            $request->ip()
+        );
 
         return response()->json([
             'message' => 'Présences enregistrées avec succès',

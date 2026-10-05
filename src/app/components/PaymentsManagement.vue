@@ -6,13 +6,25 @@
         <h2 class="text-2xl font-bold text-gray-900">Gestion des Paiements</h2>
         <p class="text-sm text-gray-500 mt-1">Séances des élèves par enseignant et mois de garderie</p>
       </div>
-      <button
-        @click="openAddModal()"
-        class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-      >
-        <Plus class="w-4 h-4" />
-        Enregistrer un paiement
-      </button>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          v-if="isDirector"
+          @click="openExtractModal('teachers')"
+          class="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 text-emerald-800 font-bold rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200 text-sm shadow-xs"
+          title="Exporter un extrait officiel des paiements pour les enseignants ou les élèves (PDF / Excel)"
+        >
+          <FileText class="w-4 h-4 text-emerald-600" />
+          <span>Extraits de Paiements</span>
+        </button>
+
+        <button
+          @click="openAddModal()"
+          class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+        >
+          <Plus class="w-4 h-4" />
+          Enregistrer un paiement
+        </button>
+      </div>
     </div>
 
     <!-- Stats Cards -->
@@ -164,12 +176,22 @@
                   </div>
                 </td>
                 <td class="px-5 py-3.5 text-right">
-                  <button
-                    @click="openAddModal({ kind: 'student', studentId: row.studentId, teacherId: row.teacherId })"
-                    class="px-2.5 py-1 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition-colors shadow-xs"
-                  >
-                    Encaisser
-                  </button>
+                  <div class="flex items-center justify-end gap-1.5">
+                    <button
+                      v-if="isDirector"
+                      @click="openExtractModal('students', row.studentId)"
+                      class="p-1 hover:bg-indigo-50 text-indigo-600 rounded-md transition-colors"
+                      title="Générer l'extrait de compte de cet élève"
+                    >
+                      <FileText class="w-4 h-4" />
+                    </button>
+                    <button
+                      @click="openAddModal({ kind: 'student', studentId: row.studentId, teacherId: row.teacherId })"
+                      class="px-2.5 py-1 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition-colors shadow-xs"
+                    >
+                      Encaisser
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -251,6 +273,7 @@
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mois</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Montant</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Encaissé par</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
                 <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
@@ -273,6 +296,15 @@
                 <td class="px-5 py-3.5 text-sm font-semibold text-gray-900">{{ Number(payment.amount).toFixed(2) }} TND</td>
                 <td class="px-5 py-3.5 text-sm text-gray-600">{{ payment.date || '-' }}</td>
                 <td class="px-5 py-3.5">
+                  <span
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold"
+                    :class="payment.createdByRole === 'secretary' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'"
+                  >
+                    <span>{{ payment.createdByName || 'Directeur Fondateur' }}</span>
+                    <span class="text-[9px] font-medium opacity-75">({{ payment.createdByRole === 'secretary' ? 'Secrétaire' : 'Directeur' }})</span>
+                  </span>
+                </td>
+                <td class="px-5 py-3.5">
                   <div class="flex items-center gap-1.5">
                     <component :is="getStatusIcon(payment.status)" :class="['w-4 h-4', getStatusColor(payment.status)]" />
                     <span class="text-xs font-medium" :class="getStatusTextColor(payment.status)">
@@ -289,6 +321,21 @@
                       title="Marquer comme payé aujourd'hui"
                     >
                       Marquer payé
+                    </button>
+                    <button
+                      v-if="isDirector && (payment.studentId || payment.teacherId)"
+                      @click="payment.teacherId ? openExtractModal('teachers', payment.teacherId) : openExtractModal('students', payment.studentId)"
+                      class="p-1.5 hover:bg-emerald-50 text-gray-600 hover:text-emerald-600 rounded-lg transition-colors"
+                      :title="payment.teacherId ? 'Extrait de paiement de cet enseignant' : 'Extrait de paiement de cet élève'"
+                    >
+                      <FileText class="w-4 h-4" />
+                    </button>
+                    <button
+                      @click="openReceipt(payment)"
+                      class="p-1.5 hover:bg-indigo-50 text-gray-600 hover:text-indigo-600 rounded-lg transition-colors"
+                      title="Imprimer le reçu"
+                    >
+                      <Printer class="w-4 h-4" />
                     </button>
                     <button
                       @click="openEditModal(payment)"
@@ -582,13 +629,112 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal Reçu de Paiement Imprimable -->
+    <div v-if="showReceiptModal && receiptPayment" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="showReceiptModal = false">
+      <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-lg w-full" @click.stop>
+        <!-- Cadre Reçu -->
+        <div id="printable-receipt" class="border-2 border-dashed border-indigo-200 rounded-xl p-6 bg-slate-50/50">
+          <!-- En-tête -->
+          <div class="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
+            <div class="flex items-center gap-3">
+              <img src="/logo.png" alt="Logo" class="w-12 h-12 object-contain" />
+              <div>
+                <h2 class="text-xl font-black text-indigo-900 tracking-tight">CENTRE D'ÉTUDES</h2>
+                <p class="text-xs text-gray-500 font-medium">Soutien Scolaire & Garderie</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="inline-block px-2.5 py-1 bg-green-100 text-green-800 font-bold text-xs rounded-full uppercase tracking-wider">
+                Reçu N° {{ receiptPayment.id.toString().padStart(5, '0') }}
+              </span>
+              <p class="text-[11px] text-gray-500 mt-1">Date: {{ receiptPayment.date || today() }}</p>
+            </div>
+          </div>
+
+          <!-- Corps du reçu -->
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between py-1 border-b border-gray-100">
+              <span class="text-gray-500">Bénéficiaire :</span>
+              <span class="font-bold text-gray-900">{{ receiptPayment.studentName }}</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gray-100">
+              <span class="text-gray-500">Prestation / Détail :</span>
+              <span class="font-semibold text-gray-800">{{ paymentDetail(receiptPayment) }}</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gray-100">
+              <span class="text-gray-500">Période concernée :</span>
+              <span class="text-gray-800">{{ receiptPayment.month }}</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-gray-100">
+              <span class="text-gray-500">Quantité réglée :</span>
+              <span class="font-semibold text-indigo-700">
+                {{ receiptPayment.daycareChildId ? receiptPayment.monthsPaid + ' mois de garderie' : receiptPayment.sessionsPaid + ' séance(s)' }}
+              </span>
+            </div>
+
+            <!-- Cadre Montant -->
+            <div class="mt-4 p-4 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-between">
+              <span class="text-sm font-bold text-indigo-950 uppercase">Montant Réglé :</span>
+              <span class="text-2xl font-black text-indigo-700">{{ Number(receiptPayment.amount).toFixed(2) }} TND</span>
+            </div>
+
+            <!-- Signatures -->
+            <div class="grid grid-cols-2 gap-4 pt-6 text-xs text-center">
+              <div>
+                <p class="text-gray-400 italic">Signature du parent</p>
+                <div class="h-10 border-b border-gray-300 mt-2"></div>
+              </div>
+              <div>
+                <p class="text-gray-400 italic">Cachet & Direction</p>
+                <div class="h-10 border-b border-gray-300 mt-2 flex items-center justify-center">
+                  <span class="text-[10px] text-green-700 font-bold border border-green-500 px-2 py-0.5 rounded uppercase">
+                    ✓ RÉGLÉ
+                  </span>
+                </div>
+                <p class="text-[10px] text-gray-500 font-medium mt-1">
+                  Encaissé par : {{ receiptPayment.createdByName || 'Direction' }} ({{ receiptPayment.createdByRole === 'secretary' ? 'Secrétaire' : 'Direction' }})
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="flex items-center justify-end gap-3 mt-6 print:hidden">
+          <button
+            @click="showReceiptModal = false"
+            class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            Fermer
+          </button>
+          <button
+            @click="printReceipt"
+            class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-md transition-colors"
+          >
+            <Printer class="w-4 h-4" />
+            Imprimer le reçu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Official Payment Extract Modal (Director only) -->
+    <PaymentExtractModal
+      :isOpen="showExtractModal"
+      :initialType="extractInitialType"
+      :initialTeacherId="extractInitialTeacherId"
+      :initialStudentId="extractInitialStudentId"
+      @close="showExtractModal = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { DollarSign, Clock, AlertCircle, CheckCircle, Search, Plus, Edit2, Trash2 } from 'lucide-vue-next';
+import { DollarSign, Clock, AlertCircle, CheckCircle, Search, Plus, Edit2, Trash2, Printer, FileText } from 'lucide-vue-next';
 import api from '../utils/api';
+import PaymentExtractModal from './PaymentExtractModal.vue';
 
 type DueStatus = 'pending' | 'overdue' | 'ok';
 
@@ -606,6 +752,8 @@ interface Payment {
   teacherName: string | null;
   sessionsPaid: number;
   monthsPaid: number;
+  createdByName?: string;
+  createdByRole?: string;
 }
 
 interface DueStudent {
@@ -706,6 +854,34 @@ const loadError = ref('');
 const showModal = ref(false);
 const isEditing = ref(false);
 const editingPayment = ref<Payment | null>(null);
+
+// Extract modal state (Director only)
+const showExtractModal = ref(false);
+const extractInitialType = ref<'teachers' | 'students'>('teachers');
+const extractInitialTeacherId = ref<number | null>(null);
+const extractInitialStudentId = ref<number | null>(null);
+
+const currentUser = ref<{ role?: string; name?: string } | null>(null);
+try {
+  const saved = localStorage.getItem('user');
+  if (saved) currentUser.value = JSON.parse(saved);
+} catch {}
+
+const isDirector = computed(() => {
+  return currentUser.value?.role === 'director' || localStorage.getItem('user')?.includes('director');
+});
+
+function openExtractModal(type: 'teachers' | 'students' = 'teachers', entityId: number | null = null) {
+  extractInitialType.value = type;
+  if (type === 'teachers') {
+    extractInitialTeacherId.value = entityId;
+    extractInitialStudentId.value = null;
+  } else {
+    extractInitialStudentId.value = entityId;
+    extractInitialTeacherId.value = null;
+  }
+  showExtractModal.value = true;
+}
 
 const today = () => new Date().toISOString().split('T')[0];
 
@@ -1097,4 +1273,43 @@ async function deletePayment(id: number) {
     alert('Impossible de supprimer ce paiement.');
   }
 }
+
+// Reçus de paiement
+const receiptPayment = ref<Payment | null>(null);
+const showReceiptModal = ref(false);
+
+function openReceipt(payment: Payment) {
+  receiptPayment.value = payment;
+  showReceiptModal.value = true;
+}
+
+function printReceipt() {
+  window.print();
+}
 </script>
+
+<style>
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: fixed;
+    left: 50%;
+    top: 50px;
+    transform: translateX(-50%);
+    width: 600px;
+    max-width: 90%;
+    margin: 0;
+    padding: 24px;
+    background: white;
+    border: 2px solid #4f46e5 !important;
+    border-radius: 12px;
+    box-shadow: none;
+    z-index: 99999;
+  }
+}
+</style>

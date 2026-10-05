@@ -32,29 +32,65 @@ export function teacherSubjectList(teacher: TeacherWithSubjects): string[] {
     : parseSubjects(teacher.subject);
 }
 
+/** Dictionnaire des synonymes et abréviations des matières en Tunisie. */
+const SUBJECT_ALIASES: string[][] = [
+  ['math', 'maths', 'mathematique', 'mathematiques', 'رياضيات'],
+  ['physique', 'sciences physiques', 'physique-chimie', 'chimie', 'فيزياء'],
+  ['svt', 'sciences', 'science', 'sciences de la vie et de la terre', 'علوم', 'علوم طبيعية'],
+  ['arabe', 'arab', 'langue arabe', 'عربية', 'لغة عربية'],
+  ['francais', 'french', 'langue francaise', 'فرنسية'],
+  ['anglais', 'english', 'langue anglaise', 'انقليزية', 'إنجليزية'],
+  ['philosophie', 'philo', 'فلسفة'],
+  ['informatique', 'info', 'tic', 'إعلامية'],
+  ['economie', 'eco', 'إقتصاد'],
+  ['gestion', 'تصرف'],
+  ['histoire', 'histoire-geo', 'histoire et geographie', 'تاريخ'],
+  ['geographie', 'geo', 'جغرافيا'],
+  ['technique', 'technologie', 'تقنية']
+];
+
+function areSubjectsEquivalent(subA: string, subB: string): boolean {
+  const normA = normalizeText(subA);
+  const normB = normalizeText(subB);
+  if (!normA || !normB) return false;
+
+  // Égalité directe ou inclusion
+  if (normA === normB || normA.includes(normB) || normB.includes(normA)) {
+    return true;
+  }
+
+  // Vérification des alias
+  for (const group of SUBJECT_ALIASES) {
+    const inGroupA = group.some(alias => normA.includes(alias) || alias.includes(normA));
+    const inGroupB = group.some(alias => normB.includes(alias) || alias.includes(normB));
+    if (inGroupA && inGroupB) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 /** Vrai si l'enseignant donne cette matière (« Sciences Physiques » correspond à « Physique »). */
 export function teacherTeachesSubject(teacher: TeacherWithSubjects, subjectName: string): boolean {
-  const wanted = normalizeText(subjectName);
-  if (!wanted) return true;
+  if (!subjectName || !normalizeText(subjectName)) return true;
 
-  return teacherSubjectList(teacher)
-    .map(normalizeText)
-    .filter(Boolean)
-    .some(s => s === wanted || s.includes(wanted) || wanted.includes(s));
+  const list = teacherSubjectList(teacher);
+  return list.some(s => areSubjectsEquivalent(s, subjectName));
 }
 
 /**
  * Enseignants d'une matière.
- * Si aucun enseignant n'est déclaré pour cette matière, retourne tous les enseignants
- * avec matched = false (pour ne pas bloquer l'utilisateur).
+ * Retourne UNIQUEMENT les enseignants qui enseignent cette matière.
+ * Si aucun enseignant n'est déclaré pour cette matière, retourne une liste vide ([]).
  */
 export function filterTeachersBySubject<T extends TeacherWithSubjects>(
   teachers: T[],
   subjectName: string
 ): { list: T[]; matched: boolean } {
   if (!normalizeText(subjectName)) {
-    return { list: teachers, matched: true };
+    return { list: [], matched: false };
   }
   const list = teachers.filter(t => teacherTeachesSubject(t, subjectName));
-  return list.length > 0 ? { list, matched: true } : { list: teachers, matched: false };
+  return { list, matched: list.length > 0 };
 }

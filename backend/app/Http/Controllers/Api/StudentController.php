@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\StudentSubjectEnrollment;
 use App\Models\Pricing;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StudentController extends Controller
 {
@@ -42,31 +43,44 @@ class StudentController extends Controller
             'subjects.*.price_per_session' => 'nullable|numeric|min:0',
         ]);
 
-        $student = Student::create([
-            'name' => $data['name'],
-            'level' => $data['level'],
-            'group_name' => $data['group_name'] ?? null,
-            'phone' => $data['phone'],
-            'parent_phone' => $data['parent_phone'] ?? null,
-            'status' => $data['status'] ?? 'active',
-            'is_remise' => $data['is_remise'] ?? false,
-            'remise' => $data['remise'] ?? 0,
-            'discount_type' => $data['discount_type'] ?? 'fixed',
-            'base_fee' => $data['base_fee'] ?? 0,
-        ]);
+        $student = DB::transaction(function () use ($data) {
+            $student = Student::create([
+                'name' => $data['name'],
+                'level' => $data['level'],
+                'group_name' => $data['group_name'] ?? null,
+                'phone' => $data['phone'],
+                'parent_phone' => $data['parent_phone'] ?? null,
+                'status' => $data['status'] ?? 'active',
+                'is_remise' => $data['is_remise'] ?? false,
+                'remise' => $data['remise'] ?? 0,
+                'discount_type' => $data['discount_type'] ?? 'fixed',
+                'base_fee' => $data['base_fee'] ?? 0,
+            ]);
 
-        if (!empty($data['subjects'])) {
-            foreach ($data['subjects'] as $sub) {
-                StudentSubjectEnrollment::create([
-                    'student_id' => $student->id,
-                    'subject_name' => $sub['subject'],
-                    'teacher_id' => $sub['teacher_id'],
-                    'group_name' => $sub['group_name'] ?? $student->group_name,
-                    'price_per_month' => $sub['price_per_month'] ?? 0,
-                    'price_per_session' => $sub['price_per_session'] ?? 0,
-                ]);
+            if (!empty($data['subjects'])) {
+                foreach ($data['subjects'] as $sub) {
+                    StudentSubjectEnrollment::create([
+                        'student_id' => $student->id,
+                        'subject_name' => $sub['subject'],
+                        'teacher_id' => $sub['teacher_id'],
+                        'group_name' => $sub['group_name'] ?? $student->group_name,
+                        'price_per_month' => $sub['price_per_month'] ?? 0,
+                        'price_per_session' => $sub['price_per_session'] ?? 0,
+                    ]);
+                }
             }
-        }
+
+            return $student;
+        });
+
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'student',
+            'created',
+            "Nouvel élève inscrit : {$student->name} ({$student->level})",
+            ['student_id' => $student->id, 'level' => $student->level],
+            $request->ip()
+        );
 
         return response()->json($this->formatStudent($student), 201);
     }
@@ -107,29 +121,41 @@ class StudentController extends Controller
             'base_fee'      => isset($data['base_fee']) ? (float)$data['base_fee'] : null,
         ], fn($v) => $v !== null);
 
-        $student->update($updateData);
+        DB::transaction(function () use ($student, $updateData, $data) {
+            $student->update($updateData);
 
-        if (isset($data['subjects'])) {
-            $student->enrollments()->delete();
-            foreach ($data['subjects'] as $sub) {
-                StudentSubjectEnrollment::create([
-                    'student_id'        => $student->id,
-                    'subject_name'      => $sub['subject'],
-                    'teacher_id'        => $sub['teacher_id'],
-                    'group_name'        => $sub['group_name'] ?? $student->group_name,
-                    'price_per_month'   => $sub['price_per_month'] ?? 0,
-                    'price_per_session' => $sub['price_per_session'] ?? 0,
-                ]);
+            if (isset($data['subjects'])) {
+                $student->enrollments()->delete();
+                foreach ($data['subjects'] as $sub) {
+                    StudentSubjectEnrollment::create([
+                        'student_id'        => $student->id,
+                        'subject_name'      => $sub['subject'],
+                        'teacher_id'        => $sub['teacher_id'],
+                        'group_name'        => $sub['group_name'] ?? $student->group_name,
+                        'price_per_month'   => $sub['price_per_month'] ?? 0,
+                        'price_per_session' => $sub['price_per_session'] ?? 0,
+                    ]);
+                }
             }
-        }
+        });
 
         return response()->json($this->formatStudent($student));
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $student = Student::findOrFail($id);
+        $name = $student->name;
         $student->delete();
+
+        \App\Models\ActivityLog::record(
+            $request->user(),
+            'student',
+            'deleted',
+            "Suppression de l'élève : {$name}",
+            ['student_id' => $id],
+            $request->ip()
+        );
 
         return response()->json(['message' => 'Élève supprimé avec succès']);
     }

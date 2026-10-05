@@ -156,17 +156,39 @@
 
           <div>
             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Enseignant *</label>
-            <input
+            <select
               v-model="formData.teacher"
-              list="schedule-teachers"
-              type="text"
               required
-              placeholder="Ex: Prof. Karim Belhadj"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
-            <datalist id="schedule-teachers">
-              <option v-for="name in teacherSuggestions" :key="name" :value="name" />
-            </datalist>
+              :disabled="!formData.subject || (teacherSuggestions.length === 0 && !formData.teacher)"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 font-medium"
+            >
+              <option value="" disabled>
+                {{ !formData.subject
+                    ? 'Sélectionnez d’abord une matière'
+                    : (teacherSuggestions.length === 0
+                        ? 'Il n\'y a pas d\'enseignant'
+                        : 'Sélectionner un enseignant...') }}
+              </option>
+              <option
+                v-if="formData.teacher && !teacherSuggestions.some(t => t.name === formData.teacher)"
+                :value="formData.teacher"
+              >
+                {{ formData.teacher }} (Actuel)
+              </option>
+              <option
+                v-for="t in teacherSuggestions"
+                :key="t.name"
+                :value="t.name"
+              >
+                {{ t.name }} ({{ t.subject }})
+              </option>
+            </select>
+            <p
+              v-if="formData.subject && teacherSuggestions.length === 0"
+              class="text-xs text-rose-600 font-medium mt-1.5 flex items-center gap-1"
+            >
+              <span>Il n'y a pas d'enseignant pour cette matière</span>
+            </p>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -335,10 +357,23 @@ const groupOptions = computed(() =>
   Array.from(new Set(schedules.value.map(s => s.group_name).filter(Boolean))) as string[]
 );
 
-// Enseignants proposés : ceux qui donnent la matière saisie (un enseignant peut donner plusieurs matières)
+// Enseignants proposés : uniquement ceux qui donnent la matière saisie
 const teacherSuggestions = computed(() =>
-  filterTeachersBySubject(allTeachers.value, formData.value.subject).list.map(t => t.name)
+  filterTeachersBySubject(allTeachers.value, formData.value.subject).list
 );
+
+// Quand la matière change, réinitialiser ou ajuster l'enseignant
+watch(() => formData.value.subject, (newSub) => {
+  if (!newSub) {
+    formData.value.teacher = '';
+    return;
+  }
+  const matching = filterTeachersBySubject(allTeachers.value, newSub).list;
+  const stillValid = matching.some(t => t.name === formData.value.teacher);
+  if (!stillValid) {
+    formData.value.teacher = matching.length === 1 ? matching[0].name : '';
+  }
+});
 
 // Suggestions dans le formulaire : groupes des élèves + groupes usuels
 const groupSuggestions = computed(() =>

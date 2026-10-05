@@ -3,16 +3,28 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Gestion des Eleves</h2>
-        <p class="text-sm text-gray-500 mt-1">{{ students.length }} eleves inscrits</p>
+        <h2 class="text-2xl font-bold text-gray-900">Gestion des Élèves</h2>
+        <p class="text-sm text-gray-500 mt-1">{{ students.length }} élèves inscrits</p>
       </div>
-      <button
-        @click="openAddModal"
-        class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-      >
-        <Plus class="w-4 h-4" />
-        Ajouter un eleve
-      </button>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          v-if="isDirector"
+          @click="openExtractModal()"
+          class="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 text-emerald-800 font-bold rounded-lg hover:bg-emerald-100 transition-colors border border-emerald-200 text-sm shadow-xs"
+          title="Exporter un extrait officiel des paiements pour les élèves (PDF / Excel)"
+        >
+          <FileText class="w-4 h-4 text-emerald-600" />
+          <span>Extraits de Paiements</span>
+        </button>
+
+        <button
+          @click="openAddModal"
+          class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+        >
+          <Plus class="w-4 h-4" />
+          Ajouter un élève
+        </button>
+      </div>
     </div>
 
     <!-- Search & Filter -->
@@ -38,8 +50,8 @@
           <tr>
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nom</th>
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Niveau</th>
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Matieres</th>
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Frais mensuel</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Matières</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Frais mensuels</th>
             <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
@@ -102,6 +114,14 @@
             </td>
             <td class="px-6 py-4 text-right">
               <div class="flex items-center justify-end gap-1.5">
+                <button
+                  v-if="isDirector"
+                  @click="openExtractModal(student.id)"
+                  class="p-1.5 hover:bg-emerald-50 text-emerald-600 rounded-lg transition-colors"
+                  title="Générer l'extrait de compte de cet élève (PDF / Excel)"
+                >
+                  <FileText class="w-4 h-4" />
+                </button>
                 <button
                   @click="selectedStudent = student"
                   class="p-1.5 hover:bg-gray-100 text-gray-600 hover:text-indigo-600 rounded-lg transition-colors"
@@ -401,16 +421,25 @@
                   <select
                     v-model="sub.teacher_id"
                     required
-                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                    :disabled="!sub.subject_name || teacherOptionsFor(sub.subject_name).list.length === 0"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
                   >
-                    <option :value="undefined" disabled>Professeur</option>
-                    <option v-for="t in teacherOptionsFor(sub.subject_name).list" :key="t.id" :value="t.id">{{ t.name }} ({{ t.subject }})</option>
+                    <option :value="undefined" disabled>
+                      {{ !sub.subject_name
+                          ? 'Matière d\'abord'
+                          : (teacherOptionsFor(sub.subject_name).list.length === 0
+                              ? "Il n'y a pas d'enseignant"
+                              : 'Professeur') }}
+                    </option>
+                    <option v-for="t in teacherOptionsFor(sub.subject_name).list" :key="t.id" :value="t.id">
+                      {{ t.name }} ({{ t.subject }})
+                    </option>
                   </select>
                   <p
                     v-if="sub.subject_name && !teacherOptionsFor(sub.subject_name).matched"
-                    class="text-[10px] text-amber-700 mt-0.5"
+                    class="text-[10px] text-rose-600 font-semibold mt-0.5 flex items-center gap-1"
                   >
-                    Aucun prof déclaré pour cette matière
+                    <span>⚠️ Il n'y a pas d'enseignant pour cette matière</span>
                   </p>
                 </div>
 
@@ -473,13 +502,22 @@
         </form>
       </div>
     </div>
+
+    <!-- Official Payment Extract Modal (Director only) -->
+    <PaymentExtractModal
+      :isOpen="showExtractModal"
+      initialType="students"
+      :initialStudentId="selectedStudentExtractId"
+      @close="showExtractModal = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Plus, Search, Edit2, Trash2, Eye, BookOpen, Tag, Users } from 'lucide-vue-next';
+import { Plus, Search, Edit2, Trash2, Eye, BookOpen, Tag, Users, FileText } from 'lucide-vue-next';
 import api from '../utils/api';
+import PaymentExtractModal from './PaymentExtractModal.vue';
 import { filterTeachersBySubject } from '../utils/teacherSubjects';
 import {
   TUNISIAN_LEVELS,
@@ -541,8 +579,25 @@ const errorMessage = ref('');
 
 const selectedStudent = ref<Student | null>(null);
 const showModal = ref(false);
+const showExtractModal = ref(false);
+const selectedStudentExtractId = ref<number | null>(null);
 const isEditing = ref(false);
 const editingId = ref<number | null>(null);
+
+const currentUser = ref<{ role?: string; name?: string } | null>(null);
+try {
+  const saved = localStorage.getItem('user');
+  if (saved) currentUser.value = JSON.parse(saved);
+} catch {}
+
+const isDirector = computed(() => {
+  return currentUser.value?.role === 'director' || localStorage.getItem('user')?.includes('director');
+});
+
+function openExtractModal(studentId: number | null = null) {
+  selectedStudentExtractId.value = studentId;
+  showExtractModal.value = true;
+}
 
 const formData = ref<{
   name: string;
@@ -769,14 +824,14 @@ async function saveStudent() {
 }
 
 async function deleteStudent(id: number) {
-  if (!confirm('Voulez-vous vraiment supprimer cet eleve ?')) return;
+  if (!confirm('Voulez-vous vraiment supprimer cet élève ?')) return;
   try {
     await api.delete(`/api/students/${id}`);
     students.value = students.value.filter(s => s.id !== id);
     if (selectedStudent.value?.id === id) selectedStudent.value = null;
   } catch (e: any) {
     console.error('Erreur suppression:', e);
-    alert("Erreur lors de la suppression de l'eleve");
+    alert("Erreur lors de la suppression de l'élève");
   }
 }
 </script>

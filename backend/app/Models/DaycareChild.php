@@ -3,8 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DaycareChild extends Model
 {
-    protected $fillable = ['name', 'age', 'parent_name', 'phone', 'schedule', 'status'];
+    use SoftDeletes;
+
+    protected $guarded = ['id'];
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }
