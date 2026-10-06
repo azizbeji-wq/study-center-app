@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '', // Empty because Vite proxy resolves it locally
+  baseURL: (import.meta as any).env?.VITE_API_URL || '',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
