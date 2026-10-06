@@ -42,6 +42,12 @@ class DaycareController extends Controller
         return response()->json($this->format($child), 201);
     }
 
+    public function show($id)
+    {
+        $child = DaycareChild::findOrFail($id);
+        return response()->json($this->format($child));
+    }
+
     public function update(Request $request, $id)
     {
         $child = DaycareChild::findOrFail($id);

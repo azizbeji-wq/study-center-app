@@ -57,6 +57,12 @@ class ScheduleController extends Controller
         return response()->json($item, 201);
     }
 
+    public function show($id)
+    {
+        $item = ScheduleItem::findOrFail($id);
+        return response()->json($item);
+    }
+
     public function update(Request $request, $id)
     {
         $item = ScheduleItem::findOrFail($id);

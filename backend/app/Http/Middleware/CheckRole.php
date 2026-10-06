@@ -22,7 +22,25 @@ class CheckRole
             return response()->json(['message' => 'Non authentifié.'], 401);
         }
 
-        if (! in_array($user->role, $roles, true)) {
+        $userRole = strtolower((string) $user->role);
+        $roleSynonyms = [
+            'director' => ['director', 'directeur', 'admin'],
+            'directeur' => ['director', 'directeur', 'admin'],
+            'secretary' => ['secretary', 'secretaire'],
+            'secretaire' => ['secretary', 'secretaire'],
+        ];
+
+        $matched = false;
+        foreach ($roles as $requiredRole) {
+            $requiredLower = strtolower($requiredRole);
+            $synonyms = $roleSynonyms[$requiredLower] ?? [$requiredLower];
+            if (in_array($userRole, $synonyms, true)) {
+                $matched = true;
+                break;
+            }
+        }
+
+        if (! $matched) {
             return response()->json([
                 'message' => 'Accès refusé : cette action requiert des privilèges spécifiques (' . implode(', ', $roles) . ').'
             ], 403);

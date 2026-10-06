@@ -66,6 +66,15 @@ class TeacherController extends Controller
         return response()->json($this->formatTeacher($request, $teacher), 201);
     }
 
+    public function show(Request $request, $id)
+    {
+        $teacher = Teacher::withCount('enrollments')
+            ->with('enrollments')
+            ->findOrFail($id);
+
+        return response()->json($this->formatTeacher($request, $teacher));
+    }
+
     public function update(Request $request, $id)
     {
         $teacher = Teacher::findOrFail($id);
@@ -180,10 +189,14 @@ class TeacherController extends Controller
      */
     private function formatTeacher(Request $request, Teacher $t): array
     {
-        $enrollmentsCount = (int) ($t->enrollments_count ?? $t->enrollments()->count());
+        $enrollmentStudentIds = $t->enrollments()->pluck('student_id')->toArray();
+        $attendanceStudentIds = \App\Models\Attendance::where('teacher_id', $t->id)->pluck('student_id')->toArray();
+        $allDistinctStudentIds = array_unique(array_filter(array_merge($enrollmentStudentIds, $attendanceStudentIds)));
+        $studentCount = count($allDistinctStudentIds);
+
         $monthlyGross = (float) $t->enrollments->sum('price_per_month');
-        if ($monthlyGross == 0 && $enrollmentsCount > 0) {
-            $monthlyGross = $enrollmentsCount * 60;
+        if ($monthlyGross == 0 && $studentCount > 0) {
+            $monthlyGross = $studentCount * ((float) ($t->salary_per_lesson ?? 35) * 4);
         }
 
         $remType = $t->remuneration_type ?? 'percentage';
@@ -213,7 +226,7 @@ class TeacherController extends Controller
             'subjects' => $this->splitSubjects($t->subject),
             'phone' => $t->phone,
             'email' => $t->email,
-            'studentCount' => $enrollmentsCount,
+            'studentCount' => $studentCount,
             'lesson_rate' => $salaryPerLesson,
             'weeklyLessons' => $weeklyLessons,
             'monthlyLessons' => $monthlyLessons,

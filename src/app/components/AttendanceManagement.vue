@@ -145,7 +145,7 @@
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Matière & Professeur</th>
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut Présence</th>
-            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Calcul Règlement</th>
+            <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Séances Présent(e)</th>
             <th class="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
@@ -200,29 +200,12 @@
               </span>
             </td>
 
-            <!-- Due calculation info -->
+            <!-- Sessions count (sans calcul) -->
             <td class="px-6 py-4">
-              <div v-if="att.student" class="text-xs space-y-1">
-                <div class="flex items-center gap-1 font-medium text-gray-900">
-                  <span>Dû: {{ getStudentPayable(att.student) }} TND</span>
-                  <span
-                    v-if="att.student.calculated_fee?.isDefaultPrice"
-                    class="text-[10px] text-gray-400 font-normal"
-                    title="Aucun prix n'est défini pour cet élève : tarif par défaut par séance"
-                  >
-                    (tarif par défaut)
-                  </span>
-                  <span
-                    v-if="att.student.is_remise"
-                    class="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-semibold rounded"
-                  >
-                    -{{ att.student.remise }}{{ att.student.discount_type === 'percentage' ? '%' : ' TND' }}
-                  </span>
-                </div>
-                <p class="text-[11px] text-gray-500">
-                  Présent {{ getStudentPresenceRate(att.student.id) }} séances
-                </p>
-              </div>
+              <span v-if="att.student" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                Présent {{ getStudentPresenceRate(att.student.id) }} séance(s)
+              </span>
+              <span v-else class="text-xs text-gray-400">-</span>
             </td>
 
             <!-- Actions -->

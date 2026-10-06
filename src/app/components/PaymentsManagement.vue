@@ -87,8 +87,55 @@
     </div>
 
     <template v-else>
+      <!-- Onglets principaux : Soldes à régler vs Historique des paiements -->
+      <div class="flex items-center gap-2 border-b border-gray-200 pb-3">
+        <button
+          type="button"
+          @click="activeMainTab = 'dues'"
+          :class="[
+            'px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-all cursor-pointer',
+            activeMainTab === 'dues'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+          ]"
+        >
+          <Clock class="w-4 h-4" />
+          <span>Soldes à régler (Impayés)</span>
+          <span
+            :class="[
+              'px-2 py-0.5 rounded-full text-xs font-bold',
+              activeMainTab === 'dues' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
+            ]"
+          >
+            {{ dues.students.length + dues.daycare.length }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          @click="activeMainTab = 'history'"
+          :class="[
+            'px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-all cursor-pointer',
+            activeMainTab === 'history'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+          ]"
+        >
+          <CheckCircle class="w-4 h-4" />
+          <span>Historique des paiements encaissés</span>
+          <span
+            :class="[
+              'px-2 py-0.5 rounded-full text-xs font-bold',
+              activeMainTab === 'history' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'
+            ]"
+          >
+            {{ filteredPayments.length }}
+          </span>
+        </button>
+      </div>
+
       <!-- ============ Soldes à régler ============ -->
-      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div v-if="activeMainTab === 'dues'" class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         <div class="px-5 py-4 border-b border-gray-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div>
             <h3 class="text-base font-bold text-gray-900">Soldes à régler</h3>
@@ -259,10 +306,10 @@
       </div>
 
       <!-- ============ Historique des paiements ============ -->
-      <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div v-if="activeMainTab === 'history'" class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         <div class="px-5 py-4 border-b border-gray-200">
           <h3 class="text-base font-bold text-gray-900">Historique des paiements</h3>
-          <p class="text-xs text-gray-500 mt-0.5">Paiements reçus</p>
+          <p class="text-xs text-gray-500 mt-0.5">Paiements encaissés uniquement (avec indicateur de ponctualité)</p>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full">
@@ -274,7 +321,7 @@
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Montant</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Encaissé par</th>
-                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+                <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut & Échéance</th>
                 <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -305,23 +352,23 @@
                   </span>
                 </td>
                 <td class="px-5 py-3.5">
-                  <div class="flex items-center gap-1.5">
-                    <component :is="getStatusIcon(payment.status)" :class="['w-4 h-4', getStatusColor(payment.status)]" />
-                    <span class="text-xs font-medium" :class="getStatusTextColor(payment.status)">
-                      {{ getStatusLabel(payment.status) }}
+                  <div class="flex flex-col items-start gap-1">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                      <CheckCircle class="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Payé</span>
+                    </span>
+                    <span
+                      :class="[
+                        'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border',
+                        getPaymentPunctuality(payment).badgeClass
+                      ]"
+                    >
+                      {{ getPaymentPunctuality(payment).label }}
                     </span>
                   </div>
                 </td>
                 <td class="px-5 py-3.5 text-right">
                   <div class="flex items-center justify-end gap-2">
-                    <button
-                      v-if="payment.status !== 'paid'"
-                      @click="markAsPaid(payment)"
-                      class="px-2.5 py-1 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition-colors shadow-xs"
-                      title="Marquer comme payé aujourd'hui"
-                    >
-                      Marquer payé
-                    </button>
                     <button
                       v-if="isDirector && (payment.studentId || payment.teacherId)"
                       @click="payment.teacherId ? openExtractModal('teachers', payment.teacherId) : openExtractModal('students', payment.studentId)"
@@ -843,6 +890,7 @@ const dues = ref<Dues>({
   totals: { pending: 0, overdue: 0, pendingCount: 0, overdueCount: 0 }
 });
 
+const activeMainTab = ref<'dues' | 'history'>('dues');
 const searchTerm = ref('');
 const duesKind = ref<Kind>('student');
 const duesFilter = ref<'all' | 'pending' | 'overdue'>('all');
@@ -1002,6 +1050,8 @@ const filteredDaycareDues = computed(() =>
 
 const filteredPayments = computed(() =>
   payments.value.filter(p => {
+    // Dans l'historique des paiements encaissés, on ne conserve strictement que les paiements réglés (paid)
+    if (p.status !== 'paid') return false;
     if (!term.value) return true;
     return (
       p.studentName.toLowerCase().includes(term.value) ||
@@ -1010,6 +1060,45 @@ const filteredPayments = computed(() =>
     );
   })
 );
+
+function getPaymentPunctuality(payment: Payment): { isLate: boolean; label: string; badgeClass: string } {
+  if (!payment.date || !payment.month) {
+    return { isLate: false, label: 'Payé dans les délais', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+  }
+
+  try {
+    const payDate = new Date(payment.date);
+    const mStr = (payment.month || '').toLowerCase();
+
+    // Détecter l'année éventuelle
+    const yearMatch = mStr.match(/\b(20\d\d)\b/);
+    const targetYear = yearMatch ? parseInt(yearMatch[1], 10) : payDate.getFullYear();
+
+    let targetMonthIdx = -1;
+    if (mStr.includes('janv')) targetMonthIdx = 0;
+    else if (mStr.includes('fev') || mStr.includes('fév')) targetMonthIdx = 1;
+    else if (mStr.includes('mars')) targetMonthIdx = 2;
+    else if (mStr.includes('avr')) targetMonthIdx = 3;
+    else if (mStr.includes('mai')) targetMonthIdx = 4;
+    else if (mStr.includes('juin')) targetMonthIdx = 5;
+    else if (mStr.includes('juil')) targetMonthIdx = 6;
+    else if (mStr.includes('août') || mStr.includes('aout')) targetMonthIdx = 7;
+    else if (mStr.includes('sept')) targetMonthIdx = 8;
+    else if (mStr.includes('oct')) targetMonthIdx = 9;
+    else if (mStr.includes('nov')) targetMonthIdx = 10;
+    else if (mStr.includes('déc') || mStr.includes('dec')) targetMonthIdx = 11;
+
+    if (targetMonthIdx !== -1) {
+      // Échéance : fin du mois concerné + 5 jours de grâce
+      const deadline = new Date(targetYear, targetMonthIdx + 1, 5, 23, 59, 59);
+      if (payDate.getTime() > deadline.getTime()) {
+        return { isLate: true, label: 'Règlement en retard', badgeClass: 'bg-amber-50 text-amber-700 border-amber-200' };
+      }
+    }
+  } catch (e) {}
+
+  return { isLate: false, label: 'Payé à temps', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+}
 
 function paymentDetail(p: Payment) {
   if (p.daycareChildId) {

@@ -288,6 +288,12 @@ class PaymentController extends Controller
         return response()->json($this->format($payment, Teacher::pluck('name', 'id')), 201);
     }
 
+    public function show($id)
+    {
+        $payment = Payment::with(['student', 'teacher', 'daycareChild', 'creator'])->findOrFail($id);
+        return response()->json($this->format($payment, Teacher::pluck('name', 'id')));
+    }
+
     public function update(Request $request, $id)
     {
         $payment = Payment::findOrFail($id);

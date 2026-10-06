@@ -93,6 +93,12 @@ class StudentController extends Controller
         return response()->json($this->formatStudent($student), 201);
     }
 
+    public function show($id)
+    {
+        $student = Student::with(['enrollments.teacher', 'attendances'])->findOrFail($id);
+        return response()->json($this->formatStudent($student));
+    }
+
     public function update(Request $request, $id)
     {
         $student = Student::findOrFail($id);
