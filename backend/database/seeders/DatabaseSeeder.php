@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'directeur@studycenter.com'],
             [
                 'name' => 'Directeur',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('director123'),
                 'role' => 'director',
                 'is_active' => true,
             ]
@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'director@studycenter.com'],
             [
                 'name' => 'Directeur',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('director123'),
                 'role' => 'director',
                 'is_active' => true,
             ]
@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'secretaire@studycenter.com'],
             [
                 'name' => 'Secrétaire',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('secretary123'),
                 'role' => 'secretary',
                 'is_active' => true,
             ]
@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'secretary@studycenter.com'],
             [
                 'name' => 'Secrétaire',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('secretary123'),
                 'role' => 'secretary',
                 'is_active' => true,
             ]
