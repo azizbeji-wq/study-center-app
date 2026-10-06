@@ -1,6 +1,6 @@
 services:
   # ---------------------------------------------
-  # 1. API BACKEND (Laravel 12 + Docker + SQLite)
+  # 1. API BACKEND (Laravel 12 + Docker + Aiven MySQL)
   # ---------------------------------------------
   - type: web
     name: study-center-api
@@ -17,7 +17,21 @@ services:
       - key: APP_DEBUG
         value: "true"
       - key: DB_CONNECTION
-        value: sqlite
+        value: mysql
+      - key: DB_HOST
+        value: mysql-4ee79c3-azizbeji32-1336.e.aivencloud.com
+      - key: DB_PORT
+        value: "21609"
+      - key: DB_DATABASE
+        value: defaultdb
+      - key: DB_USERNAME
+        value: avnadmin
+      - key: DB_PASSWORD
+        value: AVNS_DxCbUyb6QYdoYDCBSQE
+      - key: DB_SSL_MODE
+        value: REQUIRED
+      - key: MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
+        value: "false"
       - key: APP_KEY
         generateValue: true
 

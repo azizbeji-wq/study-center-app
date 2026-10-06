@@ -1,12 +1,6 @@
 #!/bin/sh
 set -e
 
-# If using sqlite, ensure the sqlite database file exists
-if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_CONNECTION" ]; then
-    mkdir -p /var/www/database
-    touch /var/www/database/database.sqlite
-    chmod 777 /var/www/database/database.sqlite
-fi
 
 # Ensure storage directories exist and have proper permissions
 mkdir -p /var/www/storage/framework/sessions \
