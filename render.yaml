@@ -24,10 +24,8 @@ services:
   # ---------------------------------------------
   # 2. FRONTEND (Vue 3 + Vite Static Site)
   # ---------------------------------------------
-  - type: web
+  - type: static
     name: study-center-client
-    runtime: static
-    plan: free
     buildCommand: npm run build
     staticPublishPath: dist
     routes:
