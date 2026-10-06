@@ -41,10 +41,10 @@ class DatabaseSeeder extends Seeder
 
         // 2. Teachers
         $teachers = [
-            ['name' => 'Prof. Karim Belhadj', 'subject' => 'Mathématiques', 'phone' => '20 111 222', 'email' => 'karim@email.com', 'weekly_lessons' => 8],
-            ['name' => 'Prof. Leila Amor', 'subject' => 'Français', 'phone' => '20 222 333', 'email' => 'leila@email.com', 'weekly_lessons' => 6],
-            ['name' => 'Prof. Hichem Zaied', 'subject' => 'Physique', 'phone' => '20 333 444', 'email' => 'hichem@email.com', 'weekly_lessons' => 5],
-            ['name' => 'Prof. Sonia Jebali', 'subject' => 'Anglais', 'phone' => '20 444 555', 'email' => 'sonia@email.com', 'weekly_lessons' => 5],
+            ['name' => 'Prof. Karim Belhadj', 'subject' => 'Mathématiques', 'phone' => '20 111 222', 'email' => 'karim@email.com', 'weekly_lessons' => 8, 'salary_per_lesson' => 35],
+            ['name' => 'Prof. Leila Amor', 'subject' => 'Français', 'phone' => '20 222 333', 'email' => 'leila@email.com', 'weekly_lessons' => 6, 'salary_per_lesson' => 40],
+            ['name' => 'Prof. Hichem Zaied', 'subject' => 'Physique', 'phone' => '20 333 444', 'email' => 'hichem@email.com', 'weekly_lessons' => 5, 'salary_per_lesson' => 45],
+            ['name' => 'Prof. Sonia Jebali', 'subject' => 'Anglais', 'phone' => '20 444 555', 'email' => 'sonia@email.com', 'weekly_lessons' => 5, 'salary_per_lesson' => 30],
         ];
 
         $teacherModels = [];
