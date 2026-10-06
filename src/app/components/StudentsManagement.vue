@@ -382,9 +382,9 @@
             <div class="flex items-center justify-between mb-2">
               <div>
                 <label class="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Matières sélectionnées & Enseignants
+                  Enseignants & Matières sélectionnées
                 </label>
-                <p class="text-[11px] text-gray-500">Tarif calculé automatiquement selon chaque enseignant</p>
+                <p class="text-[11px] text-gray-500">Choisissez d'abord l'enseignant : sa matière et son tarif sont récupérés automatiquement</p>
               </div>
               <button
                 type="button"
@@ -397,22 +397,7 @@
 
             <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
               <div v-for="(sub, idx) in formData.subjects" :key="idx" class="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-200">
-                <!-- Subject Select/Input -->
-                <div class="flex-1">
-                  <input
-                    v-model="sub.subject_name"
-                    @change="onSubjectNameChange(sub)"
-                    list="tunisian-subjects"
-                    required
-                    placeholder="Nom matière"
-                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <datalist id="tunisian-subjects">
-                    <option v-for="s in availableLevelSubjects" :key="s" :value="s" />
-                  </datalist>
-                </div>
-
-                <!-- Teacher Select (Liste Complète de tous les enseignants) -->
+                <!-- 1. Enseignant d'abord -->
                 <div class="flex-1">
                   <select
                     v-model="sub.teacher_id"
@@ -420,11 +405,26 @@
                     required
                     class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
                   >
-                    <option :value="undefined" disabled>Choisir un enseignant...</option>
+                    <option :value="undefined" disabled>1. Choisir l'enseignant...</option>
                     <option v-for="t in teachers" :key="t.id" :value="t.id">
                       {{ t.name }} ({{ t.subject }})
                     </option>
                   </select>
+                </div>
+
+                <!-- 2. Matière ensuite -->
+                <div class="flex-1">
+                  <input
+                    v-model="sub.subject_name"
+                    :list="'teacher-subjects-' + idx"
+                    required
+                    :disabled="!sub.teacher_id"
+                    :placeholder="!sub.teacher_id ? '2. Choisir le prof d\'abord' : 'Nom matière'"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400"
+                  />
+                  <datalist :id="'teacher-subjects-' + idx">
+                    <option v-for="s in getSubjectsForTeacher(sub.teacher_id)" :key="s" :value="s" />
+                  </datalist>
                 </div>
 
                 <!-- Tarif Enseignant Récupéré Automatiquement -->
@@ -483,7 +483,7 @@ import { ref, computed, onMounted } from 'vue';
 import { Plus, Search, Edit2, Trash2, Eye, BookOpen, Tag, Users, FileText } from 'lucide-vue-next';
 import api from '../utils/api';
 import PaymentExtractModal from './PaymentExtractModal.vue';
-import { filterTeachersBySubject } from '../utils/teacherSubjects';
+import { filterTeachersBySubject, teacherSubjectList } from '../utils/teacherSubjects';
 import {
   TUNISIAN_LEVELS,
   COMMON_TUNISIAN_GROUPS,
@@ -695,36 +695,36 @@ onMounted(() => {
   loadData();
 });
 
-// Enseignants qui donnent la matière choisie (un enseignant peut donner plusieurs matières)
-function teacherOptionsFor(subjectName: string) {
-  return filterTeachersBySubject(teachers.value, subjectName);
-}
-
-function defaultTeacherFor(subjectName: string): number | undefined {
-  return teacherOptionsFor(subjectName).list[0]?.id;
+function getSubjectsForTeacher(teacherId?: number): string[] {
+  if (!teacherId) return availableLevelSubjects.value;
+  const t = teachers.value.find(teach => teach.id === teacherId);
+  if (!t) return availableLevelSubjects.value;
+  const list = teacherSubjectList(t);
+  return list.length > 0 ? list : (t.subject ? [t.subject] : availableLevelSubjects.value);
 }
 
 function onTeacherChange(sub: { subject_name: string; teacher_id?: number; price_per_month?: number; price_per_session?: number }) {
   if (sub.teacher_id) {
     const t = teachers.value.find(teach => teach.id === sub.teacher_id);
     if (t) {
-      if (!sub.subject_name && t.subject) {
-        sub.subject_name = t.subject.split(/[,;/،]+/)[0].trim();
-      }
+      // Met TOUJOURS à jour la matière avec la matière de l'enseignant sélectionné
+      const subjects = teacherSubjectList(t);
+      sub.subject_name = subjects[0] || (t.subject ? t.subject.split(/[,;/،]+/)[0].trim() : '');
       const rate = getTeacherLessonRate(t.id);
       sub.price_per_session = rate;
       sub.price_per_month = rate * 4;
     }
-  }
-}
-
-function onSubjectNameChange(sub: { subject_name: string; teacher_id?: number; price_per_month?: number; price_per_session?: number }) {
-  if (sub.teacher_id) {
-    onTeacherChange(sub);
+  } else {
+    sub.subject_name = '';
+    sub.price_per_session = 0;
+    sub.price_per_month = 0;
   }
 }
 
 function openAddModal() {
+  if (teachers.value.length === 0) {
+    loadData();
+  }
   isEditing.value = false;
   editingId.value = null;
   errorMessage.value = '';
