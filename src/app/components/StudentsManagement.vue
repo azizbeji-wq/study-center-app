@@ -313,20 +313,6 @@
             </div>
           </div>
 
-          <!-- Tarif mensuel forfaitaire (toujours visible) -->
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Tarif mensuel forfaitaire (TND)</label>
-            <input
-              v-model.number="formData.base_fee"
-              type="number"
-              min="0"
-              step="1"
-              placeholder="0"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
-            <p class="text-[11px] text-gray-500 mt-1">Laissez 0 pour utiliser la somme des prix mensuels des matières.</p>
-          </div>
-
           <!-- Remise / Discount -->
           <div class="bg-amber-50/50 p-3.5 rounded-xl border border-amber-200/80 space-y-3">
             <div class="flex items-center justify-between">
@@ -374,10 +360,20 @@
               </div>
             </div>
 
-            <!-- Discount Realtime Preview -->
-            <div v-if="formData.is_remise && calculatedNetPreview !== null" class="flex items-center justify-between text-xs px-2 py-1 bg-white/70 rounded-md border border-amber-200 text-amber-900 font-medium">
-              <span>Montant après déduction:</span>
-              <span class="text-sm font-bold text-indigo-700">{{ calculatedNetPreview }} TND</span>
+            <!-- Synthèse automatique des frais -->
+            <div class="pt-2 border-t border-amber-200/50 space-y-1.5 text-xs">
+              <div class="flex items-center justify-between text-gray-600">
+                <span>Total des cours (tarifs enseignants) :</span>
+                <span class="font-bold text-gray-900">{{ calculatedGrossPreview }} TND</span>
+              </div>
+              <div v-if="formData.is_remise && calculatedDiscountValue > 0" class="flex items-center justify-between text-amber-700 font-medium">
+                <span>Déduction remise ({{ formData.remise }}{{ formData.discount_type === 'percentage' ? '%' : ' TND' }}) :</span>
+                <span class="font-bold">-{{ calculatedDiscountValue }} TND</span>
+              </div>
+              <div class="flex items-center justify-between pt-1 border-t border-amber-200/70 text-indigo-950 font-bold">
+                <span class="text-xs uppercase tracking-wide text-indigo-900">Total net mensuel :</span>
+                <span class="text-base font-black text-indigo-700">{{ calculatedNetPreview }} TND / mois</span>
+              </div>
             </div>
           </div>
 
@@ -388,7 +384,7 @@
                 <label class="text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Matières sélectionnées & Enseignants
                 </label>
-                <p class="text-[11px] text-gray-500">Matières du programme officiel tunisien</p>
+                <p class="text-[11px] text-gray-500">Tarif calculé automatiquement selon chaque enseignant</p>
               </div>
               <button
                 type="button"
@@ -420,6 +416,7 @@
                 <div class="flex-1">
                   <select
                     v-model="sub.teacher_id"
+                    @change="onTeacherChange(sub)"
                     required
                     :disabled="!sub.subject_name || teacherOptionsFor(sub.subject_name).list.length === 0"
                     class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
@@ -443,28 +440,9 @@
                   </p>
                 </div>
 
-                <!-- Price per month -->
-                <div class="w-24">
-                  <input
-                    v-model.number="sub.price_per_month"
-                    type="number"
-                    min="0"
-                    placeholder="TND/Mois"
-                    title="Prix mensuel de la matière"
-                    class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <!-- Price per session -->
-                <div class="w-24">
-                  <input
-                    v-model.number="sub.price_per_session"
-                    type="number"
-                    min="0"
-                    placeholder="TND/Séance"
-                    title="Prix par séance pour suivi présence"
-                    class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-indigo-500"
-                  />
+                <!-- Tarif Enseignant Récupéré Automatiquement -->
+                <div v-if="sub.teacher_id" class="px-2.5 py-1.5 bg-indigo-50 border border-indigo-200/80 rounded-lg text-xs font-semibold text-indigo-700 whitespace-nowrap flex items-center gap-1" title="Tarif mensuel de l'enseignant">
+                  <span>{{ getTeacherMonthlyRate(sub.teacher_id) }} TND/mois</span>
                 </div>
 
                 <button
@@ -646,17 +624,45 @@ function onLevelChange() {
   }
 }
 
-const calculatedNetPreview = computed(() => {
-  if (!formData.value.is_remise) return null;
-  const subjectsTotal = formData.value.subjects.reduce(
-    (sum, s) => sum + (Number(s.price_per_month) || 0), 0
-  );
-  const base = Number(formData.value.base_fee) > 0 ? Number(formData.value.base_fee) : subjectsTotal;
+function getTeacherLessonRate(teacherId?: number): number {
+  if (!teacherId) return 35;
+  const t = teachers.value.find(teach => teach.id === teacherId);
+  return Number((t as any)?.lesson_rate ?? (t as any)?.salary_per_lesson) || 35;
+}
+
+function getTeacherMonthlyRate(teacherId?: number): number {
+  return getTeacherLessonRate(teacherId) * 4;
+}
+
+function onTeacherChange(sub: { subject_name: string; teacher_id?: number; price_per_month?: number; price_per_session?: number }) {
+  if (sub.teacher_id) {
+    const rate = getTeacherLessonRate(sub.teacher_id);
+    sub.price_per_session = rate;
+    sub.price_per_month = rate * 4;
+  }
+}
+
+const calculatedGrossPreview = computed(() => {
+  return formData.value.subjects.reduce((sum, s) => {
+    if (!s.teacher_id) return sum;
+    return sum + getTeacherMonthlyRate(s.teacher_id);
+  }, 0);
+});
+
+const calculatedDiscountValue = computed(() => {
+  if (!formData.value.is_remise) return 0;
+  const gross = calculatedGrossPreview.value;
   const rem = Number(formData.value.remise) || 0;
   if (formData.value.discount_type === 'percentage') {
-    return Math.max(0, Math.round((base - (base * rem) / 100) * 100) / 100);
+    return Math.round(((gross * rem) / 100) * 100) / 100;
   }
-  return Math.max(0, Math.round((base - rem) * 100) / 100);
+  return Math.min(gross, rem);
+});
+
+const calculatedNetPreview = computed(() => {
+  const gross = calculatedGrossPreview.value;
+  const discount = calculatedDiscountValue.value;
+  return Math.max(0, Math.round((gross - discount) * 100) / 100);
 });
 
 const filteredStudents = computed(() => {
@@ -670,9 +676,23 @@ const filteredStudents = computed(() => {
   );
 });
 
-// Montant mensuel à payer (après remise) ; 0 si aucun prix n'est défini
+// Montant mensuel à payer (après remise) calculé automatiquement
 function feeValue(student: Student): number {
-  return Number(student.calculated_fee?.netPayable ?? student.base_fee ?? 0);
+  const val = Number(student.calculated_fee?.netPayable ?? 0);
+  if (val > 0) return val;
+  // Recalcul dynamique selon les enseignants de l'élève
+  const gross = (student.subjects || []).reduce((sum, s: any) => {
+    const teacherId = s.teacher_id || teachers.value.find(t => t.name === s.teacher)?.id;
+    const rate = s.price_per_month > 0 ? s.price_per_month : getTeacherMonthlyRate(teacherId);
+    return sum + rate;
+  }, 0);
+  if (student.is_remise && student.remise) {
+    if (student.discount_type === 'percentage') {
+      return Math.max(0, Math.round((gross - (gross * student.remise / 100)) * 100) / 100);
+    }
+    return Math.max(0, gross - student.remise);
+  }
+  return gross;
 }
 
 async function loadData() {
@@ -704,7 +724,7 @@ function defaultTeacherFor(subjectName: string): number | undefined {
   return teacherOptionsFor(subjectName).list[0]?.id;
 }
 
-function onSubjectNameChange(sub: { subject_name: string; teacher_id?: number }) {
+function onSubjectNameChange(sub: { subject_name: string; teacher_id?: number; price_per_month?: number; price_per_session?: number }) {
   const { list, matched } = teacherOptionsFor(sub.subject_name);
   if (sub.teacher_id && !list.some(t => t.id === sub.teacher_id)) {
     sub.teacher_id = undefined;
@@ -712,12 +732,17 @@ function onSubjectNameChange(sub: { subject_name: string; teacher_id?: number })
   if (!sub.teacher_id && matched && list.length === 1) {
     sub.teacher_id = list[0].id;
   }
+  if (sub.teacher_id) {
+    onTeacherChange(sub);
+  }
 }
 
 function openAddModal() {
   isEditing.value = false;
   editingId.value = null;
   errorMessage.value = '';
+  const mathTeacherId = defaultTeacherFor('Mathématiques');
+  const physiqueTeacherId = defaultTeacherFor('Sciences Physiques');
   formData.value = {
     name: '',
     level: TUNISIAN_LEVELS[4].name, // 2ème Sciences
@@ -730,8 +755,8 @@ function openAddModal() {
     discount_type: 'fixed',
     base_fee: 0,
     subjects: [
-      { subject_name: 'Mathématiques', teacher_id: defaultTeacherFor('Mathématiques'), price_per_month: 60, price_per_session: 15 },
-      { subject_name: 'Sciences Physiques', teacher_id: defaultTeacherFor('Sciences Physiques'), price_per_month: 60, price_per_session: 15 }
+      { subject_name: 'Mathématiques', teacher_id: mathTeacherId, price_per_month: getTeacherMonthlyRate(mathTeacherId), price_per_session: getTeacherLessonRate(mathTeacherId) },
+      { subject_name: 'Sciences Physiques', teacher_id: physiqueTeacherId, price_per_month: getTeacherMonthlyRate(physiqueTeacherId), price_per_session: getTeacherLessonRate(physiqueTeacherId) }
     ]
   };
   showModal.value = true;
@@ -751,14 +776,18 @@ function openEditModal(student: Student) {
     is_remise: !!student.is_remise,
     remise: student.remise || 0,
     discount_type: student.discount_type || 'fixed',
-    base_fee: student.base_fee ?? 0,
-    subjects: (student.subjects || []).map((s: any) => ({
-      subject_name: s.subject ?? '',
-      teacher_id: s.teacher_id,
-      group_name: s.group_name || student.group_name,
-      price_per_month: s.price_per_month || 0,
-      price_per_session: s.price_per_session || 0,
-    }))
+    base_fee: 0,
+    subjects: (student.subjects || []).map((s: any) => {
+      const teacherId = s.teacher_id || teachers.value.find(t => t.name === s.teacher)?.id;
+      const rate = getTeacherLessonRate(teacherId);
+      return {
+        subject_name: s.subject ?? '',
+        teacher_id: teacherId,
+        group_name: s.group_name || student.group_name,
+        price_per_month: s.price_per_month > 0 ? s.price_per_month : (rate * 4),
+        price_per_session: s.price_per_session > 0 ? s.price_per_session : rate,
+      };
+    })
   };
   showModal.value = true;
 }
@@ -770,12 +799,15 @@ function closeModal() {
 
 function addSubjectRow() {
   const subjects = availableLevelSubjects.value;
+  const subName = subjects[0] || 'Mathématiques';
+  const teacherId = defaultTeacherFor(subName);
+  const rate = getTeacherLessonRate(teacherId);
   formData.value.subjects.push({
-    subject_name: subjects[0] || 'Mathématiques',
-    teacher_id: defaultTeacherFor(subjects[0] || 'Mathématiques'),
+    subject_name: subName,
+    teacher_id: teacherId,
     group_name: formData.value.group_name,
-    price_per_month: 50,
-    price_per_session: 15
+    price_per_month: rate * 4,
+    price_per_session: rate
   });
 }
 
@@ -796,14 +828,17 @@ async function saveStudent() {
     is_remise: formData.value.is_remise,
     remise: formData.value.remise,
     discount_type: formData.value.discount_type,
-    base_fee: formData.value.base_fee,
-    subjects: formData.value.subjects.map(s => ({
-      subject: s.subject_name,
-      teacher_id: s.teacher_id,
-      group_name: s.group_name || formData.value.group_name,
-      price_per_month: s.price_per_month,
-      price_per_session: s.price_per_session,
-    }))
+    base_fee: 0,
+    subjects: formData.value.subjects.map(s => {
+      const rate = getTeacherLessonRate(s.teacher_id);
+      return {
+        subject: s.subject_name,
+        teacher_id: s.teacher_id,
+        group_name: s.group_name || formData.value.group_name,
+        price_per_month: rate * 4,
+        price_per_session: rate,
+      };
+    })
   };
   try {
     if (isEditing.value && editingId.value) {

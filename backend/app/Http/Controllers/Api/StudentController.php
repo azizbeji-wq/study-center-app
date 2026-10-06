@@ -59,13 +59,20 @@ class StudentController extends Controller
 
             if (!empty($data['subjects'])) {
                 foreach ($data['subjects'] as $sub) {
+                    $teacher = !empty($sub['teacher_id']) ? Teacher::find($sub['teacher_id']) : null;
+                    $lessonRate = (float) ($teacher?->salary_per_lesson ?? 35);
+                    $pricePerSession = (float) ($sub['price_per_session'] ?? 0);
+                    if ($pricePerSession <= 0) $pricePerSession = $lessonRate;
+                    $pricePerMonth = (float) ($sub['price_per_month'] ?? 0);
+                    if ($pricePerMonth <= 0) $pricePerMonth = $pricePerSession * 4;
+
                     StudentSubjectEnrollment::create([
-                        'student_id' => $student->id,
-                        'subject_name' => $sub['subject'],
-                        'teacher_id' => $sub['teacher_id'],
-                        'group_name' => $sub['group_name'] ?? $student->group_name,
-                        'price_per_month' => $sub['price_per_month'] ?? 0,
-                        'price_per_session' => $sub['price_per_session'] ?? 0,
+                        'student_id'        => $student->id,
+                        'subject_name'      => $sub['subject'] ?? $sub['subject_name'] ?? 'Matière',
+                        'teacher_id'        => $sub['teacher_id'] ?? null,
+                        'group_name'        => $sub['group_name'] ?? $student->group_name,
+                        'price_per_month'   => $pricePerMonth,
+                        'price_per_session' => $pricePerSession,
                     ]);
                 }
             }
@@ -127,13 +134,20 @@ class StudentController extends Controller
             if (isset($data['subjects'])) {
                 $student->enrollments()->delete();
                 foreach ($data['subjects'] as $sub) {
+                    $teacher = !empty($sub['teacher_id']) ? Teacher::find($sub['teacher_id']) : null;
+                    $lessonRate = (float) ($teacher?->salary_per_lesson ?? 35);
+                    $pricePerSession = (float) ($sub['price_per_session'] ?? 0);
+                    if ($pricePerSession <= 0) $pricePerSession = $lessonRate;
+                    $pricePerMonth = (float) ($sub['price_per_month'] ?? 0);
+                    if ($pricePerMonth <= 0) $pricePerMonth = $pricePerSession * 4;
+
                     StudentSubjectEnrollment::create([
                         'student_id'        => $student->id,
-                        'subject_name'      => $sub['subject'],
-                        'teacher_id'        => $sub['teacher_id'],
+                        'subject_name'      => $sub['subject'] ?? $sub['subject_name'] ?? 'Matière',
+                        'teacher_id'        => $sub['teacher_id'] ?? null,
                         'group_name'        => $sub['group_name'] ?? $student->group_name,
-                        'price_per_month'   => $sub['price_per_month'] ?? 0,
-                        'price_per_session' => $sub['price_per_session'] ?? 0,
+                        'price_per_month'   => $pricePerMonth,
+                        'price_per_session' => $pricePerSession,
                     ]);
                 }
             }
@@ -171,8 +185,17 @@ class StudentController extends Controller
         $excusedCount = $s->attendances->where('status', 'excused')->count();
 
         // Calculate estimated fees:
-        // Sum of enrollments price_per_month OR base_fee OR attendance-based (present sessions * price_per_session)
-        $monthlySubjectTotal = (float) $s->enrollments->sum('price_per_month');
+        // Sum of enrollments price_per_month (or teacher lesson rate * 4) OR base_fee
+        $monthlySubjectTotal = 0;
+        foreach ($s->enrollments as $enr) {
+            $monthPrice = (float) $enr->price_per_month;
+            if ($monthPrice <= 0) {
+                $tRate = (float) ($enr->teacher?->salary_per_lesson ?? 35);
+                $monthPrice = $tRate * 4;
+            }
+            $monthlySubjectTotal += $monthPrice;
+        }
+
         $sessionSubjectTotal = 0;
         $usedDefaultPrice = false;
         foreach ($s->enrollments as $enr) {
@@ -240,8 +263,8 @@ class StudentController extends Controller
                     'teacher'           => $e->teacher ? $e->teacher->name : 'N/A',
                     'teacher_id'        => $e->teacher_id,
                     'group_name'        => $e->group_name,
-                    'price_per_month'   => (float) $e->price_per_month,
-                    'price_per_session' => (float) $e->price_per_session,
+                    'price_per_month'   => (float) ($e->price_per_month > 0 ? $e->price_per_month : ((float) ($e->teacher?->salary_per_lesson ?? 35) * 4)),
+                    'price_per_session' => (float) ($e->price_per_session > 0 ? $e->price_per_session : (float) ($e->teacher?->salary_per_lesson ?? 35)),
                 ];
             }),
         ];

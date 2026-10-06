@@ -214,6 +214,7 @@ class TeacherController extends Controller
             'phone' => $t->phone,
             'email' => $t->email,
             'studentCount' => $enrollmentsCount,
+            'lesson_rate' => $salaryPerLesson,
             'weeklyLessons' => $weeklyLessons,
             'monthlyLessons' => $monthlyLessons,
             'remuneration_type' => $remType,
