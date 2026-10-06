@@ -8,6 +8,7 @@ RUN apk add --no-cache \
     libzip-dev \
     sqlite-dev \
     oniguruma-dev \
+    ca-certificates \
     && docker-php-ext-install pdo pdo_sqlite pdo_mysql bcmath opcache zip
 
 # Install Composer

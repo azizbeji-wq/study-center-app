@@ -59,12 +59,10 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT') !== null
-                    ? filter_var(env('MYSQL_ATTR_SSL_VERIFY_SERVER_CERT'), FILTER_VALIDATE_BOOLEAN)
-                    : (env('DB_SSL_MODE') === 'REQUIRED' || env('MYSQL_SSL_MODE') === 'REQUIRED' ? false : null),
-            ], fn($v) => $v !== null && $v !== '') : [],
+            'options' => extension_loaded('pdo_mysql') ? [
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+                ...(env('MYSQL_ATTR_SSL_CA') ? [PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA')] : []),
+            ] : [],
         ],
 
         'mariadb' => [
