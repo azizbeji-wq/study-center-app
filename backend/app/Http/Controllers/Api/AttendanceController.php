@@ -110,12 +110,16 @@ class AttendanceController extends Controller
             return $saved;
         });
 
+        $date = $data['session_date'];
+        $subject = $data['subject_name'];
+        $group = $data['group_name'] ?? 'N/A';
+
         \App\Models\ActivityLog::record(
             $request->user(),
             'attendance',
             'recorded',
-            "Appel de présence validé pour {$data['date']} ({$data['level']}, {$data['subject']} : " . count($saved) . " élèves pointés)",
-            ['date' => $data['date'], 'level' => $data['level'], 'subject' => $data['subject'], 'count' => count($saved)],
+            "Appel de présence validé pour {$date} ({$group}, {$subject} : " . count($saved) . " élèves pointés)",
+            ['date' => $date, 'group' => $group, 'subject' => $subject, 'count' => count($saved)],
             $request->ip()
         );
 
