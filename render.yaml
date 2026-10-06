@@ -1,0 +1,37 @@
+services:
+  # ---------------------------------------------
+  # 1. API BACKEND (Laravel 12 + Docker + SQLite)
+  # ---------------------------------------------
+  - type: web
+    name: study-center-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    region: frankfurt
+    healthCheckPath: /api/health
+    envVars:
+      - key: APP_NAME
+        value: StudyCenter
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "true"
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: APP_KEY
+        generateValue: true
+
+  # ---------------------------------------------
+  # 2. FRONTEND (Vue 3 + Vite Static Site)
+  # ---------------------------------------------
+  - type: web
+    name: study-center-client
+    runtime: static
+    plan: free
+    region: frankfurt
+    buildCommand: npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

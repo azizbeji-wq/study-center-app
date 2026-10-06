@@ -15,6 +15,15 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
+| Route publique : vérification de santé (Health Check)
+|--------------------------------------------------------------------------
+*/
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok', 'app' => 'Study Center API']);
+});
+
+/*
+|--------------------------------------------------------------------------
 | Route publique : connexion (10 essais par minute maximum)
 |--------------------------------------------------------------------------
 */

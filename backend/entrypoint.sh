@@ -16,6 +16,12 @@ mkdir -p /var/www/storage/framework/sessions \
          /var/www/bootstrap/cache
 chmod -R 777 /var/www/storage /var/www/bootstrap/cache
 
+# Auto-generate APP_KEY if not provided
+if [ -z "$APP_KEY" ]; then
+    echo "Generating APP_KEY..."
+    php artisan key:generate --force || true
+fi
+
 # Run migrations and seed test data
 echo "Running migrations..."
 php artisan migrate --force

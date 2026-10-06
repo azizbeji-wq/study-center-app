@@ -19,6 +19,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Prevent duplicate seed crashes if already populated
+        if (User::where('email', 'director@studycenter.com')->exists()) {
+            return;
+        }
+
         // 1. Users
         User::create([
             'name' => 'Directeur',
