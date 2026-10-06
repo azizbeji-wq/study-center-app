@@ -412,32 +412,19 @@
                   </datalist>
                 </div>
 
-                <!-- Teacher Select -->
+                <!-- Teacher Select (Liste Complète de tous les enseignants) -->
                 <div class="flex-1">
                   <select
                     v-model="sub.teacher_id"
                     @change="onTeacherChange(sub)"
                     required
-                    :disabled="!sub.subject_name || teacherOptionsFor(sub.subject_name).list.length === 0"
-                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
                   >
-                    <option :value="undefined" disabled>
-                      {{ !sub.subject_name
-                          ? 'Matière d\'abord'
-                          : (teacherOptionsFor(sub.subject_name).list.length === 0
-                              ? "Il n'y a pas d'enseignant"
-                              : 'Professeur') }}
-                    </option>
-                    <option v-for="t in teacherOptionsFor(sub.subject_name).list" :key="t.id" :value="t.id">
+                    <option :value="undefined" disabled>Choisir un enseignant...</option>
+                    <option v-for="t in teachers" :key="t.id" :value="t.id">
                       {{ t.name }} ({{ t.subject }})
                     </option>
                   </select>
-                  <p
-                    v-if="sub.subject_name && !teacherOptionsFor(sub.subject_name).matched"
-                    class="text-[10px] text-rose-600 font-semibold mt-0.5 flex items-center gap-1"
-                  >
-                    <span>⚠️ Il n'y a pas d'enseignant pour cette matière</span>
-                  </p>
                 </div>
 
                 <!-- Tarif Enseignant Récupéré Automatiquement -->
@@ -634,13 +621,6 @@ function getTeacherMonthlyRate(teacherId?: number): number {
   return getTeacherLessonRate(teacherId) * 4;
 }
 
-function onTeacherChange(sub: { subject_name: string; teacher_id?: number; price_per_month?: number; price_per_session?: number }) {
-  if (sub.teacher_id) {
-    const rate = getTeacherLessonRate(sub.teacher_id);
-    sub.price_per_session = rate;
-    sub.price_per_month = rate * 4;
-  }
-}
 
 const calculatedGrossPreview = computed(() => {
   return formData.value.subjects.reduce((sum, s) => {
@@ -724,14 +704,21 @@ function defaultTeacherFor(subjectName: string): number | undefined {
   return teacherOptionsFor(subjectName).list[0]?.id;
 }
 
+function onTeacherChange(sub: { subject_name: string; teacher_id?: number; price_per_month?: number; price_per_session?: number }) {
+  if (sub.teacher_id) {
+    const t = teachers.value.find(teach => teach.id === sub.teacher_id);
+    if (t) {
+      if (!sub.subject_name && t.subject) {
+        sub.subject_name = t.subject.split(/[,;/،]+/)[0].trim();
+      }
+      const rate = getTeacherLessonRate(t.id);
+      sub.price_per_session = rate;
+      sub.price_per_month = rate * 4;
+    }
+  }
+}
+
 function onSubjectNameChange(sub: { subject_name: string; teacher_id?: number; price_per_month?: number; price_per_session?: number }) {
-  const { list, matched } = teacherOptionsFor(sub.subject_name);
-  if (sub.teacher_id && !list.some(t => t.id === sub.teacher_id)) {
-    sub.teacher_id = undefined;
-  }
-  if (!sub.teacher_id && matched && list.length === 1) {
-    sub.teacher_id = list[0].id;
-  }
   if (sub.teacher_id) {
     onTeacherChange(sub);
   }
@@ -741,8 +728,6 @@ function openAddModal() {
   isEditing.value = false;
   editingId.value = null;
   errorMessage.value = '';
-  const mathTeacherId = defaultTeacherFor('Mathématiques');
-  const physiqueTeacherId = defaultTeacherFor('Sciences Physiques');
   formData.value = {
     name: '',
     level: TUNISIAN_LEVELS[4].name, // 2ème Sciences
@@ -755,8 +740,7 @@ function openAddModal() {
     discount_type: 'fixed',
     base_fee: 0,
     subjects: [
-      { subject_name: 'Mathématiques', teacher_id: mathTeacherId, price_per_month: getTeacherMonthlyRate(mathTeacherId), price_per_session: getTeacherLessonRate(mathTeacherId) },
-      { subject_name: 'Sciences Physiques', teacher_id: physiqueTeacherId, price_per_month: getTeacherMonthlyRate(physiqueTeacherId), price_per_session: getTeacherLessonRate(physiqueTeacherId) }
+      { subject_name: '', teacher_id: undefined, group_name: 'Sc1', price_per_month: 0, price_per_session: 0 }
     ]
   };
   showModal.value = true;
@@ -798,16 +782,12 @@ function closeModal() {
 }
 
 function addSubjectRow() {
-  const subjects = availableLevelSubjects.value;
-  const subName = subjects[0] || 'Mathématiques';
-  const teacherId = defaultTeacherFor(subName);
-  const rate = getTeacherLessonRate(teacherId);
   formData.value.subjects.push({
-    subject_name: subName,
-    teacher_id: teacherId,
+    subject_name: '',
+    teacher_id: undefined,
     group_name: formData.value.group_name,
-    price_per_month: rate * 4,
-    price_per_session: rate
+    price_per_month: 0,
+    price_per_session: 0
   });
 }
 
