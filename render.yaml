@@ -35,5 +35,5 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://study-center-api.onrender.com/api
+        value: https://study-center-api.onrender.com
 
