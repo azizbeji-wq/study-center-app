@@ -117,7 +117,7 @@
                   type="text"
                   required
                   placeholder="Ex: Mohamed Ben Salem"
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                 />
               </div>
 
@@ -128,7 +128,7 @@
                   type="email"
                   required
                   placeholder="nom@studycenter.com"
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                 />
               </div>
 
@@ -138,7 +138,7 @@
                   v-model="profileForm.phone"
                   type="text"
                   placeholder="+216 20 000 000"
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                 />
               </div>
 
@@ -176,7 +176,7 @@
                       :type="showCurrentPass ? 'text' : 'password'"
                       required
                       placeholder="••••••••"
-                      class="w-full px-3.5 py-2 pr-10 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                      class="w-full px-3.5 py-2 pr-10 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                     />
                     <button
                       type="button"
@@ -198,7 +198,7 @@
                       required
                       minlength="6"
                       placeholder="••••••••"
-                      class="w-full px-3.5 py-2 pr-10 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                      class="w-full px-3.5 py-2 pr-10 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                     />
                     <button
                       type="button"
@@ -220,7 +220,7 @@
                       required
                       minlength="6"
                       placeholder="••••••••"
-                      class="w-full px-3.5 py-2 pr-10 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                      class="w-full px-3.5 py-2 pr-10 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
                     />
                     <button
                       type="button"
@@ -280,7 +280,7 @@
 
           <!-- Tableau des utilisateurs -->
           <div class="border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
-            <table class="w-full text-left text-xs">
+            <div class="w-full overflow-x-auto pb-4"><table class="w-full text-left text-xs whitespace-nowrap">
               <thead class="bg-gray-100/80 text-gray-700 font-bold border-b border-gray-200">
                 <tr>
                   <th class="py-3 px-4">Utilisateur</th>
@@ -380,7 +380,7 @@
                   </td>
                 </tr>
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
       </div>
@@ -404,7 +404,7 @@
       v-if="showUserEditModal"
       class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 animate-in fade-in"
     >
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-md p-6 space-y-4">
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <div class="flex items-center gap-2">
             <UserPlus v-if="!editingUser" class="w-5 h-5 text-indigo-600" />
@@ -513,7 +513,7 @@
       v-if="showResetModal && targetResetUser"
       class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 animate-in fade-in"
     >
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-sm p-6 space-y-4">
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-sm p-6 space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <div class="flex items-center gap-2 text-amber-700">
             <KeyRound class="w-5 h-5" />

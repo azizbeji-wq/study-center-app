@@ -98,7 +98,7 @@
           type="text"
           placeholder="Rechercher par nom ou matière..."
           v-model="searchTerm"
-          class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm"
+          class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base shadow-sm"
         />
       </div>
 
@@ -207,7 +207,7 @@
         </div>
 
         <div class="pt-2 border-t border-gray-100">
-          <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-center">
             <div class="bg-blue-50/70 p-2 rounded-lg border border-blue-100">
               <p class="text-[10px] uppercase font-semibold text-gray-500">Élèves</p>
               <p class="text-sm font-bold text-gray-900">{{ teacher.studentCount }}</p>
@@ -313,7 +313,7 @@
       class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4"
       @click="showModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full space-y-4" @click.stop>
+      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <div class="flex items-center justify-between border-b pb-3 border-gray-100">
           <div>
             <h3 class="text-xl font-bold text-gray-900">
@@ -332,7 +332,7 @@
               type="text"
               required
               placeholder="Ex: Prof. Karim Belhadj"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
@@ -406,7 +406,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Téléphone *</label>
               <input
@@ -414,7 +414,7 @@
                 type="text"
                 required
                 placeholder="Ex: 21 345 678"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
             <div>
@@ -424,7 +424,7 @@
                 type="number"
                 min="0"
                 placeholder="Ex: 4"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
           </div>
@@ -436,7 +436,7 @@
               type="email"
               required
               placeholder="Ex: karim.belhadj@email.tn"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
@@ -446,12 +446,12 @@
               Gain de l'enseignant par séance
             </label>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-gray-700 mb-1">Type de rémunération</label>
                 <select
                   v-model="formData.remuneration_type"
-                  class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-emerald-500"
+                  class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="percentage">Pourcentage (%) du groupe</option>
                   <option value="fixed">Montant Fixe (TND / séance)</option>
@@ -470,7 +470,7 @@
                     max="100"
                     step="1"
                     placeholder="Ex: 70%"
-                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500"
                   />
                 </template>
                 <template v-else>
@@ -483,7 +483,7 @@
                     min="0"
                     step="1"
                     placeholder="Ex: 35 TND"
-                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white font-bold text-emerald-700 focus:ring-2 focus:ring-emerald-500"
                   />
                 </template>
               </div>
@@ -531,7 +531,7 @@
       @click="showDirectorSharesModal = false"
     >
       <div
-        class="bg-white rounded-2xl shadow-2xl p-6 max-w-4xl w-full space-y-4 max-h-[92vh] overflow-y-auto"
+        class="bg-white rounded-2xl shadow-2xl p-6 max-w-4xl w-full space-y-4 max-h-[92vh] overflow-y-auto mx-4 md:mx-auto"
         @click.stop
       >
         <div class="flex items-center justify-between border-b pb-3 border-gray-100">
@@ -553,7 +553,7 @@
         </div>
 
         <div class="overflow-x-auto border border-gray-200 rounded-xl">
-          <table class="w-full text-left text-sm">
+          <table class="w-full text-left text-sm whitespace-nowrap">
             <thead class="bg-gray-50 text-gray-700 text-xs font-semibold uppercase tracking-wider border-b border-gray-200">
               <tr>
                 <th class="py-3 px-4">Enseignant</th>
@@ -650,7 +650,7 @@
       class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4"
       @click="showDischargeModal = false"
     >
-      <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-xl w-full" @click.stop>
+      <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <!-- Printable Area -->
         <div id="printable-teacher-discharge" class="border-2 border-dashed border-emerald-300 rounded-2xl p-6 bg-slate-50/60">
           <!-- Header -->
@@ -722,7 +722,7 @@
             </p>
 
             <!-- Signature Boxes -->
-            <div class="grid grid-cols-2 gap-4 pt-6 text-center text-xs">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 text-center text-xs">
               <div class="p-3 bg-white rounded-xl border border-gray-200">
                 <p class="font-bold text-gray-700 mb-1">Signature de l'Enseignant</p>
                 <p class="text-[10px] text-gray-400 italic">(Mention manuscrite "Bon pour accord et reçu")</p>

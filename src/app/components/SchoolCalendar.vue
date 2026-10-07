@@ -171,7 +171,7 @@
               v-model="searchQuery"
               type="text"
               placeholder="Rechercher par école ou fichier..."
-              class="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
             <button
               v-if="searchQuery"
@@ -185,7 +185,7 @@
           <!-- Filtre École -->
           <select
             v-model="filterSchoolId"
-            class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none min-w-[200px]"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none min-w-[200px]"
           >
             <option :value="null">Toutes les écoles ({{ schools.length }})</option>
             <option v-for="school in schools" :key="school.id" :value="school.id">
@@ -196,7 +196,7 @@
           <!-- Filtre Niveau -->
           <select
             v-model="filterLevel"
-            class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none min-w-[150px]"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none min-w-[150px]"
           >
             <option :value="null">Tous les niveaux</option>
             <option v-for="lvl in levels" :key="lvl" :value="lvl">
@@ -207,7 +207,7 @@
           <!-- Filtre Section -->
           <select
             v-model="filterSection"
-            class="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none min-w-[150px]"
+            class="px-3 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none min-w-[150px]"
           >
             <option :value="null">Toutes les classes</option>
             <option v-for="sec in sectionOptions" :key="sec.value" :value="sec.value">
@@ -373,7 +373,7 @@
             v-model="schoolSearchQuery"
             type="text"
             placeholder="Rechercher une école par nom ou ville..."
-            class="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full pl-9 pr-8 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
         </div>
 
@@ -472,7 +472,7 @@
       @click="closeViewer"
     >
       <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[94vh] flex flex-col overflow-hidden"
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[94vh] flex flex-col overflow-hidden mx-4 md:mx-auto"
         @click.stop
       >
         <!-- En-tête -->
@@ -557,7 +557,7 @@
       @click="closeImport"
     >
       <div
-        class="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full space-y-4 max-h-[92vh] overflow-y-auto"
+        class="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full space-y-4 max-h-[92vh] overflow-y-auto mx-4 md:mx-auto"
         @click.stop
       >
         <div class="flex items-start justify-between border-b border-gray-100 pb-3">
@@ -585,7 +585,7 @@
           </div>
           <select
             v-model="importSchoolId"
-            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           >
             <option :value="null">Sélectionnez une école...</option>
             <option v-for="school in schools" :key="school.id" :value="school.id">
@@ -595,12 +595,12 @@
         </div>
 
         <!-- Niveau et Section -->
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-gray-700 mb-1">Niveau scolaire *</label>
             <select
               v-model.number="importLevel"
-              class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
               <option v-for="lvl in levels" :key="lvl" :value="lvl">
                 {{ formatLevel(lvl) }}
@@ -612,7 +612,7 @@
             <label class="block text-xs font-semibold text-gray-700 mb-1">Classe / Section *</label>
             <select
               v-model="importSection"
-              class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
               <option v-for="sec in sectionOptions" :key="sec.value" :value="sec.value">
                 {{ sec.label }}
@@ -716,7 +716,7 @@
       @click="closeSchoolModal"
     >
       <div
-        class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full space-y-4"
+        class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto"
         @click.stop
       >
         <div class="flex items-start justify-between border-b border-gray-100 pb-3">
@@ -740,7 +740,7 @@
               v-model="schoolForm.name"
               type="text"
               placeholder="ex: École Primaire Habib Bourguiba"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
@@ -750,7 +750,7 @@
               v-model="schoolForm.city"
               type="text"
               placeholder="ex: Tunis, Ariana, Ben Arous..."
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
@@ -760,7 +760,7 @@
               v-model="schoolForm.address"
               type="text"
               placeholder="ex: Avenue Habib Bourguiba, Centre Ville"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
         </div>
@@ -800,7 +800,7 @@
       class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4"
       @click="cancelDelete"
     >
-      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full space-y-4" @click.stop>
+      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <div class="flex items-start gap-3">
           <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
             <Trash2 class="w-5 h-5" />
@@ -850,7 +850,7 @@
       class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4"
       @click="schoolToDelete = null"
     >
-      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full space-y-4" @click.stop>
+      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <div class="flex items-start gap-3">
           <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
             <AlertTriangle class="w-5 h-5" />

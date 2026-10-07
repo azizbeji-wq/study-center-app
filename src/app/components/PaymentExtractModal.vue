@@ -96,7 +96,7 @@
         </div>
 
         <!-- Filter Row -->
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+        <div class="grid grid-cols-12 gap-3 items-center">
           <!-- Selection Mode (All vs Specific) -->
           <div class="md:col-span-4 flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-gray-300 text-xs">
             <span class="text-gray-500 font-semibold shrink-0">Cible :</span>
@@ -229,7 +229,7 @@
         <!-- Empty State -->
         <div
           v-else-if="displayedItemsCount === 0"
-          class="bg-white rounded-2xl p-12 text-center max-w-md mx-auto shadow-xs border border-gray-200 space-y-3"
+          class="bg-white rounded-2xl p-12 text-center max-w-md mx-auto shadow-xs border border-gray-200 space-y-3 max-h-[90vh] overflow-y-auto"
         >
           <div class="text-4xl">📄</div>
           <h3 class="text-base font-bold text-gray-900">Aucun élément sélectionné</h3>
@@ -242,7 +242,7 @@
         <div
           v-else
           id="printable-extract-document"
-          class="bg-white rounded-xl shadow-xs border border-gray-200 p-6 sm:p-10 max-w-4xl mx-auto space-y-8 print:shadow-none print:border-none print:p-4 print:max-w-none"
+          class="bg-white rounded-xl shadow-xs border border-gray-200 p-6 sm:p-10 max-w-4xl mx-auto space-y-8 print:shadow-none print:border-none print:p-4 print:max-w-none max-h-[90vh] overflow-y-auto"
         >
           <!-- Document Official Header -->
           <div class="border-b-2 border-indigo-900 pb-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -280,7 +280,7 @@
           <!-- ================= TEACHERS EXTRACT VIEW ================= -->
           <template v-if="extractType === 'teachers'">
             <!-- Grand Totals Banner -->
-            <div class="grid grid-cols-3 gap-3 bg-linear-to-r from-emerald-50 via-teal-50 to-indigo-50 p-4 rounded-xl border border-emerald-200 text-center">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-linear-to-r from-emerald-50 via-teal-50 to-indigo-50 p-4 rounded-xl border border-emerald-200 text-center">
               <div>
                 <p class="text-[10px] font-bold uppercase text-gray-500">C.A. Total Encaissé</p>
                 <p class="text-xl font-black text-gray-900 mt-0.5">{{ formatMoney(teachersDataTotals.grand_total_collected) }} TND</p>
@@ -347,7 +347,7 @@
 
                 <!-- Payments Table for This Teacher -->
                 <div class="overflow-x-auto">
-                  <table class="w-full text-xs text-left">
+                  <table class="w-full text-xs text-left whitespace-nowrap">
                     <thead class="bg-gray-100/70 text-gray-600 uppercase font-semibold text-[10px] border-b border-gray-200">
                       <tr>
                         <th class="py-2 px-3">Date</th>
@@ -397,7 +397,7 @@
           <!-- ================= STUDENTS EXTRACT VIEW ================= -->
           <template v-else>
             <!-- Grand Totals Banner -->
-            <div class="grid grid-cols-3 gap-3 bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 p-4 rounded-xl border border-indigo-200 text-center">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 p-4 rounded-xl border border-indigo-200 text-center">
               <div>
                 <p class="text-[10px] font-bold uppercase text-gray-500">Élèves Extraits</p>
                 <p class="text-xl font-black text-gray-900 mt-0.5">{{ studentsDataTotals.students_count }}</p>
@@ -465,7 +465,7 @@
                     Historique des Règlements Effectués
                   </h4>
                   <div class="overflow-x-auto rounded-lg border border-gray-100">
-                    <table class="w-full text-xs text-left">
+                    <table class="w-full text-xs text-left whitespace-nowrap">
                       <thead class="bg-gray-50 text-gray-600 uppercase font-semibold text-[10px] border-b border-gray-200">
                         <tr>
                           <th class="py-2 px-3">Date</th>
@@ -517,7 +517,7 @@
                       <span>⚠️ Soldes en Attente de Règlement</span>
                     </h4>
                     <div class="overflow-x-auto rounded-lg border border-red-200 bg-red-50/30">
-                      <table class="w-full text-xs text-left">
+                      <table class="w-full text-xs text-left whitespace-nowrap">
                         <thead class="bg-red-100/60 text-red-900 uppercase font-semibold text-[10px]">
                           <tr>
                             <th class="py-1.5 px-3">Enseignant & Matière</th>

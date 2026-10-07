@@ -34,7 +34,7 @@
         type="text"
         placeholder="Rechercher par nom ou niveau..."
         v-model="searchTerm"
-        class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm"
+        class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base shadow-sm"
       />
     </div>
 
@@ -45,7 +45,7 @@
 
     <!-- Students Table -->
     <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-      <table class="w-full">
+      <div class="w-full overflow-x-auto pb-4"><table class="w-full whitespace-nowrap">
         <thead class="bg-gray-50/75 border-b border-gray-200">
           <tr>
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nom</th>
@@ -147,7 +147,7 @@
             </td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
 
       <div v-if="filteredStudents.length === 0" class="text-center py-12">
         <p class="text-gray-500 text-sm">Aucun élève trouvé</p>
@@ -156,7 +156,7 @@
 
     <!-- Student Details Modal -->
     <div v-if="selectedStudent" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="selectedStudent = null">
-      <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-5" @click.stop>
+      <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <div class="flex items-center justify-between border-b pb-3 border-gray-100">
           <div>
             <h3 class="text-xl font-bold text-gray-900">{{ selectedStudent.name }}</h3>
@@ -182,7 +182,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-100 text-xs">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-100 text-xs">
             <div>
               <p class="text-gray-500">Téléphone élève</p>
               <p class="font-semibold text-gray-800 mt-0.5">{{ selectedStudent.phone }}</p>
@@ -224,7 +224,7 @@
 
     <!-- Add/Edit Student Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="closeModal">
-      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[92vh] flex flex-col" @click.stop>
+      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[92vh] flex flex-col max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <div class="flex items-center justify-between border-b pb-3 border-gray-100">
           <div>
             <h3 class="text-xl font-bold text-gray-900">
@@ -244,7 +244,7 @@
                 v-model="formData.name"
                 type="text"
                 required
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-base"
                 placeholder="Ex: Yassine Trabelsi"
               />
             </div>
@@ -254,7 +254,7 @@
                 v-model="formData.phone"
                 type="text"
                 required
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-base"
                 placeholder="Ex: 21 345 678"
               />
             </div>
@@ -270,7 +270,7 @@
                 v-model="formData.level"
                 @change="onLevelChange"
                 required
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               >
                 <option value="" disabled>Sélectionner un niveau</option>
                 <optgroup label="Collège (Base)">
@@ -304,7 +304,7 @@
                   list="group-suggestions"
                   required
                   placeholder="Ex: M1, Sc2..."
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase font-semibold"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase font-semibold"
                 />
                 <datalist id="group-suggestions">
                   <option v-for="grp in suggestedGroups" :key="grp" :value="grp" />
@@ -337,7 +337,7 @@
                 <label class="block text-xs font-semibold text-gray-700 mb-1">Type de remise</label>
                 <select
                   v-model="formData.discount_type"
-                  class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                  class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="fixed">Montant Fixe (TND)</option>
                   <option value="percentage">Pourcentage (%)</option>
@@ -355,7 +355,7 @@
                   step="0.5"
                   required
                   placeholder="Ex: 20"
-                  class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                  class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
@@ -403,7 +403,7 @@
                     v-model="sub.teacher_id"
                     @change="onTeacherChange(sub)"
                     required
-                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
                   >
                     <option :value="undefined" disabled>1. Choisir l'enseignant...</option>
                     <option v-for="t in teachers" :key="t.id" :value="t.id">
@@ -420,7 +420,7 @@
                     required
                     :disabled="!sub.teacher_id"
                     :placeholder="!sub.teacher_id ? '2. Choisir le prof d\'abord' : 'Nom matière'"
-                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400"
+                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400"
                   />
                   <datalist :id="'teacher-subjects-' + idx">
                     <option v-for="s in getSubjectsForTeacher(sub.teacher_id)" :key="s" :value="s" />

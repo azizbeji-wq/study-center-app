@@ -1,78 +1,103 @@
 <template>
-  <div class="size-full flex flex-col">
-    <!-- Header -->
-    <header class="bg-white border-b border-gray-200 px-6 py-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-white rounded-lg border border-gray-200 p-1 flex items-center justify-center shadow-xs">
-            <img src="/logo.png" alt="Logo Centre d'Études" class="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h1 class="text-xl font-bold text-gray-900">Centre d'Études</h1>
-            <p class="text-xs text-gray-500">Espace Directeur</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <button
-            @click="showAccountModal = true"
-            class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all text-left group shadow-2xs"
-            title="Mon profil & Gestion des secrétaires"
-          >
-            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-              {{ currentDisplayName ? currentDisplayName.charAt(0).toUpperCase() : 'D' }}
-            </div>
-            <div>
-              <p class="text-xs font-bold text-gray-900 group-hover:text-indigo-900 flex items-center gap-1">
-                <span>{{ currentDisplayName }}</span>
-                <UserCog class="w-3 h-3 text-gray-400 group-hover:text-indigo-600" />
-              </p>
-              <p class="text-[10px] text-gray-500">Directeur • Mon Compte</p>
-            </div>
-          </button>
+  <div class="size-full flex bg-gray-50 overflow-hidden">
+    <!-- Overlay Mobile -->
+    <div 
+      v-if="isMobileMenuOpen" 
+      class="fixed inset-0 bg-gray-900/50 z-40 md:hidden transition-opacity"
+      @click="isMobileMenuOpen = false"
+    ></div>
 
-          <button
-            @click="$emit('logout')"
-            class="p-2 hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-lg transition-colors border border-transparent hover:border-red-200"
-            title="Déconnexion"
-          >
-            <LogOut class="w-5 h-5" />
-          </button>
+    <!-- Sidebar / Drawer -->
+    <aside 
+      :class="[
+        'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 md:translate-x-0 md:static shrink-0',
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      ]"
+    >
+      <!-- Sidebar Header (Logo) -->
+      <div class="h-16 flex items-center px-6 border-b border-gray-200 gap-3 shrink-0">
+        <div class="w-8 h-8 bg-white rounded-lg border border-gray-200 p-1 flex items-center justify-center shadow-xs">
+          <img src="/logo.png" alt="Logo" class="w-full h-full object-contain" />
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-gray-900 leading-tight">Centre d'Études</h1>
+          <p class="text-[10px] text-gray-500">Espace Directeur</p>
         </div>
       </div>
-    </header>
 
-    <!-- Tabs Navigation -->
-    <div class="bg-white border-b border-gray-200 px-6">
-      <nav class="flex gap-1 overflow-x-auto">
+      <!-- Navigation Links -->
+      <nav class="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
         <button
           v-for="tab in tabs"
           :key="tab.id"
-          @click="activeTab = tab.id"
+          @click="selectTab(tab.id)"
           :class="[
-            'flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap',
+            'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left text-sm font-medium w-full min-h-[44px]',
             activeTab === tab.id
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'bg-indigo-50 text-indigo-700'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
           ]"
         >
-          <component :is="tab.icon" class="w-4 h-4" />
-          <span class="text-sm">{{ tab.label }}</span>
+          <component :is="tab.icon" :class="['w-5 h-5', activeTab === tab.id ? 'text-indigo-600' : 'text-gray-400']" />
+          {{ tab.label }}
         </button>
       </nav>
-    </div>
 
-    <!-- Content -->
-    <div class="flex-1 overflow-auto p-6">
-      <DashboardOverview v-if="activeTab === 'dashboard'" role="director" />
-      <StudentsManagement v-else-if="activeTab === 'students'" />
-      <DaycareManagement v-else-if="activeTab === 'daycare'" />
-      <TeachersManagement v-else-if="activeTab === 'teachers'" />
-      <ScheduleManagement v-else-if="activeTab === 'schedule'" />
-      <SchoolCalendar v-else-if="activeTab === 'schoolcalendar'" />
-      <AttendanceManagement v-else-if="activeTab === 'attendance'" />
-      <PaymentsManagement v-else-if="activeTab === 'payments'" />
-      <FinancialReports v-else-if="activeTab === 'reports'" />
-    </div>
+      <!-- User Profile (Bottom of sidebar) -->
+      <div class="p-4 border-t border-gray-200 flex flex-col gap-2 shrink-0">
+        <button
+          @click="showAccountModal = true; isMobileMenuOpen = false"
+          class="flex items-center gap-2.5 p-2 rounded-xl border border-transparent hover:bg-gray-50 transition-all text-left group min-h-[44px]"
+        >
+          <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+            {{ currentDisplayName ? currentDisplayName.charAt(0).toUpperCase() : 'D' }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold text-gray-900 truncate group-hover:text-indigo-700">{{ currentDisplayName }}</p>
+            <p class="text-[10px] text-gray-500 truncate">Mon Compte</p>
+          </div>
+          <UserCog class="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
+        </button>
+        <button
+          @click="$emit('logout')"
+          class="flex items-center gap-2.5 p-2 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all text-left w-full min-h-[44px]"
+        >
+          <LogOut class="w-5 h-5 text-gray-400 group-hover:text-red-500" />
+          <span class="text-sm font-medium">Déconnexion</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-w-0">
+      <!-- Mobile Header -->
+      <header class="md:hidden bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 shrink-0">
+        <div class="flex items-center gap-3">
+          <button @click="isMobileMenuOpen = true" class="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <Menu class="w-6 h-6" />
+          </button>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-white rounded-lg border border-gray-200 p-1 flex items-center justify-center shadow-xs">
+              <img src="/logo.png" alt="Logo" class="w-full h-full object-contain" />
+            </div>
+            <h1 class="text-sm font-bold text-gray-900 leading-tight">Centre d'Études</h1>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="flex-1 overflow-auto p-4 md:p-6 relative">
+        <DashboardOverview v-if="activeTab === 'dashboard'" role="director" />
+        <StudentsManagement v-else-if="activeTab === 'students'" />
+        <DaycareManagement v-else-if="activeTab === 'daycare'" />
+        <TeachersManagement v-else-if="activeTab === 'teachers'" />
+        <ScheduleManagement v-else-if="activeTab === 'schedule'" />
+        <SchoolCalendar v-else-if="activeTab === 'schoolcalendar'" />
+        <AttendanceManagement v-else-if="activeTab === 'attendance'" />
+        <PaymentsManagement v-else-if="activeTab === 'payments'" />
+        <FinancialReports v-else-if="activeTab === 'reports'" />
+      </div>
+    </main>
 
     <!-- Modale de Gestion de Compte & Secrétaires -->
     <AccountManagementModal
@@ -87,7 +112,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { LogOut, Users, DollarSign, Calendar, BookOpen, BarChart3, UserPlus, LayoutDashboard, Baby, UserCheck, UserCog } from 'lucide-vue-next';
+import { LogOut, Users, DollarSign, Calendar, BookOpen, BarChart3, UserPlus, LayoutDashboard, Baby, UserCheck, UserCog, Menu } from 'lucide-vue-next';
 import DashboardOverview from './DashboardOverview.vue';
 import StudentsManagement from './StudentsManagement.vue';
 import DaycareManagement from './DaycareManagement.vue';
@@ -109,10 +134,16 @@ defineEmits<{
 
 const currentDisplayName = ref(props.userName);
 const showAccountModal = ref(false);
+const isMobileMenuOpen = ref(false);
 
 function handleUserUpdated(newName: string) {
   currentDisplayName.value = newName;
 }
+
+const selectTab = (tabId: Tab) => {
+  activeTab.value = tabId;
+  isMobileMenuOpen.value = false;
+};
 
 type Tab = 'dashboard' | 'students' | 'daycare' | 'teachers' | 'schedule' | 'attendance' | 'payments' | 'reports'| 'schoolcalendar';
 

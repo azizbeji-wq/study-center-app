@@ -77,7 +77,7 @@
         type="text"
         placeholder="Rechercher un élève, un enseignant ou un enfant de garde..."
         v-model="searchTerm"
-        class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm"
+        class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base shadow-sm"
       />
     </div>
 
@@ -174,7 +174,7 @@
 
         <!-- Élèves -->
         <div v-if="duesKind === 'student'" class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full whitespace-nowrap">
             <thead class="bg-gray-50/75 border-b border-gray-200">
               <tr>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Élève</th>
@@ -250,7 +250,7 @@
 
         <!-- Garderie -->
         <div v-else class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full whitespace-nowrap">
             <thead class="bg-gray-50/75 border-b border-gray-200">
               <tr>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Enfant</th>
@@ -312,7 +312,7 @@
           <p class="text-xs text-gray-500 mt-0.5">Paiements encaissés uniquement (avec indicateur de ponctualité)</p>
         </div>
         <div class="overflow-x-auto">
-          <table class="w-full">
+          <table class="w-full whitespace-nowrap">
             <thead class="bg-gray-50/75 border-b border-gray-200">
               <tr>
                 <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Payeur</th>
@@ -412,7 +412,7 @@
 
     <!-- Add/Edit Payment Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="showModal = false">
-      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[92vh] overflow-y-auto" @click.stop>
+      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[92vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <h3 class="text-xl font-bold text-gray-900 mb-4">
           {{ isEditing ? 'Modifier le paiement' : 'Enregistrer un paiement' }}
         </h3>
@@ -421,7 +421,7 @@
 
           <!-- ===== Création ===== -->
           <template v-if="!isEditing">
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
               <button
                 v-for="k in kinds"
                 :key="k.value"
@@ -446,7 +446,7 @@
                   v-model="form.studentId"
                   @change="onStudentChange"
                   required
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option :value="null" disabled>Sélectionner un élève...</option>
                   <option v-for="s in students" :key="s.id" :value="s.id">
@@ -462,7 +462,7 @@
                   @change="onTeacherChange"
                   required
                   :disabled="!form.studentId"
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100"
                 >
                   <option :value="null" disabled>Sélectionner un enseignant...</option>
                   <option v-for="t in teacherOptions" :key="t.id" :value="t.id">{{ t.name }}</option>
@@ -486,7 +486,7 @@
                 </p>
               </div>
 
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Séances payées *</label>
                   <input
@@ -496,7 +496,7 @@
                     min="1"
                     step="1"
                     required
-                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -507,7 +507,7 @@
                     step="0.01"
                     min="0"
                     required
-                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -521,7 +521,7 @@
                   v-model="form.daycareChildId"
                   @change="onChildChange"
                   required
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option :value="null" disabled>Sélectionner un enfant...</option>
                   <option v-for="c in children" :key="c.id" :value="c.id">{{ c.name }} (parent : {{ c.parentName }})</option>
@@ -541,7 +541,7 @@
                 </p>
               </div>
 
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Mois payés *</label>
                   <input
@@ -551,7 +551,7 @@
                     min="1"
                     step="1"
                     required
-                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -562,7 +562,7 @@
                     step="0.01"
                     min="0"
                     required
-                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -573,7 +573,7 @@
               <input
                 v-model="form.date"
                 type="date"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
           </template>
@@ -592,7 +592,7 @@
                 type="number"
                 min="0"
                 step="1"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
@@ -603,25 +603,25 @@
                 type="number"
                 min="0"
                 step="1"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
-            <div v-if="isLegacyEdit" class="grid grid-cols-2 gap-3">
+            <div v-if="isLegacyEdit" class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Mois</label>
                 <input
                   v-model="form.month"
                   type="text"
                   required
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Statut</label>
                 <select
                   v-model="form.status"
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option value="paid">Payé</option>
                   <option value="pending">En attente</option>
@@ -630,7 +630,7 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Montant (TND) *</label>
                 <input
@@ -639,7 +639,7 @@
                   step="0.01"
                   min="0"
                   required
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -647,7 +647,7 @@
                 <input
                   v-model="form.date"
                   type="date"
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -679,7 +679,7 @@
 
     <!-- Modal Reçu de Paiement Imprimable -->
     <div v-if="showReceiptModal && receiptPayment" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="showReceiptModal = false">
-      <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-lg w-full" @click.stop>
+      <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <!-- Cadre Reçu -->
         <div id="printable-receipt" class="border-2 border-dashed border-indigo-200 rounded-xl p-6 bg-slate-50/50">
           <!-- En-tête -->
@@ -727,7 +727,7 @@
             </div>
 
             <!-- Signatures -->
-            <div class="grid grid-cols-2 gap-4 pt-6 text-xs text-center">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 text-xs text-center">
               <div>
                 <p class="text-gray-400 italic">Signature du parent</p>
                 <div class="h-10 border-b border-gray-300 mt-2"></div>

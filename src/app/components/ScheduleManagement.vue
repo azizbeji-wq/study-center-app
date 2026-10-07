@@ -39,7 +39,7 @@
       <label class="text-xs font-semibold text-gray-700 uppercase tracking-wider">Groupe</label>
       <select
         v-model="selectedGroup"
-        class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+        class="px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
       >
         <option value="">Tous les groupes</option>
         <option v-for="g in groupOptions" :key="g" :value="g">{{ g }}</option>
@@ -113,17 +113,17 @@
 
     <!-- Add/Edit Course Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="showModal = false">
-      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full" @click.stop>
+      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <h3 class="text-xl font-bold text-gray-900 mb-4">
           {{ isEditing ? 'Modifier la séance' : 'Planifier un cours' }}
         </h3>
         <form @submit.prevent="saveSchedule()" class="space-y-4">
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Jour *</label>
               <select
                 v-model="formData.day"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               >
                 <option v-for="d in days" :key="d" :value="d">{{ d }}</option>
               </select>
@@ -135,7 +135,7 @@
                 type="text"
                 required
                 placeholder="Ex: 08:00 - 10:00"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
           </div>
@@ -145,7 +145,7 @@
               <select
                 v-model="formData.subject"
                 required
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium text-gray-900"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium text-gray-900"
               >
                 <option value="" disabled>Sélectionner une matière</option>
                 <option v-for="sub in tunisianSubjects " :key="sub" :value="sub">
@@ -160,7 +160,7 @@
               v-model="formData.teacher"
               required
               :disabled="!formData.subject || (teacherSuggestions.length === 0 && !formData.teacher)"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 font-medium"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 font-medium"
             >
               <option value="" disabled>
                 {{ !formData.subject
@@ -191,7 +191,7 @@
             </p>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Niveau scolaire *</label>
               <input
@@ -199,7 +199,7 @@
                 type="text"
                 required
                 placeholder="Ex: 7ème"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
             <div>
@@ -209,7 +209,7 @@
                 type="text"
                 required
                 placeholder="Ex: Salle 101"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
           </div>
@@ -221,7 +221,7 @@
               list="schedule-groups"
               type="text"
               placeholder="Ex: M1 (laisser vide pour tout le niveau)"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
             <datalist id="schedule-groups">
               <option v-for="g in groupSuggestions" :key="g" :value="g" />

@@ -60,7 +60,7 @@
           type="text"
           placeholder="Rechercher un enfant ou parent..."
           v-model="searchTerm"
-          class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm shadow-sm"
+          class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-base shadow-sm"
         />
       </div>
       <div class="flex gap-2">
@@ -169,7 +169,7 @@
 
     <!-- Child Details Modal -->
     <div v-if="selectedChild" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="selectedChild = null">
-      <div class="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4" @click.stop>
+      <div class="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <div class="flex items-center justify-between border-b pb-3 border-gray-100">
           <h3 class="text-xl font-bold text-gray-900">Détails de l'enfant</h3>
           <button @click="selectedChild = null" class="text-gray-400 hover:text-gray-600">✕</button>
@@ -181,7 +181,7 @@
             <p class="text-sm font-semibold text-orange-600">{{ selectedChild.age }} ans</p>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
             <p class="text-xs text-gray-400">Parent</p>
             <p class="font-medium text-gray-900">{{ selectedChild.parentName }}</p>
@@ -215,7 +215,7 @@
 
     <!-- Add/Edit Child Modal -->
     <div v-if="showModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="showModal = false">
-      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full" @click.stop>
+      <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <h3 class="text-xl font-bold text-gray-900 mb-4">
           {{ isEditing ? "Modifier l'enfant" : 'Ajouter un enfant' }}
         </h3>
@@ -227,10 +227,10 @@
               type="text"
               required
               placeholder="Ex: Aya Mansouri"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Âge (ans) *</label>
               <input
@@ -239,14 +239,14 @@
                 min="3"
                 max="15"
                 required
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
             </div>
             <div>
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Statut *</label>
               <select
                 v-model="formData.status"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-orange-500 focus:outline-none"
               >
                 <option value="present">Présent</option>
                 <option value="absent">Absent</option>
@@ -260,7 +260,7 @@
               type="text"
               required
               placeholder="Ex: Mme Mansouri"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
           </div>
           <div>
@@ -270,7 +270,7 @@
               type="text"
               required
               placeholder="Ex: 20 111 222"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
           </div>
           <div>
@@ -280,11 +280,11 @@
               type="text"
               required
               placeholder="Ex: Lun-Ven 8h-17h"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Tarif mensuel (TND)</label>
               <input
@@ -293,7 +293,7 @@
                 min="0"
                 step="1"
                 placeholder="Ex: 150"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
             </div>
             <div>
@@ -301,7 +301,7 @@
               <input
                 v-model="formData.startDate"
                 type="date"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
             </div>
           </div>

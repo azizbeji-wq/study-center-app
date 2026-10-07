@@ -526,7 +526,7 @@
 
             <!-- Tableau des dépenses -->
             <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs">
+              <table class="w-full text-left text-xs whitespace-nowrap">
                 <thead class="bg-gray-50 text-gray-600 uppercase font-semibold border-b border-gray-200">
                   <tr>
                     <th class="py-3 px-4">Date</th>
@@ -654,7 +654,7 @@
             </div>
 
             <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs">
+              <table class="w-full text-left text-xs whitespace-nowrap">
                 <thead class="bg-gray-50 text-gray-600 uppercase font-semibold border-b border-gray-200">
                   <tr>
                     <th class="py-3 px-4">Enseignant</th>
@@ -793,7 +793,7 @@
             </div>
 
             <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs">
+              <table class="w-full text-left text-xs whitespace-nowrap">
                 <thead class="bg-gray-50 text-gray-600 uppercase font-semibold border-b border-gray-200">
                   <tr>
                     <th class="py-3 px-4">Élève / Enfant</th>
@@ -961,7 +961,7 @@
             </div>
 
             <div class="overflow-x-auto max-h-[400px]">
-              <table class="w-full text-left text-xs">
+              <table class="w-full text-left text-xs whitespace-nowrap">
                 <thead class="bg-gray-50 text-gray-600 uppercase font-semibold border-b border-gray-200 sticky top-0 z-10">
                   <tr>
                     <th class="py-3 px-4">Date & Heure</th>
@@ -1171,7 +1171,7 @@
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <!-- Catégorie -->
             <div>
               <label class="block font-semibold text-gray-700 mb-1">Catégorie *</label>
@@ -1201,12 +1201,12 @@
                 min="0.01"
                 required
                 placeholder="0.00"
-                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-black text-sm"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-black text-base"
               />
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <!-- Date -->
             <div>
               <label class="block font-semibold text-gray-700 mb-1">Date *</label>
@@ -1349,7 +1349,7 @@
             </div>
 
             <!-- Informations Enseignant -->
-            <div class="avoid-break grid grid-cols-2 gap-4 text-xs bg-gray-50/70 p-4 rounded-xl border border-gray-200">
+            <div class="avoid-break grid grid-cols-1 md:grid-cols-2 gap-4 text-xs bg-gray-50/70 p-4 rounded-xl border border-gray-200">
               <div>
                 <p class="text-gray-500 uppercase text-[10px] tracking-wider font-semibold">Bénéficiaire</p>
                 <p class="text-sm font-black text-gray-900 mt-0.5">{{ activePayslip.teacher.name }}</p>
@@ -1370,7 +1370,7 @@
             <!-- Détail des séances & élèves -->
             <div class="avoid-break">
               <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Détail des séances encaissées</h3>
-              <table class="w-full text-left text-xs border border-gray-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs border border-gray-200 rounded-xl overflow-hidden whitespace-nowrap">
                 <thead class="bg-gray-100 font-semibold text-gray-700 border-b border-gray-200">
                   <tr>
                     <th class="py-2 px-3">Date</th>
@@ -1412,7 +1412,7 @@
             </div>
 
             <!-- Signatures et Décharge -->
-            <div class="avoid-break grid grid-cols-2 gap-8 pt-8 border-t border-gray-200 text-xs">
+            <div class="avoid-break grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-gray-200 text-xs">
               <div class="space-y-12">
                 <p class="font-bold text-gray-900">Visa & Cachet de la Direction :</p>
                 <div class="h-14 border-b border-dashed border-gray-400"></div>
@@ -1517,7 +1517,7 @@
             <!-- Évolution Mensuelle Récapitulative -->
             <div class="avoid-break">
               <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">1. Évolution Mensuelle Réelle</h3>
-              <table class="w-full text-left text-xs border border-gray-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs border border-gray-200 rounded-xl overflow-hidden whitespace-nowrap">
                 <thead class="bg-gray-100 font-semibold text-gray-700 border-b border-gray-200">
                   <tr>
                     <th class="py-2 px-3">Mois</th>
@@ -1548,7 +1548,7 @@
             <!-- Ventilation des Dépenses par Catégorie -->
             <div class="avoid-break">
               <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">2. Répartition des Dépenses par Poste</h3>
-              <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                 <div
                   v-for="cat in summaryData?.expenseDonut || []"
                   :key="cat.category"
@@ -1563,7 +1563,7 @@
             <!-- Synthèse Honoraires Enseignants -->
             <div class="avoid-break">
               <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">3. Honoraires & Parts des Enseignants</h3>
-              <table class="w-full text-left text-xs border border-gray-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs border border-gray-200 rounded-xl overflow-hidden whitespace-nowrap">
                 <thead class="bg-gray-100 font-semibold text-gray-700 border-b border-gray-200">
                   <tr>
                     <th class="py-2 px-3">Enseignant</th>
@@ -1592,7 +1592,7 @@
             </div>
 
             <!-- Visa et Certification -->
-            <div class="avoid-break grid grid-cols-2 gap-8 pt-6 border-t-2 border-gray-900 text-xs">
+            <div class="avoid-break grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t-2 border-gray-900 text-xs">
               <div>
                 <p class="font-bold text-gray-900">Visa & Rapprochement Comptable :</p>
                 <p class="text-[10px] text-gray-500 mt-1">Conforme au grand livre et aux journaux de caisse.</p>

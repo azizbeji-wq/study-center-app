@@ -79,7 +79,7 @@
           <label class="block text-xs font-semibold text-gray-700 mb-1">Filtrer par Groupe</label>
           <select
             v-model="filterGroup"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           >
             <option value="">Tous les groupes</option>
             <option v-for="grp in allAvailableGroups" :key="grp" :value="grp">{{ grp }}</option>
@@ -92,7 +92,7 @@
           <input
             type="date"
             v-model="filterDate"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           />
         </div>
 
@@ -101,7 +101,7 @@
           <label class="block text-xs font-semibold text-gray-700 mb-1">Enseignant</label>
           <select
             v-model="filterTeacherId"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           >
             <option value="">Tous les enseignants</option>
             <option v-for="t in teachers" :key="t.id" :value="t.id">{{ t.name }} ({{ t.subject }})</option>
@@ -117,7 +117,7 @@
               type="text"
               placeholder="Nom de l'élève..."
               v-model="searchTerm"
-              class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
         </div>
@@ -137,7 +137,7 @@
 
     <!-- Attendance Table -->
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
-      <table class="w-full">
+      <div class="w-full overflow-x-auto pb-4"><table class="w-full whitespace-nowrap">
         <thead class="bg-gray-50/75 border-b border-gray-200">
           <tr>
             <th class="px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Élève</th>
@@ -229,7 +229,7 @@
             </td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
 
       <div v-if="filteredAttendances.length === 0" class="text-center py-12">
         <Users class="w-10 h-10 text-gray-300 mx-auto mb-2" />
@@ -240,7 +240,7 @@
 
     <!-- Batch Attendance Modal -->
     <div v-if="showBatchModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="closeBatchModal">
-      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col" @click.stop>
+      <div class="bg-white rounded-2xl p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <div class="flex items-center justify-between border-b pb-3 border-gray-100">
           <div>
             <h3 class="text-lg font-bold text-gray-900">Appel de Présence par Groupe</h3>
@@ -258,7 +258,7 @@
                 type="date"
                 v-model="batchForm.session_date"
                 required
-                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
@@ -268,7 +268,7 @@
                 v-model="batchForm.group_name"
                 @change="onBatchGroupChange"
                 required
-                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="" disabled>Choisir un groupe</option>
                 <option v-for="grp in allAvailableGroups" :key="grp" :value="grp">{{ grp }}</option>
@@ -281,7 +281,7 @@
                 v-model="batchForm.subject_name"
                 @change="onBatchSubjectChange"
                 required
-                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="" disabled>Choisir la matière</option>
                 <option v-for="sub in activeGroupSubjects" :key="sub" :value="sub">{{ sub }}</option>
@@ -293,7 +293,7 @@
               <select
                 v-model="batchForm.teacher_id"
                 :disabled="!batchForm.subject_name || batchTeacherOptions.list.length === 0"
-                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
+                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
               >
                 <option :value="undefined">
                   {{ !batchForm.subject_name
@@ -421,7 +421,7 @@
 
     <!-- Student Summary Modal -->
     <div v-if="selectedStudentSummary" class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" @click="selectedStudentSummary = null">
-      <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4" @click.stop>
+      <div class="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto" @click.stop>
         <div class="flex items-center justify-between border-b pb-3 border-gray-100">
           <div>
             <h3 class="text-xl font-bold text-gray-900">{{ selectedStudentSummary.name }}</h3>
@@ -449,7 +449,7 @@
         </div>
 
         <!-- Attendance Stats -->
-        <div class="grid grid-cols-3 gap-2 text-center">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-center">
           <div class="bg-gray-50 p-2.5 rounded-lg border border-gray-100">
             <p class="text-xs text-gray-500">Séances</p>
             <p class="text-lg font-bold text-gray-800">{{ getStudentAttendanceStats(selectedStudentSummary.id).total }}</p>
