@@ -16,7 +16,7 @@ class AuthController extends Controller
             $email = $role === 'director' ? 'director@studycenter.com' : 'secretary@studycenter.com';
             if (Auth::attempt(['email' => $email, 'password' => $role . '123'])) {
                 $user = Auth::user();
-                $token = $user->createToken('auth_token')->plainTextToken;
+                $token = $user->createToken('auth_token', ['*'], now()->addMinutes(120))->plainTextToken;
                 return response()->json([
                     'status' => 'success',
                     'user' => [
@@ -25,6 +25,8 @@ class AuthController extends Controller
                         'email' => $user->email,
                     ],
                     'token' => $token,
+                    'expires_in' => 7200,
+                    'login_time' => now()->toISOString(),
                 ]);
             }
         }
@@ -45,7 +47,7 @@ class AuthController extends Controller
                     ], 403);
                 }
 
-                $token = $user->createToken('auth_token')->plainTextToken;
+                $token = $user->createToken('auth_token', ['*'], now()->addMinutes(120))->plainTextToken;
 
                 \App\Models\ActivityLog::record(
                     $user,
@@ -64,6 +66,8 @@ class AuthController extends Controller
                         'email' => $user->email,
                     ],
                     'token' => $token,
+                    'expires_in' => 7200,
+                    'login_time' => now()->toISOString(),
                 ]);
             }
         }

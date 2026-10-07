@@ -1,6 +1,10 @@
 <template>
   <div class="size-full bg-gray-50">
-    <LoginPage v-if="!user" @login="handleLogin" />
+    <LoginPage
+      v-if="!user"
+      :session-notice="sessionNotice"
+      @login="handleLogin"
+    />
     <template v-else>
       <DirectorDashboard
         v-if="user.role === 'director'"
@@ -17,10 +21,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import LoginPage from './components/LoginPage.vue';
 import DirectorDashboard from './components/DirectorDashboard.vue';
 import SecretaryDashboard from './components/SecretaryDashboard.vue';
+import api from './utils/api';
+import {
+  checkSessionValidity,
+  clearSession,
+  getStoredUser,
+  consumeNotice,
+  startSessionMonitor,
+} from './utils/session';
 
 interface User {
   role: 'director' | 'secretary';
@@ -28,25 +40,69 @@ interface User {
 }
 
 const user = ref<User | null>(null);
+const sessionNotice = ref<string>('');
+let stopMonitor: (() => void) | null = null;
+
+const onSessionExpired = (message: string) => {
+  handleLogout(message);
+};
 
 onMounted(() => {
-  const savedUser = localStorage.getItem('user');
-  if (savedUser) {
-    try {
-      user.value = JSON.parse(savedUser);
-    } catch (e) {
-      localStorage.removeItem('user');
+  // 1. Récupération d'un éventuel message d'expiration
+  const pendingNotice = consumeNotice();
+  if (pendingNotice) {
+    sessionNotice.value = pendingNotice;
+  }
+
+  // 2. Vérification des règles d'expiration (1h fermé / 2h ouvert)
+  const status = checkSessionValidity();
+  if (!status.isValid) {
+    if (status.message) {
+      sessionNotice.value = status.message;
     }
+    clearSession(sessionNotice.value);
+    user.value = null;
+    return;
+  }
+
+  // 3. Restauration de l'utilisateur actif
+  const savedUser = getStoredUser();
+  if (savedUser) {
+    user.value = savedUser;
+    stopMonitor = startSessionMonitor(onSessionExpired);
+  } else {
+    user.value = null;
+  }
+});
+
+onUnmounted(() => {
+  if (stopMonitor) {
+    stopMonitor();
+    stopMonitor = null;
   }
 });
 
 const handleLogin = (role: 'director' | 'secretary', name: string) => {
   user.value = { role, name };
+  sessionNotice.value = '';
+
+  if (stopMonitor) {
+    stopMonitor();
+  }
+  stopMonitor = startSessionMonitor(onSessionExpired);
 };
 
-const handleLogout = () => {
+const handleLogout = (reason?: string) => {
+  if (stopMonitor) {
+    stopMonitor();
+    stopMonitor = null;
+  }
+
+  // Tentative de déconnexion côté serveur sans bloquer
+  api.post('/api/logout').catch(() => {});
+
+  clearSession(reason);
   user.value = null;
-  localStorage.removeItem('user');
-  localStorage.removeItem('token');
+  sessionNotice.value = reason || '';
 };
 </script>

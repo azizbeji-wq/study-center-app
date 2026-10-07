@@ -10,6 +10,15 @@
         <p class="text-xs text-gray-500 mt-0.5">Direction Financière, Pédagogie & Administration</p>
       </div>
 
+      <!-- Message d'information de session expirée -->
+      <div
+        v-if="activeNotice"
+        class="p-3.5 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-semibold flex items-center gap-2.5 animate-in fade-in"
+      >
+        <Clock class="w-4 h-4 shrink-0 text-amber-600" />
+        <span class="leading-relaxed">{{ activeNotice }}</span>
+      </div>
+
       <!-- Message d'erreur -->
       <div
         v-if="errorMessage"
@@ -91,9 +100,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, ShieldCheck } from 'lucide-vue-next';
+import { ref, watch, onMounted } from 'vue';
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, ShieldCheck, Clock } from 'lucide-vue-next';
 import api from '../utils/api';
+import { setSession, consumeNotice } from '../utils/session';
+
+const props = defineProps<{
+  sessionNotice?: string;
+}>();
 
 const emit = defineEmits<{
   (e: 'login', role: 'director' | 'secretary', name: string): void
@@ -104,10 +118,22 @@ const password = ref('');
 const showPassword = ref(false);
 const loading = ref(false);
 const errorMessage = ref('');
+const activeNotice = ref('');
+
+onMounted(() => {
+  activeNotice.value = props.sessionNotice || consumeNotice() || '';
+});
+
+watch(() => props.sessionNotice, (newVal) => {
+  if (newVal) {
+    activeNotice.value = newVal;
+  }
+});
 
 async function handleLoginSubmit() {
   loading.value = true;
   errorMessage.value = '';
+  activeNotice.value = '';
 
   try {
     const res = await api.post('/api/login', {
@@ -116,8 +142,8 @@ async function handleLoginSubmit() {
     });
 
     if (res.data && res.data.token && res.data.user) {
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      const loginTime = res.data.login_time ? new Date(res.data.login_time).getTime() : Date.now();
+      setSession(res.data.token, res.data.user, loginTime);
       emit('login', res.data.user.role, res.data.user.name);
     } else {
       errorMessage.value = 'Réponse serveur inattendue.';
