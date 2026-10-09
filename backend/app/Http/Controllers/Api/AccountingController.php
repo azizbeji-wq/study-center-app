@@ -100,11 +100,16 @@ class AccountingController extends Controller
                     $remType = $t->remuneration_type ?? 'percentage';
                     $ratePct = $t->rate_percentage !== null ? (float) $t->rate_percentage : 70.0;
                     $salaryPerLesson = $t->salary_per_lesson !== null ? (float) $t->salary_per_lesson : 35.0;
+                    $st = $students[$mp->student_id] ?? null;
+                    $enr = $st?->enrollments?->firstWhere('teacher_id', $mp->teacher_id);
+                    $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
+                    $baseGross = max((float) $mp->amount, round((int) $mp->sessions_paid * $sessionPrice, 2));
 
                     if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
-                        $tPayouts += round(((float) $mp->amount * $ratePct) / 100.0, 2);
+                        $tPayouts += round(($baseGross * $ratePct) / 100.0, 2);
                     } else {
-                        $tPayouts += round((int) $mp->sessions_paid * $salaryPerLesson, 2);
+                        $fixedRate = (float) ($t->fixed_student_rate ?? $salaryPerLesson);
+                        $tPayouts += round($fixedRate * max(1, round((int) $mp->sessions_paid / 4.0)), 2);
                     }
                 }
             }
@@ -138,10 +143,16 @@ class AccountingController extends Controller
 
             $teacherShare = 0.0;
             foreach ($tPayments as $tp) {
+                $st = $students[$tp->student_id] ?? null;
+                $enr = $st?->enrollments?->firstWhere('teacher_id', $tId);
+                $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
+                $baseGross = max((float) $tp->amount, round((int) $tp->sessions_paid * $sessionPrice, 2));
+
                 if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
-                    $teacherShare += round(((float) $tp->amount * $ratePct) / 100.0, 2);
+                    $teacherShare += round(($baseGross * $ratePct) / 100.0, 2);
                 } else {
-                    $teacherShare += round((int) $tp->sessions_paid * $salaryPerLesson, 2);
+                    $fixedRate = (float) ($t->fixed_student_rate ?? $salaryPerLesson);
+                    $teacherShare += round($fixedRate * max(1, round((int) $tp->sessions_paid / 4.0)), 2);
                 }
             }
 
@@ -566,7 +577,8 @@ class AccountingController extends Controller
         $monthC = Carbon::parse($month . '-01');
 
         // Calculer les totaux réels du mois
-        $payments = Payment::where('status', 'paid')
+        $payments = Payment::with('student.enrollments')
+            ->where('status', 'paid')
             ->whereYear('date', $monthC->year)
             ->whereMonth('date', $monthC->month)
             ->get();
@@ -587,11 +599,15 @@ class AccountingController extends Controller
                 $remType = $t->remuneration_type ?? 'percentage';
                 $ratePct = $t->rate_percentage !== null ? (float) $t->rate_percentage : 70.0;
                 $salaryPerLesson = $t->salary_per_lesson !== null ? (float) $t->salary_per_lesson : 35.0;
+                $enr = $p->student?->enrollments?->firstWhere('teacher_id', $p->teacher_id);
+                $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
+                $baseGross = max((float) $p->amount, round((int) $p->sessions_paid * $sessionPrice, 2));
 
                 if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
-                    $totalTeacherPayouts += round(((float) $p->amount * $ratePct) / 100.0, 2);
+                    $totalTeacherPayouts += round(($baseGross * $ratePct) / 100.0, 2);
                 } else {
-                    $totalTeacherPayouts += round((int) $p->sessions_paid * $salaryPerLesson, 2);
+                    $fixedRate = (float) ($t->fixed_student_rate ?? $salaryPerLesson);
+                    $totalTeacherPayouts += round($fixedRate * max(1, round((int) $p->sessions_paid / 4.0)), 2);
                 }
             }
         }
@@ -669,7 +685,8 @@ class AccountingController extends Controller
         $month = $request->input('month', now()->format('Y-m'));
         $monthC = Carbon::parse($month . '-01');
 
-        $payments = Payment::where('teacher_id', $teacher->id)
+        $payments = Payment::with('student.enrollments')
+            ->where('teacher_id', $teacher->id)
             ->where('status', 'paid')
             ->whereYear('date', $monthC->year)
             ->whereMonth('date', $monthC->month)
@@ -687,10 +704,17 @@ class AccountingController extends Controller
             $amt = (float) $p->amount;
             $sessions = (int) $p->sessions_paid;
 
+            $enr = $p->student?->enrollments?->firstWhere('teacher_id', $teacher->id);
+            $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
+            $baseGross = max($amt, round($sessions * $sessionPrice, 2));
+
             if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
-                $tShare = round(($amt * $ratePct) / 100.0, 2);
+                // Formule C : Pourcentage sur tarif brut (remise absorbée par l'administration)
+                $tShare = round(($baseGross * $ratePct) / 100.0, 2);
             } else {
-                $tShare = round($sessions * $salaryPerLesson, 2);
+                // Formule B : Montant fixe par élève
+                $fixedRate = (float) ($teacher->fixed_student_rate ?? $salaryPerLesson);
+                $tShare = round($fixedRate * max(1, round($sessions / 4.0)), 2);
             }
 
             $totalCollected += $amt;

@@ -17,6 +17,7 @@ class Teacher extends Model
         'email',
         'weekly_lessons',
         'salary_per_lesson',
+        'fixed_student_rate',
         'remuneration_type',
         'rate_percentage',
         'payout_status',

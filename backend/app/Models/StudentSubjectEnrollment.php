@@ -13,6 +13,7 @@ class StudentSubjectEnrollment extends Model
         'subject_id',       // Nouvelle FK vers subjects (Phase 1A) — nullable pendant transition
         'teacher_id',
         'group_name',
+        'sessions_per_month',
         'price_per_month',
         'price_per_session',
     ];

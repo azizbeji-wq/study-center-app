@@ -363,16 +363,20 @@
             <!-- Synthèse automatique des frais -->
             <div class="pt-2 border-t border-amber-200/50 space-y-1.5 text-xs">
               <div class="flex items-center justify-between text-gray-600">
-                <span>Total des cours (tarifs enseignants) :</span>
-                <span class="font-bold text-gray-900">{{ calculatedGrossPreview }} TND</span>
+                <span>Total brut des cours ({{ formData.subjects.length }} matière{{ formData.subjects.length > 1 ? 's' : '' }}) :</span>
+                <span class="font-bold text-gray-900">{{ calculatedGrossPreview }} TND / mois</span>
               </div>
               <div v-if="formData.is_remise && calculatedDiscountValue > 0" class="flex items-center justify-between text-amber-700 font-medium">
                 <span>Déduction remise ({{ formData.remise }}{{ formData.discount_type === 'percentage' ? '%' : ' TND' }}) :</span>
                 <span class="font-bold">-{{ calculatedDiscountValue }} TND</span>
               </div>
               <div class="flex items-center justify-between pt-1 border-t border-amber-200/70 text-indigo-950 font-bold">
-                <span class="text-xs uppercase tracking-wide text-indigo-900">Total net mensuel :</span>
+                <span class="text-xs uppercase tracking-wide text-indigo-900">Total net mensuel élève :</span>
                 <span class="text-base font-black text-indigo-700">{{ calculatedNetPreview }} TND / mois</span>
+              </div>
+              <div v-if="formData.is_remise && calculatedDiscountValue > 0" class="mt-1 p-2 rounded-lg bg-amber-50 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-1.5">
+                <span class="font-black text-amber-600">ℹ️</span>
+                <span><strong>Règle de gestion :</strong> La remise de <strong>{{ calculatedDiscountValue }} TND</strong> est déduite à 100% de la part de l'administration. La rémunération des enseignants reste calculée sur le brut intégral ({{ calculatedGrossPreview }} TND).</span>
               </div>
             </div>
           </div>
@@ -384,7 +388,7 @@
                 <label class="text-xs font-semibold text-gray-700 uppercase tracking-wider">
                   Enseignants & Matières sélectionnées
                 </label>
-                <p class="text-[11px] text-gray-500">Choisissez d'abord l'enseignant : sa matière et son tarif sont récupérés automatiquement</p>
+                <p class="text-[11px] text-gray-500">Calcul : Nombre de séances × Prix séance fixé par l'administration (somme de toutes les matières)</p>
               </div>
               <button
                 type="button"
@@ -395,51 +399,87 @@
               </button>
             </div>
 
-            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
-              <div v-for="(sub, idx) in formData.subjects" :key="idx" class="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-200">
-                <!-- 1. Enseignant d'abord -->
-                <div class="flex-1">
-                  <select
-                    v-model="sub.teacher_id"
-                    @change="onTeacherChange(sub)"
-                    required
-                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
+            <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+              <div v-for="(sub, idx) in formData.subjects" :key="idx" class="p-2.5 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
+                <div class="flex items-center gap-2">
+                  <!-- 1. Enseignant -->
+                  <div class="flex-1">
+                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Enseignant</label>
+                    <select
+                      v-model="sub.teacher_id"
+                      @change="onTeacherChange(sub)"
+                      required
+                      class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
+                    >
+                      <option :value="undefined" disabled>Choisir l'enseignant...</option>
+                      <option v-for="t in teachers" :key="t.id" :value="t.id">
+                        {{ t.name }} ({{ t.subject }})
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- 2. Matière -->
+                  <div class="flex-1">
+                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Matière</label>
+                    <input
+                      v-model="sub.subject_name"
+                      :list="'teacher-subjects-' + idx"
+                      required
+                      :disabled="!sub.teacher_id"
+                      :placeholder="!sub.teacher_id ? 'Choisir le prof d\'abord' : 'Nom matière'"
+                      class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
+                    />
+                    <datalist :id="'teacher-subjects-' + idx">
+                      <option v-for="s in getSubjectsForTeacher(sub.teacher_id)" :key="s" :value="s" />
+                    </datalist>
+                  </div>
+
+                  <button
+                    type="button"
+                    @click="removeSubjectRow(idx)"
+                    class="mt-4 p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors"
+                    title="Supprimer cette matière"
                   >
-                    <option :value="undefined" disabled>1. Choisir l'enseignant...</option>
-                    <option v-for="t in teachers" :key="t.id" :value="t.id">
-                      {{ t.name }} ({{ t.subject }})
-                    </option>
-                  </select>
+                    <Trash2 class="w-4 h-4" />
+                  </button>
                 </div>
 
-                <!-- 2. Matière ensuite -->
-                <div class="flex-1">
-                  <input
-                    v-model="sub.subject_name"
-                    :list="'teacher-subjects-' + idx"
-                    required
-                    :disabled="!sub.teacher_id"
-                    :placeholder="!sub.teacher_id ? '2. Choisir le prof d\'abord' : 'Nom matière'"
-                    class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400"
-                  />
-                  <datalist :id="'teacher-subjects-' + idx">
-                    <option v-for="s in getSubjectsForTeacher(sub.teacher_id)" :key="s" :value="s" />
-                  </datalist>
-                </div>
+                <!-- 3. Formule : Nombre de séances × Prix séance fixé par l'administration -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-gray-200/70 text-xs">
+                  <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-gray-600 font-medium text-[11px]">Prix séance (Idara) :</span>
+                      <div class="relative w-20">
+                        <input
+                          v-model.number="sub.price_per_session"
+                          type="number"
+                          min="0"
+                          step="1"
+                          placeholder="0"
+                          class="w-full pl-2 pr-6 py-1 border border-gray-300 rounded-md text-xs font-bold text-gray-800 bg-white focus:ring-2 focus:ring-indigo-500"
+                        />
+                        <span class="absolute right-1.5 top-1 text-[10px] text-gray-400 font-bold">DT</span>
+                      </div>
+                    </div>
 
-                <!-- Tarif Enseignant Récupéré Automatiquement -->
-                <div v-if="sub.teacher_id" class="px-2.5 py-1.5 bg-indigo-50 border border-indigo-200/80 rounded-lg text-xs font-semibold text-indigo-700 whitespace-nowrap flex items-center gap-1" title="Tarif mensuel de l'enseignant">
-                  <span>{{ getTeacherMonthlyRate(sub.teacher_id) }} TND/mois</span>
-                </div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-gray-600 font-medium text-[11px]">Séances / mois :</span>
+                      <input
+                        v-model.number="sub.sessions_per_month"
+                        type="number"
+                        min="1"
+                        max="30"
+                        placeholder="4"
+                        class="w-14 px-1.5 py-1 border border-gray-300 rounded-md text-xs font-bold text-gray-800 bg-white text-center focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
 
-                <button
-                  type="button"
-                  @click="removeSubjectRow(idx)"
-                  class="p-1.5 text-gray-400 hover:text-red-600 rounded"
-                  title="Supprimer"
-                >
-                  <Trash2 class="w-4 h-4" />
-                </button>
+                  <div class="px-2.5 py-1 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-bold text-indigo-700 whitespace-nowrap flex items-center gap-1">
+                    <span class="text-[10px] text-indigo-500 uppercase font-semibold">Total matière :</span>
+                    <span>{{ Math.round((sub.sessions_per_month || 4) * (sub.price_per_session || 0)) }} TND / mois</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -497,6 +537,7 @@ interface SubjectEnrollment {
   teacher?: string;
   teacher_id?: number;
   group_name?: string;
+  sessions_per_month?: number;
   price_per_month?: number;
   price_per_session?: number;
 }
@@ -579,6 +620,7 @@ const formData = ref<{
     subject_name: string;
     teacher_id?: number;
     group_name?: string;
+    sessions_per_month?: number;
     price_per_month?: number;
     price_per_session?: number;
   }>;
@@ -625,7 +667,9 @@ function getTeacherMonthlyRate(teacherId?: number): number {
 const calculatedGrossPreview = computed(() => {
   return formData.value.subjects.reduce((sum, s) => {
     if (!s.teacher_id) return sum;
-    return sum + getTeacherMonthlyRate(s.teacher_id);
+    const sessionRate = Number(s.price_per_session) || getTeacherLessonRate(s.teacher_id);
+    const sessions = Number(s.sessions_per_month) || 4;
+    return sum + Math.round(sessionRate * sessions * 100) / 100;
   }, 0);
 });
 
@@ -663,7 +707,9 @@ function feeValue(student: Student): number {
   // Recalcul dynamique selon les enseignants de l'élève
   const gross = (student.subjects || []).reduce((sum, s: any) => {
     const teacherId = s.teacher_id || teachers.value.find(t => t.name === s.teacher)?.id;
-    const rate = s.price_per_month > 0 ? s.price_per_month : getTeacherMonthlyRate(teacherId);
+    const sessionRate = Number(s.price_per_session) > 0 ? Number(s.price_per_session) : getTeacherLessonRate(teacherId);
+    const sessions = Number(s.sessions_per_month) > 0 ? Number(s.sessions_per_month) : 4;
+    const rate = Number(s.price_per_month) > 0 ? Number(s.price_per_month) : (sessionRate * sessions);
     return sum + rate;
   }, 0);
   if (student.is_remise && student.remise) {
@@ -703,7 +749,7 @@ function getSubjectsForTeacher(teacherId?: number): string[] {
   return list.length > 0 ? list : (t.subject ? [t.subject] : availableLevelSubjects.value);
 }
 
-function onTeacherChange(sub: { subject_name: string; teacher_id?: number; price_per_month?: number; price_per_session?: number }) {
+function onTeacherChange(sub: { subject_name: string; teacher_id?: number; sessions_per_month?: number; price_per_month?: number; price_per_session?: number }) {
   if (sub.teacher_id) {
     const t = teachers.value.find(teach => teach.id === sub.teacher_id);
     if (t) {
@@ -712,11 +758,13 @@ function onTeacherChange(sub: { subject_name: string; teacher_id?: number; price
       sub.subject_name = subjects[0] || (t.subject ? t.subject.split(/[,;/،]+/)[0].trim() : '');
       const rate = getTeacherLessonRate(t.id);
       sub.price_per_session = rate;
-      sub.price_per_month = rate * 4;
+      sub.sessions_per_month = sub.sessions_per_month || 4;
+      sub.price_per_month = rate * sub.sessions_per_month;
     }
   } else {
     sub.subject_name = '';
     sub.price_per_session = 0;
+    sub.sessions_per_month = 4;
     sub.price_per_month = 0;
   }
 }
@@ -740,7 +788,7 @@ function openAddModal() {
     discount_type: 'fixed',
     base_fee: 0,
     subjects: [
-      { subject_name: '', teacher_id: undefined, group_name: 'Sc1', price_per_month: 0, price_per_session: 0 }
+      { subject_name: '', teacher_id: undefined, group_name: 'Sc1', sessions_per_month: 4, price_per_session: 0, price_per_month: 0 }
     ]
   };
   showModal.value = true;
@@ -764,12 +812,15 @@ function openEditModal(student: Student) {
     subjects: (student.subjects || []).map((s: any) => {
       const teacherId = s.teacher_id || teachers.value.find(t => t.name === s.teacher)?.id;
       const rate = getTeacherLessonRate(teacherId);
+      const sessionRate = s.price_per_session > 0 ? s.price_per_session : rate;
+      const sessions = s.sessions_per_month > 0 ? s.sessions_per_month : 4;
       return {
         subject_name: s.subject ?? '',
         teacher_id: teacherId,
         group_name: s.group_name || student.group_name,
-        price_per_month: s.price_per_month > 0 ? s.price_per_month : (rate * 4),
-        price_per_session: s.price_per_session > 0 ? s.price_per_session : rate,
+        sessions_per_month: sessions,
+        price_per_session: sessionRate,
+        price_per_month: s.price_per_month > 0 ? s.price_per_month : (sessionRate * sessions),
       };
     })
   };
@@ -786,8 +837,9 @@ function addSubjectRow() {
     subject_name: '',
     teacher_id: undefined,
     group_name: formData.value.group_name,
-    price_per_month: 0,
-    price_per_session: 0
+    sessions_per_month: 4,
+    price_per_session: 0,
+    price_per_month: 0
   });
 }
 
@@ -810,13 +862,16 @@ async function saveStudent() {
     discount_type: formData.value.discount_type,
     base_fee: 0,
     subjects: formData.value.subjects.map(s => {
-      const rate = getTeacherLessonRate(s.teacher_id);
+      const teacherRate = getTeacherLessonRate(s.teacher_id);
+      const sessionRate = Number(s.price_per_session) || teacherRate;
+      const sessions = Number(s.sessions_per_month) || 4;
       return {
         subject: s.subject_name,
         teacher_id: s.teacher_id,
         group_name: s.group_name || formData.value.group_name,
-        price_per_month: rate * 4,
-        price_per_session: rate,
+        sessions_per_month: sessions,
+        price_per_session: sessionRate,
+        price_per_month: Math.round(sessionRate * sessions * 100) / 100,
       };
     })
   };

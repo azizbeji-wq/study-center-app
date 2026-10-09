@@ -75,10 +75,19 @@ class PaymentController extends Controller
         foreach ($students as $student) {
             $attendances = $attendedBy->get($student->id, collect());
 
-            // Remise en pourcentage appliquee au prix de la seance
-            $discountFactor = ($student->is_remise && $student->discount_type === 'percentage' && $student->remise > 0)
-                ? max(0, 1 - ((float) $student->remise / 100))
-                : 1;
+            // Remise accordee a l'eleve (pourcentage ou montant fixe)
+            $discountFactor = 1.0;
+            if ($student->is_remise && $student->remise > 0) {
+                if ($student->discount_type === 'percentage') {
+                    $discountFactor = max(0.0, 1.0 - ((float) $student->remise / 100.0));
+                } else {
+                    $grossMonthlyTotal = (float) $student->enrollments->sum('price_per_month');
+                    if ($grossMonthlyTotal <= 0) {
+                        $grossMonthlyTotal = max(1.0, (float) $student->enrollments->count() * 15.0 * 4.0);
+                    }
+                    $discountFactor = max(0.0, 1.0 - (min($grossMonthlyTotal, (float) $student->remise) / $grossMonthlyTotal));
+                }
+            }
 
             foreach ($student->enrollments->groupBy('teacher_id') as $teacherId => $enrollments) {
                 $subjects = $enrollments->pluck('subject_name')->unique()->values();
@@ -439,7 +448,7 @@ class PaymentController extends Controller
             if ($from) $paymentsQuery->whereDate('date', '>=', $from);
             if ($to) $paymentsQuery->whereDate('date', '<=', $to);
 
-            $payments = $paymentsQuery->orderBy('date')->get();
+            $payments = $paymentsQuery->with('student.enrollments')->orderBy('date')->get();
 
             $totalCollected = 0.0;
             $totalTeacherShare = 0.0;
@@ -450,10 +459,18 @@ class PaymentController extends Controller
                 $amt = (float) $p->amount;
                 $sessions = (int) $p->sessions_paid;
 
+                // Récupération de l'inscription pour déterminer le tarif brut normal de la séance
+                $enr = $p->student?->enrollments?->firstWhere('teacher_id', $t->id);
+                $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
+                $baseGross = max($amt, round($sessions * $sessionPrice, 2));
+
                 if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
-                    $tShare = round(($amt * $ratePct) / 100.0, 2);
+                    // Formule C : Pourcentage calculé sur le tarif brut (remise absorbée par l'administration)
+                    $tShare = round(($baseGross * $ratePct) / 100.0, 2);
                 } else {
-                    $tShare = round($sessions * $salaryPerLesson, 2);
+                    // Formule B : Montant fixe par élève
+                    $fixedRate = (float) ($t->fixed_student_rate ?? $salaryPerLesson);
+                    $tShare = round($fixedRate * max(1, round($sessions / 4.0)), 2);
                 }
                 $cMargin = round(max(0, $amt - $tShare), 2);
 

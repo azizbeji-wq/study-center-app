@@ -36,13 +36,14 @@ class TeacherController extends Controller
             'remuneration_type' => 'nullable|string|in:percentage,fixed',
             'rate_percentage' => 'nullable|numeric|min:0|max:100',
             'salary_per_lesson' => 'nullable|numeric|min:0',
+            'fixed_student_rate' => 'nullable|numeric|min:0',
         ]);
 
         $data = $this->normalizeSubjects($data);
 
         // La remuneration est reservee au directeur
         if ($request->user()->role !== 'director') {
-            unset($data['remuneration_type'], $data['rate_percentage'], $data['salary_per_lesson']);
+            unset($data['remuneration_type'], $data['rate_percentage'], $data['salary_per_lesson'], $data['fixed_student_rate']);
         }
 
         // Map weeklyLessons to weekly_lessons in database
@@ -90,13 +91,14 @@ class TeacherController extends Controller
             'remuneration_type' => 'nullable|string|in:percentage,fixed',
             'rate_percentage' => 'nullable|numeric|min:0|max:100',
             'salary_per_lesson' => 'nullable|numeric|min:0',
+            'fixed_student_rate' => 'nullable|numeric|min:0',
         ]);
 
         $data = $this->normalizeSubjects($data);
 
         // La remuneration est reservee au directeur
         if ($request->user()->role !== 'director') {
-            unset($data['remuneration_type'], $data['rate_percentage'], $data['salary_per_lesson']);
+            unset($data['remuneration_type'], $data['rate_percentage'], $data['salary_per_lesson'], $data['fixed_student_rate']);
         }
 
         if (isset($data['weeklyLessons'])) {
@@ -202,17 +204,20 @@ class TeacherController extends Controller
         $remType = $t->remuneration_type ?? 'percentage';
         $ratePct = (float) ($t->rate_percentage ?? 70);
         $salaryPerLesson = (float) ($t->salary_per_lesson ?? 35);
+        $fixedStudentRate = (float) ($t->fixed_student_rate ?? 15);
         $weeklyLessons = (int) ($t->weekly_lessons ?? 4);
         $monthlyLessons = max(1, $weeklyLessons * 4);
 
         if ($remType === 'percentage') {
+            // Formule C : Pourcentage (%) du montant des cours
             $teacherShare = round(($monthlyGross * $ratePct) / 100, 2);
-            $centerShare = round($monthlyGross - $teacherShare, 2);
+            $centerShare = round(max(0, $monthlyGross - $teacherShare), 2);
             $perSessionEst = round($teacherShare / $monthlyLessons, 2);
         } else {
-            $teacherShare = round($monthlyLessons * $salaryPerLesson, 2);
+            // Formule B : Montant fixe par élève inscrit
+            $teacherShare = round($studentCount * $fixedStudentRate, 2);
             $centerShare = round(max(0, $monthlyGross - $teacherShare), 2);
-            $perSessionEst = $salaryPerLesson;
+            $perSessionEst = round($teacherShare / max(1, $monthlyLessons), 2);
         }
 
         $payoutDateStr = $t->payout_date instanceof \DateTimeInterface 
@@ -233,6 +238,7 @@ class TeacherController extends Controller
             'remuneration_type' => $remType,
             'rate_percentage' => $ratePct,
             'salary_per_lesson' => $salaryPerLesson,
+            'fixed_student_rate' => $fixedStudentRate,
             'monthly_gross_revenue' => $monthlyGross,
             'teacher_share' => $teacherShare,
             'center_share' => $centerShare,
@@ -255,6 +261,7 @@ class TeacherController extends Controller
                 $row['remuneration_type'],
                 $row['rate_percentage'],
                 $row['salary_per_lesson'],
+                $row['fixed_student_rate'],
                 $row['monthly_gross_revenue'],
                 $row['teacher_share'],
                 $row['center_share'],
