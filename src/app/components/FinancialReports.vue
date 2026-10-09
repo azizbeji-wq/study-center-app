@@ -1098,46 +1098,82 @@
             <p class="text-xs text-gray-500">Générez les fichiers certifiés aux formats compatibles Excel, CSV et PDF :</p>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <!-- Carte 1 : Grand Livre des Recettes -->
               <div class="p-4 border border-gray-200 rounded-xl hover:border-indigo-300 transition-colors bg-gray-50/50 flex flex-col justify-between">
                 <div>
                   <h4 class="font-bold text-gray-900 text-sm">Grand Livre des Recettes</h4>
                   <p class="text-xs text-gray-500 mt-1">Détail exhaustif de chaque paiement élève et garderie avec reçu et mode de règlement.</p>
                 </div>
-                <button
-                  @click="exportCsv('payments')"
-                  class="mt-4 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-gray-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-colors shadow-xs"
-                >
-                  <Download class="w-3.5 h-3.5" />
-                  <span>Exporter Recettes (CSV)</span>
-                </button>
+                <div class="mt-4 flex flex-col sm:flex-row items-stretch gap-2">
+                  <button
+                    @click="openExpertPdfModal('receipts')"
+                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                    title="Générer et exporter le Grand Livre des Recettes au format PDF officiel"
+                  >
+                    <Printer class="w-3.5 h-3.5" />
+                    <span>Exporter PDF (A4)</span>
+                  </button>
+                  <button
+                    @click="exportCsv('payments')"
+                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-gray-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                    title="Exporter au format Excel / CSV"
+                  >
+                    <Download class="w-3.5 h-3.5" />
+                    <span>CSV</span>
+                  </button>
+                </div>
               </div>
 
+              <!-- Carte 2 : Journal des Dépenses -->
               <div class="p-4 border border-gray-200 rounded-xl hover:border-indigo-300 transition-colors bg-gray-50/50 flex flex-col justify-between">
                 <div>
                   <h4 class="font-bold text-gray-900 text-sm">Journal des Dépenses</h4>
                   <p class="text-xs text-gray-500 mt-1">Liste complète des factures, loyers, salaires annexes et justificatifs comptables.</p>
                 </div>
-                <button
-                  @click="exportCsv('expenses')"
-                  class="mt-4 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-gray-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-colors shadow-xs"
-                >
-                  <Download class="w-3.5 h-3.5" />
-                  <span>Exporter Dépenses (CSV)</span>
-                </button>
+                <div class="mt-4 flex flex-col sm:flex-row items-stretch gap-2">
+                  <button
+                    @click="openExpertPdfModal('expenses')"
+                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                    title="Générer et exporter le Journal des Dépenses au format PDF officiel"
+                  >
+                    <Printer class="w-3.5 h-3.5" />
+                    <span>Exporter PDF (A4)</span>
+                  </button>
+                  <button
+                    @click="exportCsv('expenses')"
+                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-gray-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                    title="Exporter au format Excel / CSV"
+                  >
+                    <Download class="w-3.5 h-3.5" />
+                    <span>CSV</span>
+                  </button>
+                </div>
               </div>
 
+              <!-- Carte 3 : États des Honoraires Professeurs -->
               <div class="p-4 border border-gray-200 rounded-xl hover:border-indigo-300 transition-colors bg-gray-50/50 flex flex-col justify-between">
                 <div>
                   <h4 class="font-bold text-gray-900 text-sm">États des Honoraires Professeurs</h4>
                   <p class="text-xs text-gray-500 mt-1">Récapitulatif des cours, quotas de séances, montants versés et soldes d'honoraires.</p>
                 </div>
-                <button
-                  @click="exportCsv('teachers')"
-                  class="mt-4 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-gray-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-colors shadow-xs"
-                >
-                  <Download class="w-3.5 h-3.5" />
-                  <span>Exporter Honoraires (CSV)</span>
-                </button>
+                <div class="mt-4 flex flex-col sm:flex-row items-stretch gap-2">
+                  <button
+                    @click="openExpertPdfModal('teachers')"
+                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                    title="Générer et exporter les Honoraires des Enseignants au format PDF officiel"
+                  >
+                    <Printer class="w-3.5 h-3.5" />
+                    <span>Exporter PDF (A4)</span>
+                  </button>
+                  <button
+                    @click="exportCsv('teachers')"
+                    class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-gray-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                    title="Exporter au format Excel / CSV"
+                  >
+                    <Download class="w-3.5 h-3.5" />
+                    <span>CSV</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1620,6 +1656,323 @@
         </div>
       </div>
     </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL 4 : EXPORTS OFFICIELS EXPERT-COMPTABLE (PDF & IMPRESSION A4) -->
+    <!-- ============================================================== -->
+    <div
+      v-if="showExpertPdfModal"
+      @click.self="showExpertPdfModal = false"
+      class="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs p-3 sm:p-6 flex justify-center items-start"
+    >
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-5xl my-2 sm:my-6 overflow-hidden flex flex-col max-h-[94vh] animate-in fade-in zoom-in-95">
+        <!-- Actions barre (Sticky Top) -->
+        <div class="p-4 bg-gray-900 text-white flex items-center justify-between no-print print:hidden shrink-0 shadow-sm z-20">
+          <div class="flex items-center gap-2">
+            <FileText class="w-4 h-4 text-indigo-400" />
+            <span class="text-xs sm:text-sm font-bold">{{ expertPdfModalTitle }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              @click="printExpertReport"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <Printer class="w-3.5 h-3.5" />
+              <span>Imprimer / PDF (A4)</span>
+            </button>
+            <button
+              @click="showExpertPdfModal = false"
+              class="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
+              title="Fermer"
+            >
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Corps Déroulant Imprimable -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-8 bg-gray-50/50 print:p-0 print:bg-white print:overflow-visible">
+          <div id="expert-report-printable" class="p-6 sm:p-8 space-y-6 text-gray-900 bg-white rounded-xl border border-gray-200 print:border-none print:shadow-none print:p-0">
+            <!-- En-tête officiel Centre d'études -->
+            <div class="avoid-break flex items-start justify-between border-b-2 border-gray-900 pb-5">
+              <div>
+                <h1 class="text-xl font-black tracking-tight text-gray-900">CENTRE D'ÉTUDES & SOUTIEN SCOLAIRE</h1>
+                <p class="text-xs text-gray-500 mt-0.5">Direction Financière & Comptabilité Générale — États d'Expertise</p>
+                <p class="text-xs text-gray-500">Tunis, Tunisie • Document Officiel Conforme</p>
+              </div>
+              <div class="text-right">
+                <span class="text-xs font-mono px-2.5 py-1 bg-gray-100 rounded-lg font-bold border border-gray-300">
+                  {{ expertPdfDocRef }}
+                </span>
+                <p class="text-xs text-gray-500 mt-2">Édité le: {{ new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) }}</p>
+                <p class="text-xs text-gray-500">Période: <span class="font-bold text-gray-900">{{ selectedPeriodLabel }}</span></p>
+              </div>
+            </div>
+
+            <!-- DOCUMENT 1 : GRAND LIVRE DES RECETTES -->
+            <div v-if="expertPdfType === 'receipts'" class="space-y-6">
+              <div class="avoid-break text-center py-2.5 bg-gray-50 rounded-xl border border-gray-200">
+                <h2 class="text-sm font-black uppercase tracking-wider text-gray-900">GRAND LIVRE GÉNÉRAL DES RECETTES & ENCAISSEMENTS</h2>
+                <p class="text-xs text-gray-600 mt-0.5">
+                  Relevé exhaustif des règlements perçus (cours de soutien, élèves et garderie scolaire)
+                </p>
+              </div>
+
+              <!-- KPIs Recettes -->
+              <div class="avoid-break grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider font-semibold">Total Encaissé</span>
+                  <p class="text-lg font-black text-emerald-700 mt-0.5">{{ totalFilteredPaymentsAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} DT</p>
+                  <p class="text-[10px] text-gray-500 mt-0.5">{{ filteredPaymentsForExport.length }} transactions</p>
+                </div>
+                <div class="p-3 bg-blue-50/70 rounded-xl border border-blue-200">
+                  <span class="text-blue-700 uppercase text-[10px] tracking-wider font-semibold">Part Élèves (Cours)</span>
+                  <p class="text-lg font-black text-blue-900 mt-0.5">{{ totalFilteredPaymentsStudents.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} DT</p>
+                  <p class="text-[10px] text-blue-600 mt-0.5">Soutien scolaire</p>
+                </div>
+                <div class="p-3 bg-amber-50/70 rounded-xl border border-amber-200">
+                  <span class="text-amber-700 uppercase text-[10px] tracking-wider font-semibold">Part Garderie</span>
+                  <p class="text-lg font-black text-amber-900 mt-0.5">{{ totalFilteredPaymentsDaycare.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} DT</p>
+                  <p class="text-[10px] text-amber-600 mt-0.5">Services de garde</p>
+                </div>
+                <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-200">
+                  <span class="text-indigo-700 uppercase text-[10px] tracking-wider font-semibold">Règlements Espèces</span>
+                  <p class="text-lg font-black text-indigo-900 mt-0.5">{{ totalCashPaymentsAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} DT</p>
+                  <p class="text-[10px] text-indigo-600 mt-0.5">Caisse directe</p>
+                </div>
+              </div>
+
+              <!-- Tableau Grand Livre Recettes -->
+              <div class="avoid-break">
+                <table class="w-full text-left text-xs border border-gray-200 rounded-xl overflow-hidden whitespace-nowrap">
+                  <thead class="bg-gray-100 font-semibold text-gray-700 border-b border-gray-200">
+                    <tr>
+                      <th class="py-2.5 px-3">Date</th>
+                      <th class="py-2.5 px-3">Réf / Reçu</th>
+                      <th class="py-2.5 px-3">Élève / Enfant</th>
+                      <th class="py-2.5 px-3">Mois</th>
+                      <th class="py-2.5 px-3">Type</th>
+                      <th class="py-2.5 px-3">Mode Règlement</th>
+                      <th class="py-2.5 px-3 text-right font-bold">Montant (DT)</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="p in filteredPaymentsForExport" :key="p.id" class="avoid-break hover:bg-gray-50/50">
+                      <td class="py-2 px-3 text-gray-700">{{ p.date || p.created_at?.substring(0, 10) || '—' }}</td>
+                      <td class="py-2 px-3 font-mono text-[11px] text-gray-500">#REC-{{ String(p.id).padStart(5, '0') }}</td>
+                      <td class="py-2 px-3 font-bold text-gray-900">{{ p.student_name || 'Élève inconnu' }}</td>
+                      <td class="py-2 px-3 text-gray-600">{{ p.month || '—' }}</td>
+                      <td class="py-2 px-3">
+                        <span
+                          class="px-2 py-0.5 rounded text-[10px] font-bold"
+                          :class="p.daycare_child_id || p.is_garderie ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'"
+                        >
+                          {{ p.daycare_child_id || p.is_garderie ? 'Garderie' : (p.is_primaire ? 'Primaire' : (p.is_secondaire ? 'Secondaire' : 'Cours')) }}
+                        </span>
+                      </td>
+                      <td class="py-2 px-3 text-gray-600 capitalize">{{ p.payment_method || 'Espèces' }}</td>
+                      <td class="py-2 px-3 text-right font-black text-gray-900">{{ Number(p.amount || 0).toFixed(2) }} DT</td>
+                    </tr>
+                    <tr v-if="filteredPaymentsForExport.length === 0">
+                      <td colspan="7" class="py-8 text-center text-gray-400">Aucun encaissement enregistré sur cette période</td>
+                    </tr>
+                  </tbody>
+                  <tfoot v-if="filteredPaymentsForExport.length > 0" class="bg-gray-100 font-bold border-t-2 border-gray-300">
+                    <tr>
+                      <td colspan="6" class="py-2.5 px-3 text-right uppercase text-[11px] text-gray-700">Total Général des Recettes :</td>
+                      <td class="py-2.5 px-3 text-right font-black text-emerald-700 text-sm">{{ totalFilteredPaymentsAmount.toFixed(2) }} DT</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- DOCUMENT 2 : JOURNAL DES DÉPENSES -->
+            <div v-else-if="expertPdfType === 'expenses'" class="space-y-6">
+              <div class="avoid-break text-center py-2.5 bg-gray-50 rounded-xl border border-gray-200">
+                <h2 class="text-sm font-black uppercase tracking-wider text-gray-900">JOURNAL GÉNÉRAL DES DÉPENSES & CHARGES D'EXPLOITATION</h2>
+                <p class="text-xs text-gray-600 mt-0.5">
+                  Livre comptable exhaustif des factures, loyers, salaires annexes et achats d'exploitation
+                </p>
+              </div>
+
+              <!-- KPIs Dépenses -->
+              <div class="avoid-break grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div class="p-3 bg-red-50/70 rounded-xl border border-red-200">
+                  <span class="text-red-700 uppercase text-[10px] tracking-wider font-semibold">Total Dépenses</span>
+                  <p class="text-lg font-black text-red-600 mt-0.5">{{ totalFilteredExpenses.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} DT</p>
+                  <p class="text-[10px] text-red-600 mt-0.5">{{ filteredExpenses.length }} écritures</p>
+                </div>
+                <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-200">
+                  <span class="text-indigo-700 uppercase text-[10px] tracking-wider font-semibold">Charges Récurrentes</span>
+                  <p class="text-lg font-black text-indigo-900 mt-0.5">{{ recurringExpensesAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} DT</p>
+                  <p class="text-[10px] text-indigo-600 mt-0.5">Loyer, abonnements...</p>
+                </div>
+                <div class="p-3 bg-amber-50/70 rounded-xl border border-amber-200">
+                  <span class="text-amber-700 uppercase text-[10px] tracking-wider font-semibold">Fournitures & Entretien</span>
+                  <p class="text-lg font-black text-amber-900 mt-0.5">{{ suppliesExpensesAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} DT</p>
+                  <p class="text-[10px] text-amber-600 mt-0.5">Consommables</p>
+                </div>
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider font-semibold">Règlements Espèces</span>
+                  <p class="text-lg font-black text-gray-900 mt-0.5">{{ cashExpensesAmount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }} DT</p>
+                  <p class="text-[10px] text-gray-500 mt-0.5">Sorties de caisse</p>
+                </div>
+              </div>
+
+              <!-- Tableau Dépenses -->
+              <div class="avoid-break">
+                <table class="w-full text-left text-xs border border-gray-200 rounded-xl overflow-hidden whitespace-nowrap">
+                  <thead class="bg-gray-100 font-semibold text-gray-700 border-b border-gray-200">
+                    <tr>
+                      <th class="py-2.5 px-3">Date</th>
+                      <th class="py-2.5 px-3">Catégorie</th>
+                      <th class="py-2.5 px-3">Libellé / Titre de dépense</th>
+                      <th class="py-2.5 px-3">Réf / Justificatif</th>
+                      <th class="py-2.5 px-3">Mode</th>
+                      <th class="py-2.5 px-3 text-center">Récurrent</th>
+                      <th class="py-2.5 px-3 text-right font-bold">Montant (DT)</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="e in filteredExpenses" :key="e.id" class="avoid-break hover:bg-gray-50/50">
+                      <td class="py-2 px-3 text-gray-700">{{ e.date || '—' }}</td>
+                      <td class="py-2 px-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold border" :class="getCategoryBadgeClass(e.category)">
+                          {{ getCategoryLabel(e.category) }}
+                        </span>
+                      </td>
+                      <td class="py-2 px-3 font-bold text-gray-900">{{ e.title }}</td>
+                      <td class="py-2 px-3 font-mono text-[11px] text-gray-500">{{ e.receipt_reference || '—' }}</td>
+                      <td class="py-2 px-3 text-gray-600 capitalize">{{ e.payment_method || 'especes' }}</td>
+                      <td class="py-2 px-3 text-center">
+                        <span v-if="e.is_recurring" class="text-indigo-600 font-bold">Oui</span>
+                        <span v-else class="text-gray-400">Non</span>
+                      </td>
+                      <td class="py-2 px-3 text-right font-black text-red-600">{{ Number(e.amount || 0).toFixed(2) }} DT</td>
+                    </tr>
+                    <tr v-if="filteredExpenses.length === 0">
+                      <td colspan="7" class="py-8 text-center text-gray-400">Aucune dépense enregistrée sur cette période</td>
+                    </tr>
+                  </tbody>
+                  <tfoot v-if="filteredExpenses.length > 0" class="bg-gray-100 font-bold border-t-2 border-gray-300">
+                    <tr>
+                      <td colspan="6" class="py-2.5 px-3 text-right uppercase text-[11px] text-gray-700">Total Général des Dépenses :</td>
+                      <td class="py-2.5 px-3 text-right font-black text-red-600 text-sm">{{ totalFilteredExpenses.toFixed(2) }} DT</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- DOCUMENT 3 : ÉTATS DES HONORAIRES PROFESSEURS -->
+            <div v-else-if="expertPdfType === 'teachers'" class="space-y-6">
+              <div class="avoid-break text-center py-2.5 bg-gray-50 rounded-xl border border-gray-200">
+                <h2 class="text-sm font-black uppercase tracking-wider text-gray-900">ÉTATS CERTIFIÉS DES HONORAIRES & RÉMUNÉRATIONS DES ENSEIGNANTS</h2>
+                <p class="text-xs text-gray-600 mt-0.5">
+                  Récapitulatif des cours, quotas de séances, montants versés et soldes d'honoraires par professeur
+                </p>
+              </div>
+
+              <!-- KPIs Enseignants -->
+              <div class="avoid-break grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider font-semibold">CA Cours Encaissé</span>
+                  <p class="text-lg font-black text-gray-900 mt-0.5">{{ totalTeachersGross.toFixed(2) }} DT</p>
+                  <p class="text-[10px] text-gray-500 mt-0.5">{{ (summaryData?.byTeacher || []).length }} enseignants</p>
+                </div>
+                <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-200">
+                  <span class="text-indigo-700 uppercase text-[10px] tracking-wider font-semibold">Total Honoraires Dûs</span>
+                  <p class="text-lg font-black text-indigo-900 mt-0.5">{{ Number(kpis.totalTeacherPayouts || 0).toFixed(2) }} DT</p>
+                  <p class="text-[10px] text-indigo-600 mt-0.5">Rémunération totale</p>
+                </div>
+                <div class="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200">
+                  <span class="text-emerald-700 uppercase text-[10px] tracking-wider font-semibold">Déjà Versé</span>
+                  <p class="text-lg font-black text-emerald-700 mt-0.5">{{ totalTeachersPaid.toFixed(2) }} DT</p>
+                  <p class="text-[10px] text-emerald-600 mt-0.5">Règlements effectués</p>
+                </div>
+                <div class="p-3 bg-red-50/70 rounded-xl border border-red-200">
+                  <span class="text-red-700 uppercase text-[10px] tracking-wider font-semibold">Reste à Régler</span>
+                  <p class="text-lg font-black text-red-600 mt-0.5">{{ totalTeachersRemaining.toFixed(2) }} DT</p>
+                  <p class="text-[10px] text-red-600 mt-0.5">Soldes en attente</p>
+                </div>
+              </div>
+
+              <!-- Tableau Honoraires Enseignants -->
+              <div class="avoid-break">
+                <table class="w-full text-left text-xs border border-gray-200 rounded-xl overflow-hidden whitespace-nowrap">
+                  <thead class="bg-gray-100 font-semibold text-gray-700 border-b border-gray-200">
+                    <tr>
+                      <th class="py-2.5 px-3">Enseignant</th>
+                      <th class="py-2.5 px-3">Matière</th>
+                      <th class="py-2.5 px-3">Formule Appliquée</th>
+                      <th class="py-2.5 px-2 text-center">Séances</th>
+                      <th class="py-2.5 px-3 text-right">CA Encaissé</th>
+                      <th class="py-2.5 px-3 text-right font-bold text-indigo-900">Part Due (DT)</th>
+                      <th class="py-2.5 px-3 text-right text-emerald-700">Déjà Versé</th>
+                      <th class="py-2.5 px-3 text-right font-bold">Reste à Payer</th>
+                      <th class="py-2.5 px-3 text-center">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr v-for="t in summaryData?.byTeacher || []" :key="t.id" class="avoid-break hover:bg-gray-50/50">
+                      <td class="py-2 px-3 font-bold text-gray-900">{{ t.name }}</td>
+                      <td class="py-2 px-3 text-gray-600">{{ t.subject || 'Général' }}</td>
+                      <td class="py-2 px-3 text-gray-600">
+                        <span v-if="t.remunerationType === 'percentage'" class="text-indigo-600 font-medium">Formule C ({{ t.ratePercentage || 70 }}%)</span>
+                        <span v-else-if="t.remunerationType === 'fixed_center'" class="text-emerald-700 font-medium">Formule A (Idara {{ t.centerFixedPerStudent || 20 }} DT/él)</span>
+                        <span v-else class="text-purple-700 font-medium">Formule B (Fixe {{ t.fixedStudentRate || 15 }} DT/él)</span>
+                      </td>
+                      <td class="py-2 px-2 text-center font-bold text-gray-800">{{ t.sessionsCount }}</td>
+                      <td class="py-2 px-3 text-right text-gray-600">{{ Number(t.revenueCollected || 0).toFixed(2) }} DT</td>
+                      <td class="py-2 px-3 text-right font-black text-indigo-900">{{ Number(t.teacherShare || 0).toFixed(2) }} DT</td>
+                      <td class="py-2 px-3 text-right text-emerald-700 font-semibold">{{ Number(t.paidAmount || 0).toFixed(2) }} DT</td>
+                      <td class="py-2 px-3 text-right font-black" :class="t.remainingToPay > 0 ? 'text-red-600' : 'text-gray-400'">
+                        {{ Number(t.remainingToPay || 0).toFixed(2) }} DT
+                      </td>
+                      <td class="py-2 px-3 text-center">
+                        <span
+                          class="px-2 py-0.5 rounded text-[10px] font-bold"
+                          :class="t.payoutStatus === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                        >
+                          {{ t.payoutStatus === 'paid' ? 'Réglé' : 'En attente' }}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr v-if="(summaryData?.byTeacher || []).length === 0">
+                      <td colspan="9" class="py-8 text-center text-gray-400">Aucun enseignant enregistré sur cette période</td>
+                    </tr>
+                  </tbody>
+                  <tfoot v-if="(summaryData?.byTeacher || []).length > 0" class="bg-gray-100 font-bold border-t-2 border-gray-300">
+                    <tr>
+                      <td colspan="5" class="py-2.5 px-3 text-right uppercase text-[11px] text-gray-700">Totaux des Honoraires :</td>
+                      <td class="py-2.5 px-3 text-right font-black text-indigo-900 text-sm">{{ Number(kpis.totalTeacherPayouts || 0).toFixed(2) }} DT</td>
+                      <td class="py-2.5 px-3 text-right text-emerald-700 text-sm">{{ totalTeachersPaid.toFixed(2) }} DT</td>
+                      <td class="py-2.5 px-3 text-right font-black text-red-600 text-sm">{{ totalTeachersRemaining.toFixed(2) }} DT</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Visa et Certification pour l'Expert-Comptable -->
+            <div class="avoid-break grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t-2 border-gray-900 text-xs">
+              <div>
+                <p class="font-bold text-gray-900">Visa & Rapprochement Comptable :</p>
+                <p class="text-[10px] text-gray-500 mt-1">Conforme aux livres auxiliaires, reçus de paiement et fiches d'émargement.</p>
+                <div class="h-14 border-b border-dashed border-gray-400 mt-4"></div>
+              </div>
+              <div class="text-right">
+                <p class="font-bold text-gray-900">Cachet & Signature de la Direction :</p>
+                <p class="text-[10px] text-gray-500 mt-1">Document certifié pour audit et déclaration comptable.</p>
+                <div class="h-14 border-b border-dashed border-gray-400 mt-4"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1673,8 +2026,18 @@ const isLoading = ref(false);
 const summaryData = ref<any>(null);
 const expensesList = ref<any[]>([]);
 const auditLogs = ref<any[]>([]);
+const paymentsList = ref<any[]>([]);
 
 const kpis = computed(() => summaryData.value?.kpis || {});
+
+async function fetchPayments() {
+  try {
+    const res = await api.get('/api/payments');
+    paymentsList.value = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+  } catch (e) {
+    console.error('Erreur chargement paiements pour exports:', e);
+  }
+}
 
 // ─── Chargement de la Synthèse ───────────────────────────────────────────────
 async function fetchSummary() {
@@ -1971,6 +2334,108 @@ function printElement(elementId: string) {
   printIsolatedElement(elementId, docTitle);
 }
 
+// ─── Modal & Fonctions d'Exports Expert-Comptable (PDF / A4) ─────────────────
+const showExpertPdfModal = ref(false);
+const expertPdfType = ref<'receipts' | 'expenses' | 'teachers'>('receipts');
+
+const selectedPeriodLabel = computed(() => {
+  if (selectedPeriod.value === 'school_year') return `Année Scolaire ${selectedSchoolYear.value}`;
+  if (selectedPeriod.value === 'current_month') return `Mois ${selectedMonth.value}`;
+  return '12 derniers mois';
+});
+
+const expertPdfModalTitle = computed(() => {
+  if (expertPdfType.value === 'receipts') return 'Grand Livre des Recettes (Export PDF & Impression A4)';
+  if (expertPdfType.value === 'expenses') return 'Journal Général des Dépenses (Export PDF & Impression A4)';
+  return 'États des Honoraires Enseignants (Export PDF & Impression A4)';
+});
+
+const expertPdfDocRef = computed(() => {
+  const m = selectedMonth.value || 'ANNUEL';
+  if (expertPdfType.value === 'receipts') return `GL-RECETTES-${m}`;
+  if (expertPdfType.value === 'expenses') return `JD-DEPENSES-${m}`;
+  return `HONORAIRES-${m}`;
+});
+
+function openExpertPdfModal(type: 'receipts' | 'expenses' | 'teachers') {
+  expertPdfType.value = type;
+  showExpertPdfModal.value = true;
+  if (type === 'receipts' && paymentsList.value.length === 0) {
+    fetchPayments();
+  }
+}
+
+function printExpertReport() {
+  const titles = {
+    receipts: `Grand Livre des Recettes - ${selectedMonth.value || 'Période'}`,
+    expenses: `Journal des Dépenses - ${selectedMonth.value || 'Période'}`,
+    teachers: `États des Honoraires Enseignants - ${selectedMonth.value || 'Période'}`,
+  };
+  printIsolatedElement('expert-report-printable', titles[expertPdfType.value]);
+}
+
+// ─── Calculs spécifiques pour les états comptables imprimables ────────────────
+const filteredPaymentsForExport = computed(() => {
+  return paymentsList.value.filter(p => {
+    if (selectedPeriod.value === 'current_month') {
+      const pMonth = p.month || (p.date ? p.date.substring(0, 7) : '');
+      return pMonth === selectedMonth.value;
+    }
+    if (summaryData.value?.range?.start && summaryData.value?.range?.end && p.date) {
+      return p.date >= summaryData.value.range.start && p.date <= summaryData.value.range.end;
+    }
+    return true;
+  });
+});
+
+const totalFilteredPaymentsAmount = computed(() => {
+  return filteredPaymentsForExport.value.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+});
+
+const totalFilteredPaymentsStudents = computed(() => {
+  return filteredPaymentsForExport.value
+    .filter(p => !p.daycare_child_id && !p.is_garderie)
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+});
+
+const totalFilteredPaymentsDaycare = computed(() => {
+  return filteredPaymentsForExport.value
+    .filter(p => p.daycare_child_id || p.is_garderie || (p.student_name || '').toLowerCase().includes('garde'))
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+});
+
+const totalCashPaymentsAmount = computed(() => {
+  return filteredPaymentsForExport.value
+    .filter(p => (p.payment_method || 'especes').toLowerCase() === 'especes')
+    .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+});
+
+const recurringExpensesAmount = computed(() => {
+  return filteredExpenses.value
+    .filter(e => e.is_recurring)
+    .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+});
+
+const suppliesExpensesAmount = computed(() => {
+  return filteredExpenses.value
+    .filter(e => e.category === 'fournitures' || e.category === 'entretien')
+    .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+});
+
+const cashExpensesAmount = computed(() => {
+  return filteredExpenses.value
+    .filter(e => (e.payment_method || 'especes').toLowerCase() === 'especes')
+    .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+});
+
+const totalTeachersPaid = computed(() => {
+  return (summaryData.value?.byTeacher || []).reduce((sum: number, t: any) => sum + Number(t.paidAmount || 0), 0);
+});
+
+const totalTeachersRemaining = computed(() => {
+  return (summaryData.value?.byTeacher || []).reduce((sum: number, t: any) => sum + Number(t.remainingToPay || 0), 0);
+});
+
 // ─── Helpers Graphiques & Badges ──────────────────────────────────────────────
 const categoryColors: Record<string, string> = {
   loyer: '#4F46E5',        // Indigo
@@ -2134,6 +2599,7 @@ onMounted(async () => {
     fetchSummary(),
     fetchExpenses(),
     fetchAuditLogs(),
+    fetchPayments(),
   ]);
 });
 </script>
@@ -2167,6 +2633,20 @@ onMounted(async () => {
     visibility: visible;
   }
   #financial-report-printable {
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Si Document Expert-Comptable ouvert (Grand Livre, Dépenses, Honoraires) */
+  #expert-report-printable, #expert-report-printable * {
+    visibility: visible;
+  }
+  #expert-report-printable {
     position: static !important;
     width: 100% !important;
     margin: 0 !important;
