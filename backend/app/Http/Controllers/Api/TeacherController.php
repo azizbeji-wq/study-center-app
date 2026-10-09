@@ -45,6 +45,19 @@ class TeacherController extends Controller
         // La remuneration est reservee au directeur
         if ($request->user()->role !== 'director') {
             unset($data['remuneration_type'], $data['rate_percentage'], $data['salary_per_lesson'], $data['fixed_student_rate'], $data['center_fixed_per_student']);
+        } else {
+            if (array_key_exists('rate_percentage', $data) && $data['rate_percentage'] === null) {
+                $data['rate_percentage'] = 70.00;
+            }
+            if (array_key_exists('salary_per_lesson', $data) && $data['salary_per_lesson'] === null) {
+                $data['salary_per_lesson'] = 25.00;
+            }
+            if (array_key_exists('fixed_student_rate', $data) && $data['fixed_student_rate'] === null) {
+                $data['fixed_student_rate'] = 15.00;
+            }
+            if (array_key_exists('center_fixed_per_student', $data) && $data['center_fixed_per_student'] === null) {
+                $data['center_fixed_per_student'] = 20.00;
+            }
         }
 
         // Map weeklyLessons to weekly_lessons in database
@@ -101,6 +114,19 @@ class TeacherController extends Controller
         // La remuneration est reservee au directeur
         if ($request->user()->role !== 'director') {
             unset($data['remuneration_type'], $data['rate_percentage'], $data['salary_per_lesson'], $data['fixed_student_rate'], $data['center_fixed_per_student']);
+        } else {
+            if (array_key_exists('rate_percentage', $data) && $data['rate_percentage'] === null) {
+                $data['rate_percentage'] = $teacher->rate_percentage ?? 70.00;
+            }
+            if (array_key_exists('salary_per_lesson', $data) && $data['salary_per_lesson'] === null) {
+                $data['salary_per_lesson'] = $teacher->salary_per_lesson ?? 25.00;
+            }
+            if (array_key_exists('fixed_student_rate', $data) && $data['fixed_student_rate'] === null) {
+                $data['fixed_student_rate'] = $teacher->fixed_student_rate ?? 15.00;
+            }
+            if (array_key_exists('center_fixed_per_student', $data) && $data['center_fixed_per_student'] === null) {
+                $data['center_fixed_per_student'] = $teacher->center_fixed_per_student ?? 20.00;
+            }
         }
 
         if (isset($data['weeklyLessons'])) {

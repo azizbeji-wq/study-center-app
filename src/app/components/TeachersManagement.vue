@@ -1220,6 +1220,10 @@ async function saveTeacher() {
 
   const payload = {
     ...formData.value,
+    rate_percentage: Number(formData.value.rate_percentage) || 70,
+    salary_per_lesson: Number(formData.value.salary_per_lesson) || 25,
+    fixed_student_rate: Number(formData.value.fixed_student_rate) || 15,
+    center_fixed_per_student: Number(formData.value.center_fixed_per_student) || 20,
     subject: formData.value.subjects.join(', '),
     subjects: formData.value.subjects
   };
