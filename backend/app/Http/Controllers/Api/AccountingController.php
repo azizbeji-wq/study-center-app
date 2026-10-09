@@ -176,6 +176,8 @@ class AccountingController extends Controller
                 'remunerationType'  => $remType,
                 'ratePercentage'    => $ratePct,
                 'salaryPerLesson'   => $salaryPerLesson,
+                'fixedStudentRate'  => (float) ($t->fixed_student_rate ?? 15.0),
+                'centerFixedPerStudent' => (float) ($t->center_fixed_per_student ?? 20.0),
                 'sessionsCount'     => $sessions,
                 'revenueCollected'  => round($collected, 2),
                 'teacherShare'      => round($teacherShare, 2),
@@ -769,6 +771,8 @@ class AccountingController extends Controller
                 'remunerationType' => $remType,
                 'ratePercentage'   => $ratePct,
                 'salaryPerLesson'  => $salaryPerLesson,
+                'fixedStudentRate' => (float) ($teacher->fixed_student_rate ?? 15.0),
+                'centerFixedPerStudent' => (float) ($teacher->center_fixed_per_student ?? 20.0),
                 'payoutStatus'     => $isPaid ? 'paid' : 'pending',
                 'payoutDate'       => $teacher->payout_date ? $teacher->payout_date->toDateString() : null,
             ],
@@ -978,21 +982,28 @@ class AccountingController extends Controller
         $projected = 0.0;
 
         foreach ($students->where('status', 'active') as $student) {
-            $discountFactor = ($student->is_remise && $student->discount_type === 'percentage' && $student->remise > 0)
-                ? max(0, 1 - ((float) $student->remise / 100))
-                : 1;
-
+            $studentGross = 0.0;
             foreach ($student->enrollments as $enr) {
-                // Par défaut 4 séances par mois
+                $sessions = (int) ($enr->sessions_per_month ?? 4);
+                if ($sessions <= 0) $sessions = 4;
                 $sessionPrice = (float) ($enr->price_per_session ?? 0);
                 if ($sessionPrice <= 0 && (float) ($enr->monthly_price ?? 0) > 0) {
-                    $sessionPrice = round((float) $enr->monthly_price / 4, 2);
+                    $sessionPrice = round((float) $enr->monthly_price / $sessions, 2);
                 }
                 if ($sessionPrice <= 0) {
                     $sessionPrice = Pricing::DEFAULT_SESSION_PRICE;
                 }
-                $projected += round(4 * $sessionPrice * $discountFactor, 2);
+                $studentGross += round($sessions * $sessionPrice, 2);
             }
+
+            if ($student->is_remise && (float) $student->remise > 0) {
+                if ($student->discount_type === 'percentage') {
+                    $studentGross = max(0, round($studentGross * (1 - ((float) $student->remise / 100)), 2));
+                } else {
+                    $studentGross = max(0, round($studentGross - (float) $student->remise, 2));
+                }
+            }
+            $projected += $studentGross;
         }
 
         foreach ($daycareChildren as $child) {

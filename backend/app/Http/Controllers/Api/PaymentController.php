@@ -511,6 +511,8 @@ class PaymentController extends Controller
                     'remuneration_type' => $remType,
                     'rate_percentage' => $ratePct,
                     'salary_per_lesson' => $salaryPerLesson,
+                    'fixed_student_rate' => (float) ($t->fixed_student_rate ?? 15.0),
+                    'center_fixed_per_student' => (float) ($t->center_fixed_per_student ?? 20.0),
                     'weekly_lessons' => $t->weekly_lessons,
                 ],
                 'summary' => [
@@ -695,9 +697,11 @@ class PaymentController extends Controller
 
             foreach ($data as $item) {
                 $t = $item['teacher'];
-                $formule = ($t['remuneration_type'] === 'percentage' || $t['rate_percentage'] > 0)
-                    ? "{$t['rate_percentage']}% du groupe"
-                    : "{$t['salary_per_lesson']} TND / seance";
+                $formule = match ($t['remuneration_type'] ?? '') {
+                    'percentage' => "Formule C : {$t['rate_percentage']}% du brut",
+                    'fixed_center' => "Formule A : Idara " . ($t['center_fixed_per_student'] ?? 20) . " TND / élève",
+                    default => "Formule B : " . ($t['fixed_student_rate'] ?? 15) . " TND / élève",
+                };
 
                 if (empty($item['payments'])) {
                     fputcsv($file, [

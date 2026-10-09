@@ -32,9 +32,12 @@ class Pricing
             return [$perSession, 'session'];
         }
 
+        $sessions = (int) ($enrollment->sessions_per_month ?? self::SESSIONS_PER_MONTH);
+        if ($sessions <= 0) $sessions = self::SESSIONS_PER_MONTH;
+
         $perMonth = (float) ($enrollment->price_per_month ?? 0);
         if ($perMonth > 0) {
-            return [round($perMonth / self::SESSIONS_PER_MONTH, 2), 'monthly'];
+            return [round($perMonth / $sessions, 2), 'monthly'];
         }
 
         return [self::DEFAULT_SESSION_PRICE, 'default'];

@@ -337,9 +337,15 @@
                     <span class="text-xs font-bold px-2.5 py-1 rounded-md bg-white border border-gray-300 text-gray-800">
                       Formule :
                       <strong class="text-indigo-700">
-                        {{ item.teacher.remuneration_type === 'percentage' || (item.teacher.rate_percentage && item.teacher.rate_percentage > 0)
-                          ? `${item.teacher.rate_percentage || 70}% du groupe`
-                          : `${item.teacher.salary_per_lesson || 35} TND / séance` }}
+                        <template v-if="item.teacher.remuneration_type === 'percentage' || (item.teacher.rate_percentage && item.teacher.rate_percentage > 0)">
+                          Formule C : {{ item.teacher.rate_percentage || 70 }}% du brut
+                        </template>
+                        <template v-else-if="item.teacher.remuneration_type === 'fixed_center'">
+                          Formule A : Idara {{ item.teacher.center_fixed_per_student || 20 }} TND / élève
+                        </template>
+                        <template v-else>
+                          Formule B : {{ item.teacher.fixed_student_rate || 15 }} TND / élève
+                        </template>
                       </strong>
                     </span>
                   </div>

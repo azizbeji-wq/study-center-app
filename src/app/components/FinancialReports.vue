@@ -684,10 +684,16 @@
                           'px-2 py-0.5 rounded-full text-[10px] font-bold border',
                           t.remunerationType === 'percentage'
                             ? 'bg-purple-50 text-purple-700 border-purple-200'
-                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                            : t.remunerationType === 'fixed_center'
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
                         ]"
                       >
-                        {{ t.remunerationType === 'percentage' ? `${t.ratePercentage}% du C.A.` : `${t.salaryPerLesson} DT / séance` }}
+                        {{ t.remunerationType === 'percentage'
+                          ? `Formule C : ${t.ratePercentage || 70}% du C.A.`
+                          : t.remunerationType === 'fixed_center'
+                            ? `Formule A : Idara ${t.centerFixedPerStudent || 20} DT/él`
+                            : `Formule B : ${t.fixedStudentRate || 15} DT/él` }}
                       </span>
                     </td>
                     <td class="py-3 px-3 text-center font-bold text-gray-800">
@@ -1359,9 +1365,15 @@
               <div class="text-right">
                 <p class="text-gray-500 uppercase text-[10px] tracking-wider font-semibold">Formule Contractuelle</p>
                 <p class="font-bold text-gray-900 mt-0.5">
-                  {{ activePayslip.teacher.remunerationType === 'percentage'
-                    ? `${activePayslip.teacher.ratePercentage}% sur encaissements élèves`
-                    : `${activePayslip.teacher.salaryPerLesson} DT par séance effectuée` }}
+                  <template v-if="activePayslip.teacher.remunerationType === 'percentage'">
+                    Formule C : {{ activePayslip.teacher.ratePercentage || 70 }}% sur tarif brut
+                  </template>
+                  <template v-else-if="activePayslip.teacher.remunerationType === 'fixed_center'">
+                    Formule A : Part Idara {{ activePayslip.teacher.centerFixedPerStudent || 20 }} DT/élève
+                  </template>
+                  <template v-else>
+                    Formule B : {{ activePayslip.teacher.fixedStudentRate || 15 }} DT fixe par élève
+                  </template>
                 </p>
                 <p class="text-gray-600 mt-1">Séances validées ce mois : <span class="font-bold text-gray-900">{{ activePayslip.summary.totalSessions }}</span></p>
               </div>
@@ -1905,7 +1917,11 @@ function exportCsv(type = 'all') {
       rows.push([
         `"${t.name}"`,
         t.subject || '',
-        t.remunerationType === 'percentage' ? `${t.ratePercentage}%` : `${t.salaryPerLesson} DT/séance`,
+        t.remunerationType === 'percentage'
+          ? `Formule C (${t.ratePercentage || 70}%)`
+          : t.remunerationType === 'fixed_center'
+            ? `Formule A (Idara ${t.centerFixedPerStudent || 20} DT/él)`
+            : `Formule B (${t.fixedStudentRate || 15} DT/él)`,
         String(t.sessionsCount),
         String(t.revenueCollected),
         String(t.teacherShare),
