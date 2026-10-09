@@ -219,9 +219,15 @@
             <div class="bg-emerald-50/70 p-2 rounded-lg border border-emerald-100">
               <p class="text-[10px] uppercase font-semibold text-emerald-700">Formule Gain</p>
               <p class="text-xs font-bold text-emerald-800 mt-0.5">
-                {{ teacher.remuneration_type === 'percentage' || (teacher.rate_percentage && teacher.rate_percentage > 0)
-                    ? 'C: ' + (teacher.rate_percentage || 70) + '%'
-                    : 'B: ' + (teacher.fixed_student_rate || 15) + ' DT/él' }}
+                <template v-if="teacher.remuneration_type === 'percentage' || (teacher.rate_percentage && teacher.rate_percentage > 0)">
+                  C: {{ teacher.rate_percentage || 70 }}%
+                </template>
+                <template v-else-if="teacher.remuneration_type === 'fixed_center'">
+                  A: Idara {{ teacher.center_fixed_per_student || 20 }} DT/él
+                </template>
+                <template v-else>
+                  B: {{ teacher.fixed_student_rate || 15 }} DT/él
+                </template>
               </p>
             </div>
           </div>
@@ -242,9 +248,15 @@
             <span>
               <span class="text-gray-500">Calcul :</span>
               <strong class="text-emerald-950 font-bold ml-1">
-                {{ teacher.remuneration_type === 'percentage' || (teacher.rate_percentage && teacher.rate_percentage > 0)
-                    ? `Formule C : ${teacher.rate_percentage || 70}% du brut (${getGrossRevenue(teacher)} TND)`
-                    : `Formule B : ${teacher.fixed_student_rate || 15} TND × ${teacher.studentCount || 0} élève(s)` }}
+                <template v-if="teacher.remuneration_type === 'percentage' || (teacher.rate_percentage && teacher.rate_percentage > 0)">
+                  Formule C : {{ teacher.rate_percentage || 70 }}% du brut ({{ getGrossRevenue(teacher) }} TND)
+                </template>
+                <template v-else-if="teacher.remuneration_type === 'fixed_center'">
+                  Formule A : Brut ({{ getGrossRevenue(teacher) }} DT) - Idara ({{ (teacher.center_fixed_per_student || 20) * (teacher.studentCount || 0) }} DT)
+                </template>
+                <template v-else>
+                  Formule B : {{ teacher.fixed_student_rate || 15 }} TND × {{ teacher.studentCount || 0 }} élève(s)
+                </template>
               </strong>
             </span>
             <span class="text-indigo-700 font-bold bg-white/80 px-2 py-0.5 rounded text-[11px] border border-indigo-100" title="Part conservée par le centre d'études">
@@ -451,29 +463,52 @@
               </span>
             </div>
 
-            <!-- 1. Prix fixe de la séance fixé par l'administration -->
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">
-                Prix fixe de la séance fixé par l'administration (TND / séance) *
-              </label>
-              <div class="relative">
-                <input
-                  v-model.number="formData.salary_per_lesson"
-                  type="number"
-                  min="0"
-                  step="1"
-                  placeholder="Ex: 25 TND"
-                  required
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white font-bold text-gray-900 focus:ring-2 focus:ring-emerald-500 pr-12"
-                />
-                <span class="absolute right-3 top-2.5 text-xs text-gray-400 font-bold">DT / séance</span>
+            <!-- 1. Paramètres de Base (Part Administration & Prix Séance) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">
+                  Part Fixe de l'Administration par Élève *
+                </label>
+                <div class="relative">
+                  <input
+                    v-model.number="formData.center_fixed_per_student"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="Ex: 20 TND"
+                    required
+                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white font-bold text-indigo-700 focus:ring-2 focus:ring-emerald-500 pr-14"
+                  />
+                  <span class="absolute right-3 top-2.5 text-xs text-gray-400 font-bold">DT / élève</span>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-1">
+                  Montant fixe prélevé par l'administration sur chaque élève inscrit.
+                </p>
               </div>
-              <p class="text-[11px] text-gray-500 mt-1">
-                Ce prix est appliqué par défaut lors de l'inscription des élèves à cette matière (Frais mensuels = séances × ce prix).
-              </p>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">
+                  Prix de la Séance pour l'Élève *
+                </label>
+                <div class="relative">
+                  <input
+                    v-model.number="formData.salary_per_lesson"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="Ex: 25 TND"
+                    required
+                    class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm bg-white font-bold text-gray-900 focus:ring-2 focus:ring-emerald-500 pr-14"
+                  />
+                  <span class="absolute right-3 top-2.5 text-xs text-gray-400 font-bold">DT / séance</span>
+                </div>
+                <p class="text-[11px] text-gray-500 mt-1">
+                  Appliqué lors de l'inscription de l'élève (Frais = séances × ce prix).
+                </p>
+              </div>
             </div>
 
-            <!-- 2. Formule de rémunération (B ou C) -->
+            <!-- 2. Formule de rémunération (A, B ou C) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
               <div>
                 <label class="block text-xs font-semibold text-gray-700 mb-1">Formule de rémunération</label>
@@ -482,7 +517,8 @@
                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white font-semibold text-gray-900 focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="percentage">Formule C : Pourcentage (%) du cours</option>
-                  <option value="fixed">Formule B : Part Fixe par Élève (TND / élève)</option>
+                  <option value="fixed">Formule B : Part Fixe Enseignant par Élève</option>
+                  <option value="fixed_center">Formule A : Part Fixe Administration par Élève</option>
                 </select>
               </div>
 
@@ -504,9 +540,25 @@
                     <span class="absolute right-3 top-2 text-xs text-gray-400 font-bold">%</span>
                   </div>
                 </template>
+                <template v-else-if="formData.remuneration_type === 'fixed_center'">
+                  <label class="block text-xs font-semibold text-gray-700 mb-1">
+                    Part Fixe Administration (TND / élève) *
+                  </label>
+                  <div class="relative">
+                    <input
+                      v-model.number="formData.center_fixed_per_student"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Ex: 20 TND"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white font-bold text-indigo-700 focus:ring-2 focus:ring-emerald-500 pr-12"
+                    />
+                    <span class="absolute right-3 top-2 text-xs text-gray-400 font-bold">DT / élève</span>
+                  </div>
+                </template>
                 <template v-else>
                   <label class="block text-xs font-semibold text-gray-700 mb-1">
-                    Part Fixe Enseignant par Élève (TND / élève / mois) *
+                    Part Fixe Enseignant par Élève (TND / élève) *
                   </label>
                   <div class="relative">
                     <input
@@ -528,12 +580,15 @@
               <div v-if="formData.remuneration_type === 'percentage'">
                 💡 <strong>Formule C (Pourcentage) :</strong> Pour un cours de 4 séances à {{ formData.salary_per_lesson || 25 }} TND (100 TND brut par élève), l'enseignant touche <strong>{{ formData.rate_percentage || 70 }}%</strong> ({{ ((formData.salary_per_lesson || 25) * 4 * (formData.rate_percentage || 70) / 100).toFixed(0) }} TND/élève) et le centre conserve le reste.
               </div>
+              <div v-else-if="formData.remuneration_type === 'fixed_center'">
+                💡 <strong>Formule A (Part Fixe Administration) :</strong> L'administration prélève <strong>{{ formData.center_fixed_per_student || 20 }} TND par élève</strong>. L'enseignant touche tout le reste du cours brut (ex: 100 TND - {{ formData.center_fixed_per_student || 20 }} TND = {{ Math.max(0, ((formData.salary_per_lesson || 25) * 4) - (formData.center_fixed_per_student || 20)) }} TND/élève).
+              </div>
               <div v-else>
-                💡 <strong>Formule B (Fixe par élève) :</strong> L'administration facture {{ formData.salary_per_lesson || 25 }} TND / séance ({{ (formData.salary_per_lesson || 25) * 4 }} TND/mois). L'enseignant touche un montant fixe de <strong>{{ formData.fixed_student_rate || 15 }} TND par élève</strong> inscrit chaque mois. Le centre conserve la marge restante.
+                💡 <strong>Formule B (Fixe par élève) :</strong> L'enseignant touche un montant fixe de <strong>{{ formData.fixed_student_rate || 15 }} TND par élève</strong> inscrit chaque mois. Le centre conserve la marge restante.
               </div>
               <div class="text-amber-800 font-medium pt-1 border-t border-emerald-100 flex items-start gap-1">
                 <span>🛡️</span>
-                <span><strong>Protection Enseignant :</strong> Toute remise accordée à un élève est absorbée à 100% par l'administration. La rémunération du professeur reste calculée sur le plein tarif brut.</span>
+                <span><strong>Protection Enseignant :</strong> Toute remise (discount) accordée à un élève est absorbée à 100% par l'administration. La rémunération du professeur reste calculée sur le plein tarif brut.</span>
               </div>
             </div>
           </div>
@@ -625,6 +680,12 @@
                     class="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded font-semibold text-[11px]"
                   >
                     Formule C : {{ t.rate_percentage || 70 }}% du Brut
+                  </span>
+                  <span
+                    v-else-if="t.remuneration_type === 'fixed_center'"
+                    class="px-2 py-0.5 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded font-semibold text-[11px]"
+                  >
+                    Formule A : Idara {{ t.center_fixed_per_student || 20 }} TND / élève
                   </span>
                   <span
                     v-else
@@ -827,10 +888,11 @@ interface Teacher {
   studentCount: number;
   weeklyLessons: number;
   monthlyLessons?: number;
-  remuneration_type?: 'percentage' | 'fixed';
+  remuneration_type?: 'percentage' | 'fixed' | 'fixed_center';
   rate_percentage?: number;
   salary_per_lesson?: number;
   fixed_student_rate?: number;
+  center_fixed_per_student?: number;
   monthly_gross_revenue?: number;
   teacher_share?: number;
   center_share?: number;
@@ -894,13 +956,17 @@ function getGrossRevenue(teacher: Teacher): number {
 function getTeacherShare(teacher: Teacher): number {
   if (teacher.teacher_share !== undefined) return Number(teacher.teacher_share);
   const gross = getGrossRevenue(teacher);
+  const count = Number(teacher.studentCount) || 0;
+  if (teacher.remuneration_type === 'fixed_center') {
+    const centerFixed = Number(teacher.center_fixed_per_student) || 20;
+    return Math.max(0, gross - (count * centerFixed));
+  }
   const isPct = teacher.remuneration_type === 'percentage' || (teacher.rate_percentage && teacher.rate_percentage > 0);
   if (isPct) {
     const pct = Number(teacher.rate_percentage) || 70;
     return Math.round((gross * pct) / 100);
   }
   const fixedRate = Number(teacher.fixed_student_rate) || 15;
-  const count = Number(teacher.studentCount) || 0;
   return Math.round(fixedRate * count);
 }
 
@@ -942,10 +1008,11 @@ const formData = ref<{
   phone: string;
   email: string;
   weeklyLessons: number;
-  remuneration_type: 'percentage' | 'fixed';
+  remuneration_type: 'percentage' | 'fixed' | 'fixed_center';
   rate_percentage: number;
   salary_per_lesson: number;
   fixed_student_rate: number;
+  center_fixed_per_student: number;
 }>({
   name: '',
   subjects: ['Mathématiques'],
@@ -955,7 +1022,8 @@ const formData = ref<{
   remuneration_type: 'percentage',
   rate_percentage: 70,
   salary_per_lesson: 25,
-  fixed_student_rate: 15
+  fixed_student_rate: 15,
+  center_fixed_per_student: 20
 });
 
 function getTeacherSubjects(teacher: Teacher): string[] {
@@ -1114,7 +1182,8 @@ function openAddModal() {
     remuneration_type: 'percentage',
     rate_percentage: 70,
     salary_per_lesson: 25,
-    fixed_student_rate: 15
+    fixed_student_rate: 15,
+    center_fixed_per_student: 20
   };
   showModal.value = true;
 }
@@ -1131,10 +1200,11 @@ function openEditModal(teacher: Teacher) {
     phone: teacher.phone,
     email: teacher.email,
     weeklyLessons: teacher.weeklyLessons || 0,
-    remuneration_type: teacher.remuneration_type === 'fixed' ? 'fixed' : 'percentage',
+    remuneration_type: teacher.remuneration_type || 'percentage',
     rate_percentage: teacher.rate_percentage || 70,
     salary_per_lesson: teacher.salary_per_lesson || 25,
-    fixed_student_rate: teacher.fixed_student_rate || 15
+    fixed_student_rate: teacher.fixed_student_rate || 15,
+    center_fixed_per_student: teacher.center_fixed_per_student || 20
   };
   showModal.value = true;
 }

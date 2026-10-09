@@ -464,9 +464,14 @@ class PaymentController extends Controller
                 $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
                 $baseGross = max($amt, round($sessions * $sessionPrice, 2));
 
-                if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
+                if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0 && $remType !== 'fixed' && $remType !== 'fixed_center')) {
                     // Formule C : Pourcentage calculé sur le tarif brut (remise absorbée par l'administration)
                     $tShare = round(($baseGross * $ratePct) / 100.0, 2);
+                } elseif ($remType === 'fixed_center') {
+                    // Formule A : Part Fixe Administration par élève (ex: 20 TND/élève) - L'enseignant prend le reste du brut
+                    $centerFixed = (float) ($t->center_fixed_per_student ?? 20.0);
+                    $adminShareForPayment = round($centerFixed * max(1, round($sessions / 4.0)), 2);
+                    $tShare = round(max(0, $baseGross - $adminShareForPayment), 2);
                 } else {
                     // Formule B : Montant fixe par élève
                     $fixedRate = (float) ($t->fixed_student_rate ?? $salaryPerLesson);

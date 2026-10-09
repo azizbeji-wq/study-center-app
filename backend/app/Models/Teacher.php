@@ -18,6 +18,7 @@ class Teacher extends Model
         'weekly_lessons',
         'salary_per_lesson',
         'fixed_student_rate',
+        'center_fixed_per_student',
         'remuneration_type',
         'rate_percentage',
         'payout_status',

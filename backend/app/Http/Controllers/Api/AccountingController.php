@@ -105,8 +105,12 @@ class AccountingController extends Controller
                     $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
                     $baseGross = max((float) $mp->amount, round((int) $mp->sessions_paid * $sessionPrice, 2));
 
-                    if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
+                    if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0 && $remType !== 'fixed' && $remType !== 'fixed_center')) {
                         $tPayouts += round(($baseGross * $ratePct) / 100.0, 2);
+                    } elseif ($remType === 'fixed_center') {
+                        $centerFixed = (float) ($t->center_fixed_per_student ?? 20.0);
+                        $adminShare = round($centerFixed * max(1, round((int) $mp->sessions_paid / 4.0)), 2);
+                        $tPayouts += round(max(0, $baseGross - $adminShare), 2);
                     } else {
                         $fixedRate = (float) ($t->fixed_student_rate ?? $salaryPerLesson);
                         $tPayouts += round($fixedRate * max(1, round((int) $mp->sessions_paid / 4.0)), 2);
@@ -148,8 +152,12 @@ class AccountingController extends Controller
                 $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
                 $baseGross = max((float) $tp->amount, round((int) $tp->sessions_paid * $sessionPrice, 2));
 
-                if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
+                if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0 && $remType !== 'fixed' && $remType !== 'fixed_center')) {
                     $teacherShare += round(($baseGross * $ratePct) / 100.0, 2);
+                } elseif ($remType === 'fixed_center') {
+                    $centerFixed = (float) ($t->center_fixed_per_student ?? 20.0);
+                    $adminShare = round($centerFixed * max(1, round((int) $tp->sessions_paid / 4.0)), 2);
+                    $teacherShare += round(max(0, $baseGross - $adminShare), 2);
                 } else {
                     $fixedRate = (float) ($t->fixed_student_rate ?? $salaryPerLesson);
                     $teacherShare += round($fixedRate * max(1, round((int) $tp->sessions_paid / 4.0)), 2);
@@ -603,8 +611,12 @@ class AccountingController extends Controller
                 $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
                 $baseGross = max((float) $p->amount, round((int) $p->sessions_paid * $sessionPrice, 2));
 
-                if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
+                if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0 && $remType !== 'fixed' && $remType !== 'fixed_center')) {
                     $totalTeacherPayouts += round(($baseGross * $ratePct) / 100.0, 2);
+                } elseif ($remType === 'fixed_center') {
+                    $centerFixed = (float) ($t->center_fixed_per_student ?? 20.0);
+                    $adminShare = round($centerFixed * max(1, round((int) $p->sessions_paid / 4.0)), 2);
+                    $totalTeacherPayouts += round(max(0, $baseGross - $adminShare), 2);
                 } else {
                     $fixedRate = (float) ($t->fixed_student_rate ?? $salaryPerLesson);
                     $totalTeacherPayouts += round($fixedRate * max(1, round((int) $p->sessions_paid / 4.0)), 2);
@@ -708,9 +720,14 @@ class AccountingController extends Controller
             $sessionPrice = (float) ($enr?->price_per_session > 0 ? $enr->price_per_session : $salaryPerLesson);
             $baseGross = max($amt, round($sessions * $sessionPrice, 2));
 
-            if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0)) {
+            if ($remType === 'percentage' || ($ratePct > 0 && $salaryPerLesson == 0 && $remType !== 'fixed' && $remType !== 'fixed_center')) {
                 // Formule C : Pourcentage sur tarif brut (remise absorbée par l'administration)
                 $tShare = round(($baseGross * $ratePct) / 100.0, 2);
+            } elseif ($remType === 'fixed_center') {
+                // Formule A : Part Fixe Administration par élève (ex: 20 TND/élève) - L'enseignant prend le reste
+                $centerFixed = (float) ($teacher->center_fixed_per_student ?? 20.0);
+                $adminShare = round($centerFixed * max(1, round($sessions / 4.0)), 2);
+                $tShare = round(max(0, $baseGross - $adminShare), 2);
             } else {
                 // Formule B : Montant fixe par élève
                 $fixedRate = (float) ($teacher->fixed_student_rate ?? $salaryPerLesson);

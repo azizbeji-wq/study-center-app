@@ -212,4 +212,43 @@ class RemunerationAndDiscountFormulasTest extends TestCase
         // Marge centre : 160 - 30 = 130 TND
         $this->assertEquals(130.00, $teacherRes->json('center_share'));
     }
+
+    public function test_formule_a_fixed_center_rate_per_student(): void
+    {
+        // Enseignant avec Formule A : Centre prend 20 TND fixe par élève, enseignant prend le reste
+        $teacher = Teacher::create([
+            'name' => 'Prof Informatique',
+            'subject' => 'Informatique',
+            'phone' => '71000999',
+            'email' => 'info@test.tn',
+            'salary_per_lesson' => 25.00,
+            'remuneration_type' => 'fixed_center',
+            'center_fixed_per_student' => 20.00,
+        ]);
+
+        $student = Student::create([
+            'name' => 'Amine Karray',
+            'level' => '4ème Info',
+            'phone' => '22999888',
+            'status' => 'active',
+        ]);
+
+        // 4 séances à 25 TND = 100 TND par mois
+        StudentSubjectEnrollment::create([
+            'student_id' => $student->id,
+            'teacher_id' => $teacher->id,
+            'subject_name' => 'Informatique',
+            'sessions_per_month' => 4,
+            'price_per_session' => 25.00,
+            'price_per_month' => 100.00,
+        ]);
+
+        $teacherRes = $this->actingAs($this->director)->getJson("/api/teachers/{$teacher->id}");
+        $teacherRes->assertOk();
+
+        // 1 élève -> Centre prend 20 TND, Enseignant prend 100 - 20 = 80 TND
+        $this->assertEquals(80.00, $teacherRes->json('teacher_share'));
+        $this->assertEquals(20.00, $teacherRes->json('center_share'));
+    }
 }
+
