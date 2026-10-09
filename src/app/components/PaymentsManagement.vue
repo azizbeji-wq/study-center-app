@@ -348,7 +348,7 @@
                     :class="payment.createdByRole === 'secretary' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'"
                   >
                     <span>{{ payment.createdByName || 'Directeur Fondateur' }}</span>
-                    <span class="text-[9px] font-medium opacity-75">({{ payment.createdByRole === 'secretary' ? 'Secrétaire' : 'Directeur' }})</span>
+                    <span class="text-[9px] font-medium opacity-75">({{ payment.createdByRole === 'secretary' ? 'Personnel' : 'Directeur' }})</span>
                   </span>
                 </td>
                 <td class="px-5 py-3.5">
@@ -740,7 +740,7 @@
                   </span>
                 </div>
                 <p class="text-[10px] text-gray-500 font-medium mt-1">
-                  Encaissé par : {{ receiptPayment.createdByName || 'Direction' }} ({{ receiptPayment.createdByRole === 'secretary' ? 'Secrétaire' : 'Direction' }})
+                  Encaissé par : {{ receiptPayment.createdByName || 'Direction' }} ({{ receiptPayment.createdByRole === 'secretary' ? 'Personnel' : 'Direction' }})
                 </p>
               </div>
             </div>

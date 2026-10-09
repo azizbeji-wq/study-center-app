@@ -53,7 +53,7 @@ class AuthController extends Controller
                     $user,
                     'account',
                     'login',
-                    "Connexion de {$user->name} (" . ($user->role === 'secretary' ? 'Secrétaire' : 'Directeur') . ")",
+                    "Connexion de {$user->name} (" . ($user->role === 'secretary' ? 'Personnel' : 'Directeur') . ")",
                     ['email' => $user->email],
                     $request->ip()
                 );

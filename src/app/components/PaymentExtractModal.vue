@@ -490,7 +490,7 @@
                               {{ pay.createdByName || 'Directeur' }}
                             </span>
                             <span class="text-[10px] text-gray-500 block">
-                              ({{ pay.createdByRole === 'secretary' ? 'Secrétaire' : 'Directeur' }})
+                              ({{ pay.createdByRole === 'secretary' ? 'Personnel' : 'Directeur' }})
                             </span>
                           </td>
                           <td class="py-2 px-3 text-right font-black text-gray-900">

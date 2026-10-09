@@ -14,7 +14,7 @@
           <div>
             <h2 class="text-base font-bold">Gestion du Compte & Accès</h2>
             <p class="text-xs text-gray-400">
-              {{ currentRole === 'director' ? 'Paramètres du compte directeur et gestion des secrétaires' : 'Mes informations personnelles et sécurité' }}
+              {{ currentRole === 'director' ? 'Paramètres du compte directeur et gestion du personnel' : 'Mes informations personnelles et sécurité' }}
             </p>
           </div>
         </div>
@@ -55,7 +55,7 @@
             ]"
           >
             <Users class="w-4 h-4" />
-            <span>Équipe & Secrétaires ({{ usersList.length }})</span>
+            <span>Équipe & Personnel ({{ usersList.length }})</span>
           </button>
         </div>
 
@@ -63,7 +63,7 @@
           class="text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider hidden sm:inline-block"
           :class="currentRole === 'director' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'"
         >
-          {{ currentRole === 'director' ? 'Directeur (Accès Maître)' : 'Secrétaire' }}
+          {{ currentRole === 'director' ? 'Directeur (Accès Maître)' : 'Personnel' }}
         </span>
       </div>
 
@@ -105,7 +105,7 @@
                 <p class="text-xs text-gray-500 mt-0.5">Votre identité et vos coordonnées dans l'application</p>
               </div>
               <span class="text-xs px-2.5 py-1 rounded-lg font-bold border" :class="currentRole === 'director' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'">
-                {{ currentRole === 'director' ? 'Directeur' : 'Secrétaire' }}
+                {{ currentRole === 'director' ? 'Directeur' : 'Personnel' }}
               </span>
             </div>
 
@@ -254,7 +254,7 @@
         </div>
 
         <!-- ============================================================== -->
-        <!-- ONGLET 2 : GESTION DES SECRÉTAIRES (RÉSERVÉ AU DIRECTEUR)       -->
+        <!-- ONGLET 2 : GESTION DU PERSONNEL (RÉSERVÉ AU DIRECTEUR)          -->
         <!-- ============================================================== -->
         <div v-if="activeTab === 'team' && currentRole === 'director'" class="space-y-4">
           <!-- Bandeau d'action -->
@@ -265,7 +265,7 @@
                 <span>Gestion Exclusive des Accès par la Direction (Idée 1)</span>
               </h3>
               <p class="text-xs text-indigo-800/80 mt-0.5">
-                Seul le Directeur a l'autorité de créer des secrétaires et de gérer les accès au centre.
+                Seul le Directeur a l'autorité de créer des membres du personnel et de gérer les accès au centre.
               </p>
             </div>
 
@@ -274,7 +274,7 @@
               class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 self-start sm:self-auto"
             >
               <UserPlus class="w-4 h-4" />
-              <span>+ Nouvelle Secrétaire</span>
+              <span>+ Nouveau Personnel</span>
             </button>
           </div>
 
@@ -318,7 +318,7 @@
                       :class="user.role === 'director' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'"
                     >
                       <UserCheck class="w-3 h-3" />
-                      {{ user.role === 'director' ? 'Directeur' : 'Secrétaire' }}
+                      {{ user.role === 'director' ? 'Directeur' : 'Personnel' }}
                     </span>
                   </td>
 
@@ -410,7 +410,7 @@
             <UserPlus v-if="!editingUser" class="w-5 h-5 text-indigo-600" />
             <Pencil v-else class="w-5 h-5 text-indigo-600" />
             <h3 class="text-sm font-bold text-gray-900">
-              {{ editingUser ? 'Modifier le compte' : 'Créer un compte Secrétaire' }}
+              {{ editingUser ? 'Modifier le compte' : 'Créer un compte Personnel' }}
             </h3>
           </div>
           <button @click="showUserEditModal = false" class="text-gray-400 hover:text-gray-600">
@@ -436,7 +436,7 @@
               v-model="userForm.email"
               type="email"
               required
-              placeholder="secretaire@studycenter.com"
+              placeholder="personnel@studycenter.com"
               class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs"
             />
           </div>
@@ -458,7 +458,7 @@
               :disabled="editingUser?.is_founder"
               class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs bg-white"
             >
-              <option value="secretary">Secrétaire (Gestion élèves, présences, garderie, encaissements)</option>
+              <option value="secretary">Personnel (Gestion élèves, présences, garderie, encaissements)</option>
               <option value="director">Directeur (Accès complet + comptabilité générale)</option>
             </select>
           </div>
@@ -760,7 +760,7 @@ async function submitUserForm() {
     } else {
       // Création
       const res = await api.post('/api/users', userForm.value);
-      successMessage.value = res.data.message || 'Compte secrétaire créé.';
+      successMessage.value = res.data.message || 'Compte personnel créé.';
     }
     showUserEditModal.value = false;
     await loadUsers();

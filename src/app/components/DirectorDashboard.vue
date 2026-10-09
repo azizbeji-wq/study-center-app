@@ -99,7 +99,7 @@
       </div>
     </main>
 
-    <!-- Modale de Gestion de Compte & Secrétaires -->
+    <!-- Modale de Gestion de Compte & Personnel -->
     <AccountManagementModal
       :is-open="showAccountModal"
       current-role="director"

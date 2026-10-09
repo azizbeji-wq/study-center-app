@@ -173,7 +173,7 @@
                 >
                   <User class="w-3 h-3" />
                   <span>Par {{ activity.user_name || 'Directeur' }}</span>
-                  <span class="text-[10px] font-medium opacity-80">({{ activity.user_role === 'secretary' ? 'Secrétaire' : 'Directeur' }})</span>
+                  <span class="text-[10px] font-medium opacity-80">({{ activity.user_role === 'secretary' ? 'Personnel' : 'Directeur' }})</span>
                 </span>
                 <span class="text-xs text-gray-400 flex items-center gap-1">
                   <Clock class="w-3 h-3" />

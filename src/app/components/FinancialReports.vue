@@ -566,7 +566,7 @@
                         :class="exp.creator?.role === 'secretary' ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-200'"
                       >
                         <span>{{ exp.creator?.name || 'Directeur Fondateur' }}</span>
-                        <span class="text-[9px] font-medium opacity-75">({{ exp.creator?.role === 'secretary' ? 'Secrétaire' : 'Directeur' }})</span>
+                        <span class="text-[9px] font-medium opacity-75">({{ exp.creator?.role === 'secretary' ? 'Personnel' : 'Directeur' }})</span>
                       </span>
                     </td>
                     <td class="py-3 px-3 text-center">
@@ -984,7 +984,7 @@
                     </td>
                     <td class="py-3 px-3">
                       <span :class="['px-2 py-0.5 rounded-full text-[10px] font-bold', log.user_role === 'director' ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-100 text-gray-700']">
-                        {{ log.user_role === 'director' ? 'Directeur' : 'Secrétaire' }}
+                        {{ log.user_role === 'director' ? 'Directeur' : 'Personnel' }}
                       </span>
                     </td>
                     <td class="py-3 px-3">

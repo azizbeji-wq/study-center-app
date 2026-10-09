@@ -21,7 +21,7 @@
         </div>
         <div>
           <h1 class="text-base font-bold text-gray-900 leading-tight">Centre d'Études</h1>
-          <p class="text-[10px] text-gray-500">Espace Secrétaire</p>
+          <p class="text-[10px] text-gray-500">Espace Personnel</p>
         </div>
       </div>
 
@@ -98,7 +98,7 @@
       </div>
     </main>
 
-    <!-- Modale de Mon Compte (Secrétaire) -->
+    <!-- Modale de Mon Compte (Personnel) -->
     <AccountManagementModal
       :is-open="showAccountModal"
       current-role="secretary"

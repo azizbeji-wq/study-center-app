@@ -145,7 +145,7 @@ class UserController extends Controller
             'email.unique' => 'Cette adresse email est déjà enregistrée.',
             'password.required' => 'Le mot de passe initial est obligatoire.',
             'password.min' => 'Le mot de passe doit contenir au moins 6 caractères.',
-            'role.in' => 'Le rôle doit être soit Secrétaire, soit Directeur.',
+            'role.in' => 'Le rôle doit être soit Personnel, soit Directeur.',
         ]);
 
         $user = User::create([
@@ -161,13 +161,13 @@ class UserController extends Controller
             $request->user(),
             'account',
             'created',
-            "Création du compte " . ($user->role === 'secretary' ? 'secrétaire' : 'directeur') . " : {$user->name} ({$user->email})",
+            "Création du compte " . ($user->role === 'secretary' ? 'personnel' : 'directeur') . " : {$user->name} ({$user->email})",
             ['user_id' => $user->id, 'email' => $user->email, 'role' => $user->role],
             $request->ip()
         );
 
         return response()->json([
-            'message' => 'Compte ' . ($user->role === 'secretary' ? 'secrétaire' : 'directeur') . ' créé avec succès.',
+            'message' => 'Compte ' . ($user->role === 'secretary' ? 'personnel' : 'directeur') . ' créé avec succès.',
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,

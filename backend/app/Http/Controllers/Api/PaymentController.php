@@ -254,7 +254,7 @@ class PaymentController extends Controller
                 PaymentAuditLog::create([
                     'payment_id'     => $payment->id,
                     'user_id'        => $request->user()?->id,
-                    'user_name'      => $request->user()?->name ?? 'Directeur / Secrétaire',
+                    'user_name'      => $request->user()?->name ?? 'Directeur / Personnel',
                     'user_role'      => $request->user()?->role ?? 'director',
                     'action'         => 'created',
                     'amount'         => $payment->amount,
@@ -332,7 +332,7 @@ class PaymentController extends Controller
             PaymentAuditLog::create([
                 'payment_id'     => $payment->id,
                 'user_id'        => $request->user()?->id,
-                'user_name'      => $request->user()?->name ?? 'Directeur / Secrétaire',
+                'user_name'      => $request->user()?->name ?? 'Directeur / Personnel',
                 'user_role'      => $request->user()?->role ?? 'director',
                 'action'         => $action,
                 'amount'         => $payment->amount,
@@ -741,7 +741,7 @@ class PaymentController extends Controller
                 }
 
                 foreach ($item['payments'] as $p) {
-                    $collectedBy = ($p['createdByName'] ?? 'Directeur') . ' (' . (($p['createdByRole'] ?? 'director') === 'secretary' ? 'Secrétaire' : 'Directeur') . ')';
+                    $collectedBy = ($p['createdByName'] ?? 'Directeur') . ' (' . (($p['createdByRole'] ?? 'director') === 'secretary' ? 'Personnel' : 'Directeur') . ')';
                     fputcsv($file, [
                         $s['name'],
                         $s['level'] ?? '-',
