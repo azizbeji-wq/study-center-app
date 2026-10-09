@@ -110,7 +110,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'login', role: 'director' | 'secretary', name: string): void
+  (e: 'login', role: 'director' | 'secretary', name: string, permissions?: string[]): void
 }>();
 
 const email = ref('');
@@ -144,7 +144,7 @@ async function handleLoginSubmit() {
     if (res.data && res.data.token && res.data.user) {
       const loginTime = res.data.login_time ? new Date(res.data.login_time).getTime() : Date.now();
       setSession(res.data.token, res.data.user, loginTime);
-      emit('login', res.data.user.role, res.data.user.name);
+      emit('login', res.data.user.role, res.data.user.name, res.data.user.permissions);
     } else {
       errorMessage.value = 'Réponse serveur inattendue.';
     }

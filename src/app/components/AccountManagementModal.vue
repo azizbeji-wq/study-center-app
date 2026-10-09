@@ -320,6 +320,20 @@
                       <UserCheck class="w-3 h-3" />
                       {{ user.role === 'director' ? 'Directeur' : 'Personnel' }}
                     </span>
+                    <div class="mt-1">
+                      <span
+                        v-if="user.role === 'director'"
+                        class="text-[10px] text-indigo-600 font-semibold"
+                      >
+                        Accès Maître
+                      </span>
+                      <span
+                        v-else
+                        class="text-[10px] text-gray-500 font-medium"
+                      >
+                        {{ (user.permissions?.length ?? 7) }} autorisation(s)
+                      </span>
+                    </div>
                   </td>
 
                   <td class="py-3 px-4 text-gray-600 font-mono">
@@ -404,7 +418,7 @@
       v-if="showUserEditModal"
       class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 animate-in fade-in"
     >
-      <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto mx-4 md:mx-auto">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <div class="flex items-center gap-2">
             <UserPlus v-if="!editingUser" class="w-5 h-5 text-indigo-600" />
@@ -458,9 +472,131 @@
               :disabled="editingUser?.is_founder"
               class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs bg-white"
             >
-              <option value="secretary">Personnel (Gestion élèves, présences, garderie, encaissements)</option>
+              <option value="secretary">Personnel (Autorisations modulables personnalisées)</option>
               <option value="director">Directeur (Accès complet + comptabilité générale)</option>
             </select>
+          </div>
+
+          <!-- BLOC PERMISSIONS PERSONNALISÉES (Si rôle Personnel) -->
+          <div v-if="userForm.role === 'secretary'" class="space-y-3 pt-2 border-t border-gray-100">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <div>
+                <label class="block font-bold text-gray-800 text-xs">
+                  Permissions & Accès modulaires
+                </label>
+                <p class="text-[11px] text-gray-500">
+                  Cochez les droits attribués ou appliquez un profil rapide :
+                </p>
+              </div>
+              <div class="flex items-center gap-2 text-[11px] shrink-0">
+                <button
+                  type="button"
+                  @click="selectAllPermissions"
+                  class="text-indigo-600 hover:text-indigo-800 font-bold hover:underline"
+                >
+                  Tout cocher
+                </button>
+                <span class="text-gray-300">•</span>
+                <button
+                  type="button"
+                  @click="deselectAllPermissions"
+                  class="text-gray-500 hover:text-gray-700 font-medium hover:underline"
+                >
+                  Tout décocher
+                </button>
+              </div>
+            </div>
+
+            <!-- Profils rapides (Presets) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button
+                v-for="preset in PRESET_PROFILES"
+                :key="preset.id"
+                type="button"
+                @click="applyPreset(preset)"
+                :class="[
+                  'p-2.5 rounded-xl border text-left transition-all',
+                  isPresetActive(preset)
+                    ? 'bg-indigo-50 border-indigo-400 ring-2 ring-indigo-400/40 shadow-xs'
+                    : 'bg-gray-50/80 border-gray-200 hover:bg-white hover:border-gray-300'
+                ]"
+              >
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-bold text-gray-900 truncate">{{ preset.title }}</span>
+                  <span
+                    class="text-[9px] px-1.5 py-0.2 rounded font-bold"
+                    :class="isPresetActive(preset) ? 'bg-indigo-200 text-indigo-800' : 'bg-gray-200/80 text-gray-700'"
+                  >
+                    {{ preset.badge }}
+                  </span>
+                </div>
+                <p class="text-[10px] text-gray-500 line-clamp-1 leading-tight">{{ preset.description }}</p>
+              </button>
+            </div>
+
+            <!-- Cases à cocher par catégorie -->
+            <div class="space-y-2.5 max-h-[260px] overflow-y-auto pr-1">
+              <div
+                v-for="category in PERMISSION_CATEGORIES"
+                :key="category.name"
+                class="bg-gray-50/70 border border-gray-200 rounded-xl p-3 space-y-2"
+              >
+                <div class="flex items-center justify-between border-b border-gray-200/60 pb-1.5">
+                  <h4 class="text-xs font-bold text-gray-800">
+                    {{ category.name }}
+                  </h4>
+                  <span class="text-[10px] text-gray-500 font-semibold">
+                    {{ countCategoryActive(category) }} / {{ category.items.length }}
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                  <label
+                    v-for="item in category.items"
+                    :key="item.key"
+                    :class="[
+                      'flex items-start gap-2.5 p-2 rounded-lg border cursor-pointer transition-all select-none',
+                      userForm.permissions.includes(item.key)
+                        ? (item.isSensitive ? 'bg-rose-50 border-rose-300 text-rose-950 font-semibold' : 'bg-indigo-50/80 border-indigo-300 text-indigo-950 font-semibold')
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                    ]"
+                  >
+                    <input
+                      type="checkbox"
+                      :value="item.key"
+                      v-model="userForm.permissions"
+                      class="mt-0.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5 cursor-pointer"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-xs font-bold leading-tight">{{ item.label }}</span>
+                        <span
+                          v-if="item.badge"
+                          class="text-[9px] px-1 py-0.2 rounded font-extrabold bg-amber-100 text-amber-800 border border-amber-200"
+                        >
+                          {{ item.badge }}
+                        </span>
+                        <span
+                          v-if="item.isSensitive"
+                          class="text-[9px] px-1 py-0.2 rounded font-extrabold bg-rose-100 text-rose-800 border border-rose-200"
+                        >
+                          Sensible
+                        </span>
+                      </div>
+                      <p class="text-[10px] text-gray-500 leading-tight mt-0.5">
+                        {{ item.description }}
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message informatif si rôle Directeur -->
+          <div v-else class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-indigo-900 text-xs flex items-center gap-2">
+            <ShieldCheck class="w-4 h-4 text-indigo-600 shrink-0" />
+            <span><strong>Rôle Directeur :</strong> Accès maître complet à l'ensemble des modules, clôtures et gestion du système.</span>
           </div>
 
           <!-- Mot de passe initial (création uniquement) -->
@@ -580,6 +716,7 @@ import {
   UserPlus, Pencil, Trash2, Eye, EyeOff, UserCheck
 } from 'lucide-vue-next';
 import api from '../utils/api';
+import { PERMISSION_CATEGORIES, PRESET_PROFILES } from '../utils/permissions';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -687,12 +824,23 @@ const showUserEditModal = ref(false);
 const editingUser = ref<any | null>(null);
 const submittingUser = ref(false);
 
-const userForm = ref({
+const userForm = ref<{
+  name: string;
+  email: string;
+  phone: string;
+  role: 'secretary' | 'director';
+  password: string;
+  permissions: string[];
+}>({
   name: '',
   email: '',
   phone: '',
   role: 'secretary',
   password: '',
+  permissions: [
+    'students', 'attendance', 'daycare', 'teachers',
+    'schedule', 'schoolcalendar', 'payments'
+  ],
 });
 
 const showResetModal = ref(false);
@@ -710,6 +858,28 @@ async function loadUsers() {
   }
 }
 
+function selectAllPermissions() {
+  const allKeys = PERMISSION_CATEGORIES.flatMap(cat => cat.items.map(i => i.key));
+  userForm.value.permissions = [...allKeys];
+}
+
+function deselectAllPermissions() {
+  userForm.value.permissions = [];
+}
+
+function applyPreset(preset: typeof PRESET_PROFILES[0]) {
+  userForm.value.permissions = [...preset.permissions];
+}
+
+function isPresetActive(preset: typeof PRESET_PROFILES[0]) {
+  if (userForm.value.permissions.length !== preset.permissions.length) return false;
+  return preset.permissions.every(k => userForm.value.permissions.includes(k));
+}
+
+function countCategoryActive(category: typeof PERMISSION_CATEGORIES[0]) {
+  return category.items.filter(i => userForm.value.permissions.includes(i.key)).length;
+}
+
 function openCreateModal() {
   editingUser.value = null;
   userForm.value = {
@@ -718,6 +888,10 @@ function openCreateModal() {
     phone: '',
     role: 'secretary',
     password: generatePassword(),
+    permissions: [
+      'students', 'attendance', 'daycare', 'teachers',
+      'schedule', 'schoolcalendar', 'payments'
+    ],
   };
   showUserEditModal.value = true;
 }
@@ -730,6 +904,12 @@ function openEditModal(user: any) {
     phone: user.phone || '',
     role: user.role,
     password: '',
+    permissions: Array.isArray(user.permissions)
+      ? [...user.permissions]
+      : [
+          'students', 'attendance', 'daycare', 'teachers',
+          'schedule', 'schoolcalendar', 'payments'
+        ],
   };
   showUserEditModal.value = true;
 }
@@ -748,18 +928,22 @@ async function submitUserForm() {
   errorMessage.value = '';
 
   try {
+    const payload: any = {
+      name: userForm.value.name,
+      email: userForm.value.email,
+      phone: userForm.value.phone,
+      role: userForm.value.role,
+      permissions: userForm.value.role === 'secretary' ? userForm.value.permissions : null,
+    };
+
     if (editingUser.value) {
       // Mise à jour
-      const res = await api.put(`/api/users/${editingUser.value.id}`, {
-        name: userForm.value.name,
-        email: userForm.value.email,
-        phone: userForm.value.phone,
-        role: userForm.value.role,
-      });
+      const res = await api.put(`/api/users/${editingUser.value.id}`, payload);
       successMessage.value = res.data.message || 'Utilisateur mis à jour.';
     } else {
       // Création
-      const res = await api.post('/api/users', userForm.value);
+      payload.password = userForm.value.password;
+      const res = await api.post('/api/users', payload);
       successMessage.value = res.data.message || 'Compte personnel créé.';
     }
     showUserEditModal.value = false;

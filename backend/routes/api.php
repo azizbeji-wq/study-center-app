@@ -92,25 +92,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |----------------------------------------------------------------------
-    | ACTIONS RÉSERVÉES AU DIRECTEUR (Rôle 'director' obligatoire)
+    | ACTIONS SOUMISES À PERMISSIONS GRANULAIRES (OU DIRECTEUR)
     |----------------------------------------------------------------------
     */
-    Route::middleware('role:director')->group(function () {
+    // 1. Suppression définitive d'enregistrements (Permission 'can_delete')
+    Route::middleware('permission:can_delete')->group(function () {
         Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy']);
         Route::delete('/students/{student}', [StudentController::class, 'destroy']);
         Route::delete('/daycare/{daycare}', [DaycareController::class, 'destroy']);
         Route::delete('/payments/{payment}', [PaymentController::class, 'destroy']);
         Route::delete('/attendances/{attendance}', [\App\Http\Controllers\Api\AttendanceController::class, 'destroy']);
-
-        // Gestion du versement de rémunération des enseignants (marquer si le prof a pris son argent)
-        Route::post('/teachers/{id}/toggle-payout', [TeacherController::class, 'togglePayout']);
-
-        // Gestion des matières
-        Route::post('/subjects', [SubjectController::class, 'store']);
-        Route::put('/subjects/{subject}', [SubjectController::class, 'update']);
         Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy']);
+    });
 
-        // Module Comptabilité & Finance Avancée (Réservé Directeur)
+    // 2. Module Comptabilité & Finance Avancée (Permission 'reports')
+    Route::middleware('permission:reports')->group(function () {
         Route::get('/accounting/summary', [\App\Http\Controllers\Api\AccountingController::class, 'summary']);
         Route::get('/accounting/expenses', [\App\Http\Controllers\Api\AccountingController::class, 'expenses']);
         Route::post('/accounting/expenses', [\App\Http\Controllers\Api\AccountingController::class, 'storeExpense']);
@@ -122,8 +118,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/accounting/close-month', [\App\Http\Controllers\Api\AccountingController::class, 'closeMonth']);
         Route::post('/accounting/reopen-month', [\App\Http\Controllers\Api\AccountingController::class, 'reopenMonth']);
         Route::get('/accounting/teachers/{id}/payslip', [\App\Http\Controllers\Api\AccountingController::class, 'teacherPayslip']);
+    });
 
-        // Gestion des comptes & Secrétaires (Réservé au Directeur - Idée 1)
+    // 3. Gestion exclusive de la Direction & Équipe (Rôle 'director' strict)
+    Route::middleware('role:director')->group(function () {
+        Route::post('/teachers/{id}/toggle-payout', [TeacherController::class, 'togglePayout']);
+        Route::post('/subjects', [SubjectController::class, 'store']);
+        Route::put('/subjects/{subject}', [SubjectController::class, 'update']);
+
+        // Gestion des comptes & Personnel (Réservé au Directeur)
         Route::get('/users', [UserController::class, 'index']);
         Route::post('/users', [UserController::class, 'store']);
         Route::put('/users/{id}', [UserController::class, 'update']);

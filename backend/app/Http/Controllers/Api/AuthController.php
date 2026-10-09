@@ -64,6 +64,7 @@ class AuthController extends Controller
                         'name' => $user->name,
                         'role' => $user->role,
                         'email' => $user->email,
+                        'permissions' => $user->getEffectivePermissions(),
                     ],
                     'token' => $token,
                     'expires_in' => 7200,

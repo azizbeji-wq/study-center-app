@@ -25,8 +25,8 @@ class AccountingController extends Controller
      */
     public function summary(Request $request)
     {
-        if ($request->user() && $request->user()->role !== 'director') {
-            return response()->json(['message' => 'Accès réservé au directeur.'], 403);
+        if ($request->user() && !$request->user()->hasPermission('reports')) {
+            return response()->json(['message' => 'Accès réservé au directeur ou au personnel autorisé (rapports).'], 403);
         }
 
         $period = $request->input('period', '12months'); // '12months', 'school_year', 'current_month'

@@ -22,6 +22,7 @@ class UserController extends Controller
             'email' => $user->email,
             'phone' => $user->phone,
             'role' => $user->role,
+            'permissions' => $user->getEffectivePermissions(),
             'is_active' => $user->is_active ?? true,
             'created_at' => $user->created_at?->format('Y-m-d H:i'),
         ]);
@@ -108,7 +109,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $users = User::select('id', 'name', 'email', 'phone', 'role', 'is_active', 'created_at')
+        $users = User::select('id', 'name', 'email', 'phone', 'role', 'permissions', 'is_active', 'created_at')
             ->orderByRaw("CASE WHEN role = 'director' THEN 0 ELSE 1 END")
             ->orderBy('name')
             ->get()
@@ -119,6 +120,7 @@ class UserController extends Controller
                     'email' => $u->email,
                     'phone' => $u->phone,
                     'role' => $u->role,
+                    'permissions' => $u->getEffectivePermissions(),
                     'is_active' => (bool) $u->is_active,
                     'is_founder' => $u->id === 1,
                     'created_at' => $u->created_at?->format('d/m/Y H:i'),
@@ -139,6 +141,8 @@ class UserController extends Controller
             'phone' => 'nullable|string|max:40',
             'password' => 'required|string|min:6',
             'role' => 'required|in:secretary,director',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string',
         ], [
             'name.required' => 'Le nom complet est obligatoire.',
             'email.required' => 'L\'adresse email est obligatoire.',
@@ -148,12 +152,17 @@ class UserController extends Controller
             'role.in' => 'Le rôle doit être soit Personnel, soit Directeur.',
         ]);
 
+        $permissions = $validated['role'] === 'director'
+            ? null
+            : ($validated['permissions'] ?? User::defaultPersonnelPermissions());
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'permissions' => $permissions,
             'is_active' => true,
         ]);
 
@@ -174,6 +183,7 @@ class UserController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'role' => $user->role,
+                'permissions' => $user->getEffectivePermissions(),
                 'is_active' => true,
                 'is_founder' => false,
                 'created_at' => $user->created_at?->format('d/m/Y H:i'),
@@ -198,6 +208,8 @@ class UserController extends Controller
             ],
             'phone' => 'nullable|string|max:40',
             'role' => 'sometimes|in:secretary,director',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'string',
             'is_active' => 'sometimes|boolean',
         ], [
             'name.required' => 'Le nom est obligatoire.',
@@ -219,6 +231,10 @@ class UserController extends Controller
             ], 422);
         }
 
+        if (array_key_exists('permissions', $validated)) {
+            $user->permissions = $validated['role'] === 'director' ? null : $validated['permissions'];
+        }
+
         $user->update($validated);
 
         \App\Models\ActivityLog::record(
@@ -238,6 +254,7 @@ class UserController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'role' => $user->role,
+                'permissions' => $user->getEffectivePermissions(),
                 'is_active' => (bool) $user->is_active,
                 'is_founder' => $user->id === 1,
             ],

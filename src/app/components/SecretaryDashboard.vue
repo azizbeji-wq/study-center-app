@@ -95,6 +95,7 @@
         <TeachersManagement v-else-if="activeTab === 'teachers'" />
         <ScheduleManagement v-else-if="activeTab === 'schedule'" />
         <PaymentsManagement v-else-if="activeTab === 'payments'" />
+        <FinancialReports v-else-if="activeTab === 'reports'" />
       </div>
     </main>
 
@@ -110,8 +111,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { LogOut, Users, DollarSign, Calendar, BookOpen, UserPlus, LayoutDashboard, Baby, UserCheck, UserCog, Menu } from 'lucide-vue-next';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { LogOut, Users, DollarSign, Calendar, BookOpen, UserPlus, LayoutDashboard, Baby, UserCheck, UserCog, Menu, BarChart3 } from 'lucide-vue-next';
 import DashboardOverview from './DashboardOverview.vue';
 import StudentsManagement from './StudentsManagement.vue';
 import DaycareManagement from './DaycareManagement.vue';
@@ -119,11 +120,13 @@ import TeachersManagement from './TeachersManagement.vue';
 import ScheduleManagement from './ScheduleManagement.vue';
 import AttendanceManagement from './AttendanceManagement.vue';
 import PaymentsManagement from './PaymentsManagement.vue';
+import FinancialReports from './FinancialReports.vue';
 import SchoolCalendar from './SchoolCalendar.vue';
 import AccountManagementModal from './AccountManagementModal.vue';
 
 const props = defineProps<{
   userName: string;
+  permissions?: string[];
 }>();
 
 defineEmits<{
@@ -143,27 +146,45 @@ const selectTab = (tabId: Tab) => {
   isMobileMenuOpen.value = false;
 };
 
-type Tab = 'dashboard' | 'students' | 'daycare' | 'teachers' | 'schedule' | 'attendance' | 'payments' | 'schoolcalendar';
+type Tab = 'dashboard' | 'students' | 'daycare' | 'teachers' | 'schedule' | 'attendance' | 'payments' | 'schoolcalendar' | 'reports';
 
-const tabs = [
-  { id: 'dashboard' as Tab, label: 'Tableau de bord', icon: LayoutDashboard },
-  { id: 'students' as Tab, label: 'Élèves', icon: Users },
-  { id: 'attendance' as Tab, label: 'Présences & Groupes', icon: UserCheck },
-  { id: 'daycare' as Tab, label: 'Élèves de garde', icon: Baby },
-  { id: 'teachers' as Tab, label: 'Enseignants', icon: UserPlus },
-  { id: 'schedule' as Tab, label: 'Emploi du temps', icon: Calendar },
-  { id: 'payments' as Tab, label: 'Paiements', icon: DollarSign },
-  { id: 'schoolcalendar' as Tab, label: 'Calendrier scolaire', icon: Calendar }
+const allTabs = [
+  { id: 'dashboard' as Tab, label: 'Tableau de bord', icon: LayoutDashboard, permission: 'dashboard' },
+  { id: 'students' as Tab, label: 'Élèves', icon: Users, permission: 'students' },
+  { id: 'attendance' as Tab, label: 'Présences & Groupes', icon: UserCheck, permission: 'attendance' },
+  { id: 'daycare' as Tab, label: 'Élèves de garde', icon: Baby, permission: 'daycare' },
+  { id: 'teachers' as Tab, label: 'Enseignants', icon: UserPlus, permission: 'teachers' },
+  { id: 'schedule' as Tab, label: 'Emploi du temps', icon: Calendar, permission: 'schedule' },
+  { id: 'payments' as Tab, label: 'Paiements', icon: DollarSign, permission: 'payments' },
+  { id: 'schoolcalendar' as Tab, label: 'Calendrier scolaire', icon: Calendar, permission: 'schoolcalendar' },
+  { id: 'reports' as Tab, label: 'Comptabilité', icon: BarChart3, permission: 'reports' },
 ];
+
+const tabs = computed(() => {
+  const perms = props.permissions;
+  if (!perms || !Array.isArray(perms)) {
+    // Par défaut : tous sauf reports
+    return allTabs.filter(t => t.id !== 'reports');
+  }
+  return allTabs.filter(t => perms.includes(t.permission));
+});
 
 const activeTab = ref<Tab>('dashboard');
 
 const syncFromHash = () => {
   const hash = window.location.hash.replace('#', '') as Tab;
-  if (hash && tabs.some(t => t.id === hash)) {
+  if (hash && tabs.value.some(t => t.id === hash)) {
     activeTab.value = hash;
+  } else if (!tabs.value.some(t => t.id === activeTab.value)) {
+    activeTab.value = (tabs.value[0]?.id as Tab) || 'dashboard';
   }
 };
+
+watch(() => tabs.value, (newTabs) => {
+  if (newTabs.length > 0 && !newTabs.some(t => t.id === activeTab.value)) {
+    activeTab.value = newTabs[0].id;
+  }
+}, { immediate: true });
 
 onMounted(() => {
   syncFromHash();

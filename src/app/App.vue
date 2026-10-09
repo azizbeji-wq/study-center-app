@@ -14,6 +14,7 @@
       <SecretaryDashboard
         v-else-if="user.role === 'secretary'"
         :user-name="user.name"
+        :permissions="user.permissions"
         @logout="handleLogout"
       />
     </template>
@@ -37,6 +38,7 @@ import {
 interface User {
   role: 'director' | 'secretary';
   name: string;
+  permissions?: string[];
 }
 
 const user = ref<User | null>(null);
@@ -82,8 +84,8 @@ onUnmounted(() => {
   }
 });
 
-const handleLogin = (role: 'director' | 'secretary', name: string) => {
-  user.value = { role, name };
+const handleLogin = (role: 'director' | 'secretary', name: string, permissions?: string[]) => {
+  user.value = { role, name, permissions };
   sessionNotice.value = '';
 
   if (stopMonitor) {
