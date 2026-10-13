@@ -11,32 +11,45 @@
         <p class="text-xs text-gray-500 mt-0.5">Pointez les présences, absences et retards de vos séances en temps réel</p>
       </div>
 
-      <!-- Sélecteur d'onglet (Faire l'appel / Historique) -->
-      <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-xl shrink-0">
+      <!-- Sélecteur d'onglet & Export PDF -->
+      <div class="flex items-center gap-2.5 flex-wrap">
         <button
-          @click="activeTab = 'take'"
-          :class="[
-            'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5',
-            activeTab === 'take'
-              ? 'bg-white text-gray-900 shadow-xs'
-              : 'text-gray-500 hover:text-gray-900'
-          ]"
+          type="button"
+          @click="openPdfModal"
+          :disabled="!selectedGroup || studentsList.length === 0"
+          class="px-3.5 py-1.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-violet-600/20 cursor-pointer disabled:cursor-not-allowed shrink-0"
+          title="Exporter la feuille de présence officielle en PDF"
         >
-          <CheckSquare class="w-3.5 h-3.5" />
-          <span>Saisie de Séance</span>
+          <Printer class="w-3.5 h-3.5" />
+          <span>Exporter Fiche d'Appel (PDF)</span>
         </button>
-        <button
-          @click="activeTab = 'history'"
-          :class="[
-            'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5',
-            activeTab === 'history'
-              ? 'bg-white text-gray-900 shadow-xs'
-              : 'text-gray-500 hover:text-gray-900'
-          ]"
-        >
-          <History class="w-3.5 h-3.5" />
-          <span>Historique Passé</span>
-        </button>
+
+        <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-xl shrink-0">
+          <button
+            @click="activeTab = 'take'"
+            :class="[
+              'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5',
+              activeTab === 'take'
+                ? 'bg-white text-gray-900 shadow-xs'
+                : 'text-gray-500 hover:text-gray-900'
+            ]"
+          >
+            <CheckSquare class="w-3.5 h-3.5" />
+            <span>Saisie de Séance</span>
+          </button>
+          <button
+            @click="activeTab = 'history'"
+            :class="[
+              'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5',
+              activeTab === 'history'
+                ? 'bg-white text-gray-900 shadow-xs'
+                : 'text-gray-500 hover:text-gray-900'
+            ]"
+          >
+            <History class="w-3.5 h-3.5" />
+            <span>Historique Passé</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -141,8 +154,17 @@
           </div>
         </div>
 
-        <!-- Raccourcis d'appel -->
+        <!-- Raccourcis d'appel & Export PDF -->
         <div class="flex items-center gap-2">
+          <button
+            type="button"
+            @click="openPdfModal"
+            class="px-3 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 border border-violet-200/70 cursor-pointer shadow-2xs"
+            title="Aperçu et impression de la fiche d'appel en PDF"
+          >
+            <Printer class="w-3.5 h-3.5 text-violet-600" />
+            <span>Imprimer / PDF</span>
+          </button>
           <button
             @click="markAll('present')"
             class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
@@ -405,6 +427,256 @@
         </div>
       </div>
     </div>
+
+    <!-- Modale d'Aperçu & Impression de la Fiche d'Appel en PDF -->
+    <div
+      v-if="showPdfModal"
+      class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-6 overflow-y-auto"
+      @click.self="showPdfModal = false"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-6 flex flex-col border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[92vh]"
+      >
+        <!-- Header de la modale -->
+        <div class="px-6 py-4 bg-gradient-to-r from-violet-700 via-purple-700 to-violet-800 text-white flex items-center justify-between shrink-0 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center font-bold text-lg border border-white/20 shadow-inner">
+              <Printer class="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-black tracking-tight text-white">Export PDF - Fiche d'Appel Pédagogique</h3>
+                <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
+                  Format A4
+                </span>
+              </div>
+              <p class="text-xs text-violet-100/90 mt-0.5">
+                {{ selectedGroup }} • {{ selectedSubject }} • Séance du {{ sessionDate }}
+              </p>
+            </div>
+          </div>
+
+          <button
+            @click="showPdfModal = false"
+            class="p-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
+            title="Fermer"
+          >
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Barre d'outils de la modale : Choix du format & Bouton Imprimer -->
+        <div class="px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+          <!-- Toggle Format : Rempli vs Vierge -->
+          <div class="inline-flex rounded-xl p-1 bg-gray-200/80 gap-1 text-xs font-bold">
+            <button
+              type="button"
+              @click="pdfFormat = 'filled'"
+              :class="[
+                'px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5',
+                pdfFormat === 'filled' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+              ]"
+            >
+              <CheckSquare class="w-3.5 h-3.5 text-emerald-600" />
+              <span>Avec Pointage Actuel</span>
+            </button>
+            <button
+              type="button"
+              @click="pdfFormat = 'blank'"
+              :class="[
+                'px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5',
+                pdfFormat === 'blank' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+              ]"
+            >
+              <FileText class="w-3.5 h-3.5 text-violet-600" />
+              <span>Fiche Vierge (Émargement en classe)</span>
+            </button>
+          </div>
+
+          <!-- Actions Imprimer / Enregistrer PDF -->
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              @click="showPdfModal = false"
+              class="px-4 py-2 border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+            >
+              Fermer
+            </button>
+            <button
+              type="button"
+              @click="triggerPrintAttendance"
+              class="px-5 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-md shadow-violet-600/25 cursor-pointer"
+            >
+              <Printer class="w-4 h-4" />
+              <span>Imprimer / Télécharger en PDF (A4)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Corps de la modale avec aperçu fidèle de la feuille A4 -->
+        <div class="p-6 overflow-y-auto bg-gray-100/60 flex-1 flex justify-center">
+          <div
+            id="attendance-sheet-printable"
+            class="bg-white rounded-xl shadow-md border border-gray-300 p-8 sm:p-10 w-full max-w-3xl space-y-6 text-gray-900"
+          >
+            <!-- En-tête officiel du document -->
+            <div class="border-b-2 border-violet-800 pb-5">
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                <div>
+                  <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-violet-800 text-white flex items-center justify-center font-black text-xl shadow-xs">
+                      SC
+                    </div>
+                    <div>
+                      <h1 class="text-lg font-black text-violet-950 uppercase tracking-tight">
+                        Centre d'Études & de Formation
+                      </h1>
+                      <p class="text-[11px] font-semibold text-gray-600">
+                        Établissement de Soutien Scolaire Pédagogique • Cursus Tunisien
+                      </p>
+                    </div>
+                  </div>
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    Année Scolaire : 2025 - 2026 • République Tunisienne
+                  </p>
+                </div>
+
+                <div class="text-right sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-100">
+                  <span class="inline-block px-3 py-1 rounded-md text-[11px] font-black uppercase tracking-wider bg-violet-50 text-violet-900 border border-violet-200">
+                    FICHE OFFICIELLE D'APPEL & D'ÉMARGEMENT
+                  </span>
+                  <p class="text-[11px] font-semibold text-gray-500 mt-1">
+                    Date : <strong class="text-gray-900">{{ sessionDate }}</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fiche d'identification de la séance -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs">
+              <div>
+                <span class="text-[10px] font-bold text-gray-500 uppercase block">Enseignant(e)</span>
+                <strong class="text-gray-900 text-xs">{{ currentTeacherName }}</strong>
+              </div>
+              <div>
+                <span class="text-[10px] font-bold text-gray-500 uppercase block">Groupe</span>
+                <strong class="text-violet-700 text-xs">{{ selectedGroup }}</strong>
+              </div>
+              <div>
+                <span class="text-[10px] font-bold text-gray-500 uppercase block">Niveau Scolaire</span>
+                <strong class="text-gray-900 text-xs">{{ currentGroupDetails?.level || 'Secondaire' }}</strong>
+              </div>
+              <div>
+                <span class="text-[10px] font-bold text-gray-500 uppercase block">Matière Enseignée</span>
+                <strong class="text-gray-900 text-xs">{{ selectedSubject }}</strong>
+              </div>
+            </div>
+
+            <!-- Synthèse statistique si format rempli -->
+            <div v-if="pdfFormat === 'filled'" class="flex flex-wrap items-center justify-between gap-3 bg-violet-50/60 p-3 rounded-xl border border-violet-100 text-xs">
+              <span class="font-bold text-violet-950">Statistiques de Séance :</span>
+              <div class="flex items-center gap-4 text-[11px]">
+                <span>Inscrits : <strong>{{ studentsList.length }}</strong></span>
+                <span class="text-emerald-700">Présents : <strong>{{ countStatus('present') }}</strong></span>
+                <span class="text-red-700">Absents : <strong>{{ countStatus('absent') }}</strong></span>
+                <span class="text-amber-700">Retards : <strong>{{ countStatus('late') }}</strong></span>
+                <span class="text-violet-800 font-bold">Assiduité : <strong>{{ attendanceRate }}%</strong></span>
+              </div>
+            </div>
+
+            <!-- Tableau d'émargement et d'appel des élèves -->
+            <div class="border border-gray-300 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-gray-100 text-gray-700 font-black text-[11px] border-b border-gray-300 uppercase">
+                    <th class="py-2.5 px-3 w-10 text-center border-r border-gray-300">N°</th>
+                    <th class="py-2.5 px-3 border-r border-gray-300">Nom & Prénom de l'Élève</th>
+                    <th class="py-2.5 px-3 border-r border-gray-300 w-32">Niveau</th>
+                    <th class="py-2.5 px-3 border-r border-gray-300 w-28">Téléphone</th>
+                    <th class="py-2.5 px-3 border-r border-gray-300 w-36 text-center">
+                      {{ pdfFormat === 'filled' ? 'Statut Pointé' : 'Pointage (P / A / R)' }}
+                    </th>
+                    <th class="py-2.5 px-3 border-r border-gray-300 w-32 text-center">Émargement Élève</th>
+                    <th class="py-2.5 px-3">Observations</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr
+                    v-for="(student, idx) in studentsList"
+                    :key="student.id"
+                    class="hover:bg-gray-50/50"
+                  >
+                    <td class="py-2 px-3 text-center font-bold text-gray-500 border-r border-gray-200 text-[11px]">
+                      {{ idx + 1 }}
+                    </td>
+                    <td class="py-2 px-3 font-bold text-gray-900 border-r border-gray-200">
+                      {{ student.name }}
+                    </td>
+                    <td class="py-2 px-3 text-gray-600 border-r border-gray-200 text-[11px]">
+                      {{ student.level || '—' }}
+                    </td>
+                    <td class="py-2 px-3 text-gray-600 border-r border-gray-200 text-[11px]">
+                      {{ student.phone || student.parent_phone || '—' }}
+                    </td>
+
+                    <!-- Colonne Statut : Soit Badge rempli, soit Cases à cocher vierges -->
+                    <td class="py-2 px-3 border-r border-gray-200 text-center">
+                      <div v-if="pdfFormat === 'filled'">
+                        <span
+                          :class="[
+                            'inline-block px-2 py-0.5 rounded text-[10px] font-extrabold',
+                            student.current_status === 'present' ? 'bg-emerald-100 text-emerald-800' : '',
+                            student.current_status === 'absent' ? 'bg-red-100 text-red-800' : '',
+                            student.current_status === 'late' ? 'bg-amber-100 text-amber-800' : '',
+                            student.current_status === 'excused' ? 'bg-blue-100 text-blue-800' : ''
+                          ]"
+                        >
+                          {{ formatStatusLabel(student.current_status || 'present') }}
+                        </span>
+                      </div>
+                      <div v-else class="flex items-center justify-center gap-2 text-[10px] text-gray-600 font-mono">
+                        <span>[ ] P</span>
+                        <span>[ ] A</span>
+                        <span>[ ] R</span>
+                      </div>
+                    </td>
+
+                    <!-- Émargement / Signature de l'élève -->
+                    <td class="py-2 px-3 border-r border-gray-200 text-center">
+                      <span class="inline-block w-24 h-5 border-b border-dashed border-gray-300"></span>
+                    </td>
+
+                    <!-- Observations -->
+                    <td class="py-2 px-3 text-[11px] text-gray-600 italic">
+                      {{ (pdfFormat === 'filled' ? student.current_notes : '') || '—' }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Bloc officiel de validation & Signatures -->
+            <div class="pt-6 border-t border-gray-200 grid grid-cols-2 gap-8 text-xs">
+              <div class="border border-gray-200 rounded-xl p-4 bg-gray-50/50 min-h-28 flex flex-col justify-between">
+                <div>
+                  <span class="font-bold text-gray-900 block">Visa & Signature de l'Enseignant(e)</span>
+                  <p class="text-[10px] text-gray-500 mt-0.5">Certifie l'exactitude des présences et des émargements</p>
+                </div>
+                <div class="text-[10px] text-gray-400 italic pt-6">Signature :</div>
+              </div>
+
+              <div class="border border-gray-200 rounded-xl p-4 bg-gray-50/50 min-h-28 flex flex-col justify-between">
+                <div>
+                  <span class="font-bold text-gray-900 block">Cachet & Visa de la Direction du Centre</span>
+                  <p class="text-[10px] text-gray-500 mt-0.5">Enregistré et archivé à l'administration</p>
+                </div>
+                <div class="text-[10px] text-gray-400 italic pt-6">Tampon / Signature :</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -413,13 +685,15 @@ import { ref, computed, onMounted } from 'vue';
 import {
   UserCheck, Users, BookOpen, Calendar, CheckSquare, History, CheckCheck,
   RotateCcw, Check, X, Clock, ShieldAlert, Phone, Save, CheckCircle2,
-  AlertCircle, RotateCw
+  AlertCircle, RotateCw, Printer, FileText, Download
 } from 'lucide-vue-next';
 import api from '../utils/api';
+import { printIsolatedElement } from '../utils/printHelper';
 
 const props = defineProps<{
   initialGroup?: string;
   initialSubject?: string;
+  teacherName?: string;
 }>();
 
 const activeTab = ref<'take' | 'history'>('take');
@@ -437,6 +711,36 @@ const saving = ref(false);
 
 const toastMessage = ref('');
 const toastType = ref<'success' | 'error'>('success');
+
+// État pour la modale d'aperçu et d'impression PDF
+const showPdfModal = ref(false);
+const pdfFormat = ref<'filled' | 'blank'>('filled');
+
+const currentGroupDetails = computed(() => {
+  return groupsList.value.find(g => g.group_name === selectedGroup.value) || null;
+});
+
+const currentTeacherName = computed(() => {
+  if (props.teacherName) return props.teacherName;
+  try {
+    const u = localStorage.getItem('user');
+    if (u) return JSON.parse(u).name || 'Professeur';
+  } catch {}
+  return 'Professeur';
+});
+
+function openPdfModal() {
+  if (!selectedGroup.value || studentsList.value.length === 0) {
+    showToast('Veuillez sélectionner un groupe avec des élèves pour exporter la fiche.', 'error');
+    return;
+  }
+  showPdfModal.value = true;
+}
+
+function triggerPrintAttendance() {
+  const docTitle = `Fiche_Appel_${selectedGroup.value}_${sessionDate.value}`;
+  printIsolatedElement('attendance-sheet-printable', docTitle);
+}
 
 const attendanceRate = computed(() => {
   if (studentsList.value.length === 0) return 100;

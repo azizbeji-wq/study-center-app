@@ -57,36 +57,95 @@
 
         <!-- Champ 1 : Nom du groupe -->
         <div class="space-y-1.5">
-          <label class="block text-xs font-bold text-gray-700">
-            Nom du groupe <span class="text-red-500">*</span>
+          <label class="block text-xs font-bold text-gray-700 flex items-center justify-between">
+            <span>Nom du groupe <span class="text-red-500">*</span></span>
+            <span v-if="suggestedGroupsForSelectedLevel.length > 0" class="text-[11px] font-normal text-violet-600 flex items-center gap-1">
+              <Sparkles class="w-3 h-3" />
+              Suggestions rapides
+            </span>
           </label>
           <div class="relative">
             <input
               v-model="form.name"
               type="text"
               required
-              placeholder="ex: Groupe Bac Sciences A, Groupe 3ème Math B..."
+              placeholder="ex: Bac M1, Groupe 3ème Math B, 9B1..."
               class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all placeholder:text-gray-400"
             />
+          </div>
+          <!-- Suggestions cliquables -->
+          <div v-if="suggestedGroupsForSelectedLevel.length > 0" class="flex flex-wrap items-center gap-1.5 pt-1">
+            <span class="text-[10px] text-gray-400">Exemples :</span>
+            <button
+              v-for="sug in suggestedGroupsForSelectedLevel"
+              :key="sug"
+              type="button"
+              @click="form.name = sug"
+              class="px-2 py-0.5 text-[10px] font-semibold bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-md border border-violet-200/60 transition-colors cursor-pointer"
+            >
+              {{ sug }}
+            </button>
           </div>
           <p class="text-[11px] text-gray-400">Identifiant visuel qui sera affiché sur les feuilles d'appel et le planning.</p>
         </div>
 
-        <!-- Champ 2 : Niveau scolaire -->
+        <!-- Champ 2 : Niveau scolaire (Importé de tunisianEducation.ts) -->
         <div class="space-y-1.5">
-          <label class="block text-xs font-bold text-gray-700">
-            Niveau scolaire <span class="text-red-500">*</span>
+          <label class="block text-xs font-bold text-gray-700 flex items-center justify-between">
+            <span>Niveau scolaire (Cursus Tunisien) <span class="text-red-500">*</span></span>
+            <span class="text-[10px] px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/60">
+              Conforme Tunisie
+            </span>
           </label>
           <div class="relative">
             <select
               v-model="form.level"
               required
-              class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer font-medium"
             >
               <option disabled value="">Sélectionnez un niveau scolaire</option>
-              <option v-for="lvl in availableLevels" :key="lvl" :value="lvl">
-                {{ lvl }}
-              </option>
+
+              <!-- Baccalauréat -->
+              <optgroup label="🎓 Baccalauréat (4ème Année)">
+                <option v-for="lvl in bacLevels" :key="lvl.id" :value="lvl.name">
+                  {{ lvl.name }}
+                </option>
+              </optgroup>
+
+              <!-- 3ème Année -->
+              <optgroup label="📚 3ème Année Secondaire">
+                <option v-for="lvl in lycee3Levels" :key="lvl.id" :value="lvl.name">
+                  {{ lvl.name }}
+                </option>
+              </optgroup>
+
+              <!-- 2ème Année -->
+              <optgroup label="📐 2ème Année Secondaire">
+                <option v-for="lvl in lycee2Levels" :key="lvl.id" :value="lvl.name">
+                  {{ lvl.name }}
+                </option>
+              </optgroup>
+
+              <!-- 1ère Année -->
+              <optgroup label="🌱 1ère Année Secondaire">
+                <option v-for="lvl in lyceeCommonLevels" :key="lvl.id" :value="lvl.name">
+                  {{ lvl.name }}
+                </option>
+              </optgroup>
+
+              <!-- Collège -->
+              <optgroup label="🏫 Collège (Enseignement de Base)">
+                <option v-for="lvl in collegeLevels" :key="lvl.id" :value="lvl.name">
+                  {{ lvl.name }}
+                </option>
+              </optgroup>
+
+              <!-- Autre -->
+              <optgroup label="Autre cursus">
+                <option value="Primaire">Enseignement Primaire</option>
+                <option value="Universitaire / Supérieur">Universitaire / Supérieur</option>
+                <option value="Formation Continue">Formation Continue</option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -169,8 +228,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue';
-import { Users, X, Plus, AlertCircle, CheckCircle2, Loader2 } from 'lucide-vue-next';
+import { Users, X, Plus, AlertCircle, CheckCircle2, Loader2, Sparkles } from 'lucide-vue-next';
 import api from '../utils/api';
+import { TUNISIAN_LEVELS, getSubjectsForLevel, getSuggestedGroups } from '../utils/tunisianEducation';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -186,27 +246,31 @@ const loading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
 
-const availableLevels = [
-  'Baccalauréat',
-  '4ème Année Secondaire',
-  '3ème Année Secondaire',
-  '2ème Année Secondaire',
-  '1ère Année Secondaire',
-  '9ème Année de Base',
-  '8ème Année de Base',
-  '7ème Année de Base',
-  '6ème Année Primaire',
-  '5ème Année Primaire',
-  'Autre niveau',
-];
+// Groupement structuré des niveaux scolaires tunisiens
+const collegeLevels = computed(() => TUNISIAN_LEVELS.filter(l => l.cycle === 'college'));
+const lyceeCommonLevels = computed(() => TUNISIAN_LEVELS.filter(l => l.id.startsWith('1_')));
+const lycee2Levels = computed(() => TUNISIAN_LEVELS.filter(l => l.id.startsWith('2_')));
+const lycee3Levels = computed(() => TUNISIAN_LEVELS.filter(l => l.id.startsWith('3_')));
+const bacLevels = computed(() => TUNISIAN_LEVELS.filter(l => l.id.startsWith('4_bac')));
+
+const defaultLevel = computed(() => bacLevels.value[0]?.name || '4ème Année Bac Mathématiques');
+
+const suggestedGroupsForSelectedLevel = computed(() => {
+  return getSuggestedGroups(form.level);
+});
 
 const normalizedSubjects = computed(() => {
   if (props.subjects && props.subjects.length > 0) {
     return props.subjects;
   }
+  // Sujet recommandé pour le niveau sélectionné selon le cursus tunisien
+  const levelSubjects = getSubjectsForLevel(form.level);
+  if (levelSubjects.length > 0) {
+    return levelSubjects;
+  }
   return [
     'Mathématiques',
-    'Physique-Chimie',
+    'Sciences Physiques',
     'Sciences de la Vie et de la Terre (SVT)',
     'Français',
     'Anglais',
@@ -219,13 +283,26 @@ const normalizedSubjects = computed(() => {
 
 const form = reactive({
   name: '',
-  level: 'Baccalauréat',
+  level: defaultLevel.value,
   subject: '',
   max_capacity: 15,
   notes: '',
 });
 
-// Initialiser la matière par défaut à l'ouverture du modal
+// Quand le niveau change, si la matière actuelle n'est pas dans la liste des matières possibles et si pas d'affectation fixe, mettre à jour
+watch(
+  () => form.level,
+  (newLevel) => {
+    if (!props.subjects || props.subjects.length === 0) {
+      const levelSubjects = getSubjectsForLevel(newLevel);
+      if (levelSubjects.length > 0 && !levelSubjects.includes(form.subject)) {
+        form.subject = levelSubjects[0];
+      }
+    }
+  }
+);
+
+// Initialiser les valeurs par défaut à l'ouverture du modal
 watch(
   () => props.isOpen,
   (open) => {
@@ -233,7 +310,7 @@ watch(
       errorMessage.value = '';
       successMessage.value = '';
       form.name = '';
-      form.level = 'Baccalauréat';
+      form.level = defaultLevel.value;
       form.max_capacity = 15;
       form.notes = '';
       form.subject = normalizedSubjects.value[0] || 'Mathématiques';

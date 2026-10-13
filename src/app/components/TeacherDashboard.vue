@@ -270,9 +270,17 @@
                 </div>
               </div>
 
-              <!-- Action : Faire l'appel pour ce groupe -->
-              <div class="mt-5 pt-3 border-t border-gray-100 flex items-center justify-between">
-                <span class="text-[11px] text-gray-400 font-semibold">Feuille d'appel</span>
+              <!-- Actions : Gérer les élèves + Faire l'appel -->
+              <div class="mt-5 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                <button
+                  @click="openGroupStudents(grp)"
+                  class="px-2.5 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-violet-200/60"
+                  title="Ajouter ou gérer les élèves de ce groupe"
+                >
+                  <UserPlus class="w-3.5 h-3.5" />
+                  <span>Élèves ({{ grp.student_count }})</span>
+                </button>
+
                 <button
                   @click="openAttendanceForGroup(grp.group_name, grp.subjects?.[0])"
                   class="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm shadow-violet-600/20 cursor-pointer"
@@ -290,6 +298,7 @@
           v-else-if="activeTab === 'attendance'"
           :initial-group="attendanceInitialGroup"
           :initial-subject="attendanceInitialSubject"
+          :teacher-name="currentDisplayName"
         />
       </div>
     </main>
@@ -310,18 +319,28 @@
       @close="showCreateGroupModal = false"
       @group-created="handleGroupCreated"
     />
+
+    <!-- Modale Gestion des Élèves du Groupe -->
+    <GroupStudentsModal
+      :is-open="showGroupStudentsModal"
+      :group="selectedGroupForStudents"
+      @close="showGroupStudentsModal = false"
+      @students-updated="handleStudentsUpdated"
+      @open-attendance="(groupName, subjectName) => { showGroupStudentsModal = false; openAttendanceForGroup(groupName, subjectName); }"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
-  LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw, Plus
+  LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw, Plus, UserPlus
 } from 'lucide-vue-next';
 import TeacherSchedule from './TeacherSchedule.vue';
 import TeacherAttendance from './TeacherAttendance.vue';
 import AccountManagementModal from './AccountManagementModal.vue';
 import CreateGroupModal from './CreateGroupModal.vue';
+import GroupStudentsModal from './GroupStudentsModal.vue';
 import api from '../utils/api';
 
 const props = defineProps<{
@@ -335,11 +354,26 @@ defineEmits<{
 const currentDisplayName = ref(props.userName);
 const showAccountModal = ref(false);
 const showCreateGroupModal = ref(false);
+const showGroupStudentsModal = ref(false);
+const selectedGroupForStudents = ref<any>(null);
 const isMobileMenuOpen = ref(false);
 
 const teacherProfile = ref<any>(null);
 const groupsList = ref<any[]>([]);
 const loadingGroups = ref(false);
+
+function openGroupStudents(grp: any) {
+  selectedGroupForStudents.value = grp;
+  showGroupStudentsModal.value = true;
+}
+
+function handleStudentsUpdated(groupName: string, newCount: number) {
+  const match = groupsList.value.find(g => g.group_name === groupName || g.name === groupName);
+  if (match) {
+    match.student_count = newCount;
+  }
+  fetchGroups();
+}
 
 const teacherSubjects = computed<string[]>(() => {
   const list: string[] = [];

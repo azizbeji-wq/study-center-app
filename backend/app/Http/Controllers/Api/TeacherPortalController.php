@@ -222,6 +222,18 @@ class TeacherPortalController extends Controller
         foreach ($groupNames as $gName) {
             $matchedDirectGroup = $directGroups->firstWhere('name', $gName);
 
+            // Si le groupe n'existe pas encore sous forme de modèle Group explicite, le persister pour permettre l'attachement d'élèves
+            if (!$matchedDirectGroup) {
+                $matchedDirectGroup = \App\Models\Group::firstOrCreate(
+                    ['name' => $gName],
+                    [
+                        'teacher_id' => $user?->id ?? $teacher->id,
+                        'level' => 'Secondaire',
+                        'max_capacity' => 25,
+                    ]
+                );
+            }
+
             // Nombre d'élèves dans ce groupe pour cet enseignant
             $studentIds = StudentSubjectEnrollment::where('teacher_id', $teacher->id)
                 ->where('group_name', $gName)
@@ -306,17 +318,27 @@ class TeacherPortalController extends Controller
         // Trouver les élèves via enrollments ou student.group_name
         $query = Student::query();
 
+        $enrolledIds = [];
         if ($teacher) {
             $enrolledIds = StudentSubjectEnrollment::where('teacher_id', $teacher->id)
                 ->where('group_name', $decodedGroup)
                 ->pluck('student_id')
                 ->toArray();
+        }
 
-            if (!empty($enrolledIds)) {
-                $query->whereIn('id', $enrolledIds);
-            } else {
-                $query->where('group_name', $decodedGroup);
-            }
+        // Vérifier également les élèves rattachés directement via la table pivot group_student
+        $directGroup = \App\Models\Group::where('name', $decodedGroup)
+            ->orWhere('id', is_numeric($decodedGroup) ? (int)$decodedGroup : 0)
+            ->first();
+        $directStudentIds = $directGroup ? $directGroup->students()->pluck('students.id')->toArray() : [];
+
+        $allMatchingIds = array_unique(array_filter(array_merge($enrolledIds, $directStudentIds)));
+
+        if (!empty($allMatchingIds)) {
+            $query->where(function ($q) use ($allMatchingIds, $decodedGroup) {
+                $q->whereIn('id', $allMatchingIds)
+                  ->orWhere('group_name', $decodedGroup);
+            });
         } else {
             $query->where('group_name', $decodedGroup);
         }

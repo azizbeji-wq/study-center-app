@@ -131,6 +131,33 @@ class GroupController extends Controller
      * @param int|string $groupId
      * @return JsonResponse
      */
+    /**
+     * Recherche le groupe par identifiant numérique ou nom.
+     */
+    protected function resolveGroupModel($groupId): Group
+    {
+        $group = is_numeric($groupId)
+            ? Group::find((int) $groupId)
+            : Group::where('name', $groupId)->first();
+
+        if (!$group && is_string($groupId)) {
+            $group = Group::where('name', urldecode($groupId))->first();
+        }
+
+        if (!$group) {
+            $group = Group::findOrFail($groupId);
+        }
+
+        return $group;
+    }
+
+    /**
+     * Attacher un élève existant à un groupe (avec validation et prévention des doublons).
+     *
+     * @param Request $request
+     * @param int|string $groupId
+     * @return JsonResponse
+     */
     public function attachStudent(Request $request, $groupId): JsonResponse
     {
         $validated = $request->validate([
@@ -141,7 +168,7 @@ class GroupController extends Controller
             'student_id.exists' => 'Cet élève n\'existe pas dans la base de données.',
         ]);
 
-        $group = Group::findOrFail($groupId);
+        $group = $this->resolveGroupModel($groupId);
         $studentId = (int) $validated['student_id'];
         $student = Student::findOrFail($studentId);
 
@@ -161,7 +188,12 @@ class GroupController extends Controller
         // 2. Attacher l'élève au groupe (remplit automatiquement la table pivot group_student avec timestamps)
         $group->students()->attach($studentId);
 
-        // 3. Journal d'activité (si utilisateur authentifié)
+        // 3. Mettre à jour le nom de groupe principal si vide
+        if (empty($student->group_name)) {
+            $student->update(['group_name' => $group->name]);
+        }
+
+        // 4. Journal d'activité (si utilisateur authentifié)
         if ($request->user()) {
             ActivityLog::record(
                 $request->user(),
@@ -195,16 +227,29 @@ class GroupController extends Controller
      */
     public function detachStudent(Request $request, $groupId, $studentId): JsonResponse
     {
-        $group = Group::findOrFail($groupId);
+        $group = $this->resolveGroupModel($groupId);
         $student = Student::findOrFail($studentId);
 
-        if (!$group->students()->where('students.id', $studentId)->exists()) {
+        $isAttached = $group->students()->where('students.id', $studentId)->exists();
+
+        if (!$isAttached) {
+            if ($student->group_name === $group->name) {
+                $student->update(['group_name' => null]);
+                return response()->json([
+                    'message' => "L'élève {$student->name} a été retiré du groupe {$group->name}.",
+                ]);
+            }
+
             return response()->json([
                 'message' => "L'élève {$student->name} n'appartient pas au groupe {$group->name}.",
             ], 404);
         }
 
         $group->students()->detach($studentId);
+
+        if ($student->group_name === $group->name) {
+            $student->update(['group_name' => null]);
+        }
 
         return response()->json([
             'message' => "L'élève {$student->name} a été retiré du groupe {$group->name}.",
