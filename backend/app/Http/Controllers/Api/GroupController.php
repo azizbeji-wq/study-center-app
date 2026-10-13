@@ -60,12 +60,14 @@ class GroupController extends Controller
         $user = $request->user();
 
         // Si l'utilisateur connecté est un enseignant ou si aucun teacher_id n'est spécifié,
-        // associer automatiquement le teacher_id avec auth()->id()
+        // associer automatiquement le teacher_id (en privilégiant la fiche Teacher liée pour satisfaire les FK)
         if ($user && ($user->role === 'teacher' || empty($validated['teacher_id']))) {
-            $validated['teacher_id'] = $user->id;
+            $linkedTeacher = $user->teacher ?? \App\Models\Teacher::where('user_id', $user->id)->orWhere('email', $user->email)->first();
+            $validated['teacher_id'] = $linkedTeacher ? $linkedTeacher->id : $user->id;
         }
 
         // Associer la matière correspondante
+        $subjectText = $validated['subject'] ?? null;
         if (!empty($validated['subject']) && empty($validated['subject_id'])) {
             $subjectModel = Subject::where('name', $validated['subject'])->first();
             if ($subjectModel) {
@@ -75,7 +77,13 @@ class GroupController extends Controller
             $subjectModel = Subject::find($validated['subject_id']);
             if ($subjectModel) {
                 $validated['subject'] = $subjectModel->name;
+                $subjectText = $subjectModel->name;
             }
+        }
+
+        // Sécurité runtime : si la colonne 'subject' n'existe pas encore dans la table groups en base
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('groups', 'subject')) {
+            unset($validated['subject']);
         }
 
         $group = Group::create($validated);
@@ -99,7 +107,7 @@ class GroupController extends Controller
             'id' => $group->id,
             'name' => $group->name,
             'level' => $group->level,
-            'subject' => $group->subject ?: ($groupData->subject?->name ?? null),
+            'subject' => $subjectText ?: ($groupData->subject?->name ?? ($groupData->attributes['subject'] ?? null)),
             'teacher_id' => $group->teacher_id,
         ], 201);
     }
