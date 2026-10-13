@@ -6,20 +6,34 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Group;
 use App\Models\Student;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 
 class GroupController extends Controller
 {
     /**
      * Lister les groupes avec effectifs et détails.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $groups = Group::with(['subject', 'teacher'])
+        $query = Group::with(['subject', 'teacher'])
             ->withCount('students')
-            ->orderBy('name')
-            ->get();
+            ->orderBy('name');
+
+        if ($request->user() && $request->user()->role === 'teacher') {
+            $userId = $request->user()->id;
+            $teacherId = $request->user()->teacher?->id;
+            $query->where(function ($q) use ($userId, $teacherId) {
+                $q->where('teacher_id', $userId);
+                if ($teacherId) {
+                    $q->orWhere('teacher_id', $teacherId);
+                }
+            });
+        }
+
+        $groups = $query->get();
 
         return response()->json($groups);
     }
@@ -29,22 +43,64 @@ class GroupController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        Gate::authorize('create', Group::class);
+
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'level' => 'nullable|string|max:100',
+            'subject' => 'nullable|string|max:100',
             'subject_id' => 'nullable|exists:subjects,id',
-            'teacher_id' => 'nullable|exists:teachers,id',
+            'teacher_id' => 'nullable|integer',
             'max_capacity' => 'nullable|integer|min:1',
             'notes' => 'nullable|string|max:500',
         ], [
             'name.required' => 'Le nom du groupe est obligatoire.',
         ]);
 
+        $user = $request->user();
+
+        // Si l'utilisateur connecté est un enseignant ou si aucun teacher_id n'est spécifié,
+        // associer automatiquement le teacher_id avec auth()->id()
+        if ($user && ($user->role === 'teacher' || empty($validated['teacher_id']))) {
+            $validated['teacher_id'] = $user->id;
+        }
+
+        // Associer la matière correspondante
+        if (!empty($validated['subject']) && empty($validated['subject_id'])) {
+            $subjectModel = Subject::where('name', $validated['subject'])->first();
+            if ($subjectModel) {
+                $validated['subject_id'] = $subjectModel->id;
+            }
+        } elseif (!empty($validated['subject_id']) && empty($validated['subject'])) {
+            $subjectModel = Subject::find($validated['subject_id']);
+            if ($subjectModel) {
+                $validated['subject'] = $subjectModel->name;
+            }
+        }
+
         $group = Group::create($validated);
+
+        if ($user) {
+            ActivityLog::record(
+                $user,
+                'group',
+                'group_created',
+                "Création du groupe {$group->name}",
+                ['group_id' => $group->id, 'teacher_id' => $group->teacher_id],
+                $request->ip()
+            );
+        }
+
+        $groupData = $group->load(['subject', 'teacher']);
 
         return response()->json([
             'message' => "Le groupe {$group->name} a été créé avec succès.",
-            'group' => $group->load(['subject', 'teacher']),
+            'group' => $groupData,
+            'id' => $group->id,
+            'name' => $group->name,
+            'level' => $group->level,
+            'subject' => $group->subject ?: ($groupData->subject?->name ?? null),
+            'teacher_id' => $group->teacher_id,
         ], 201);
     }
 

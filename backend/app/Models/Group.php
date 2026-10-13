@@ -15,6 +15,7 @@ class Group extends Model
     protected $fillable = [
         'name',
         'level',
+        'subject',
         'subject_id',
         'teacher_id',
         'max_capacity',
@@ -47,6 +48,14 @@ class Group extends Model
      */
     public function teacher(): BelongsTo
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->belongsTo(Teacher::class, 'teacher_id');
+    }
+
+    /**
+     * Utilisateur ayant créé ou responsable du groupe.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
     }
 }

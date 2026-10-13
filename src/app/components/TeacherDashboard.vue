@@ -180,14 +180,24 @@
               <p class="text-xs text-gray-500 mt-0.5">Effectifs de vos classes, niveaux scolaires et créneaux associés</p>
             </div>
 
-            <button
-              @click="fetchGroups"
-              :disabled="loadingGroups"
-              class="px-3 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center gap-1.5 shadow-2xs shrink-0"
-            >
-              <RotateCw :class="['w-3.5 h-3.5', loadingGroups ? 'animate-spin text-violet-600' : '']" />
-              <span>Actualiser</span>
-            </button>
+            <div class="flex items-center gap-2 shrink-0">
+              <button
+                @click="showCreateGroupModal = true"
+                class="px-3.5 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-violet-600/20 cursor-pointer"
+              >
+                <Plus class="w-3.5 h-3.5" />
+                <span>+ Créer un groupe</span>
+              </button>
+
+              <button
+                @click="fetchGroups"
+                :disabled="loadingGroups"
+                class="px-3 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center gap-1.5 shadow-2xs shrink-0 cursor-pointer"
+              >
+                <RotateCw :class="['w-3.5 h-3.5', loadingGroups ? 'animate-spin text-violet-600' : '']" />
+                <span>Actualiser</span>
+              </button>
+            </div>
           </div>
 
           <!-- Chargement -->
@@ -198,15 +208,24 @@
           <!-- Aucun groupe -->
           <div
             v-else-if="groupsList.length === 0"
-            class="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-lg mx-auto space-y-3"
+            class="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-lg mx-auto space-y-4"
           >
             <div class="w-14 h-14 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center mx-auto">
               <Users class="w-7 h-7" />
             </div>
             <h3 class="text-base font-bold text-gray-900">Aucun groupe assigné</h3>
             <p class="text-xs text-gray-500 leading-relaxed">
-              Aucun groupe d'élèves n'est actuellement lié à votre compte enseignant. L'administration configure les groupes lors des inscriptions.
+              Aucun groupe d'élèves n'est actuellement lié à votre compte enseignant. Vous pouvez créer directement vos propres groupes pédagogiques.
             </p>
+            <div class="pt-2">
+              <button
+                @click="showCreateGroupModal = true"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-violet-600/20 cursor-pointer"
+              >
+                <Plus class="w-4 h-4" />
+                <span>+ Créer un groupe</span>
+              </button>
+            </div>
           </div>
 
           <!-- Liste des cartes de groupe -->
@@ -283,17 +302,26 @@
       @close="showAccountModal = false"
       @user-updated="handleUserUpdated"
     />
+
+    <!-- Modale Création de Groupe Enseignant -->
+    <CreateGroupModal
+      :is-open="showCreateGroupModal"
+      :subjects="teacherSubjects"
+      @close="showCreateGroupModal = false"
+      @group-created="handleGroupCreated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
-  LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw
+  LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw, Plus
 } from 'lucide-vue-next';
 import TeacherSchedule from './TeacherSchedule.vue';
 import TeacherAttendance from './TeacherAttendance.vue';
 import AccountManagementModal from './AccountManagementModal.vue';
+import CreateGroupModal from './CreateGroupModal.vue';
 import api from '../utils/api';
 
 const props = defineProps<{
@@ -306,11 +334,29 @@ defineEmits<{
 
 const currentDisplayName = ref(props.userName);
 const showAccountModal = ref(false);
+const showCreateGroupModal = ref(false);
 const isMobileMenuOpen = ref(false);
 
 const teacherProfile = ref<any>(null);
 const groupsList = ref<any[]>([]);
 const loadingGroups = ref(false);
+
+const teacherSubjects = computed<string[]>(() => {
+  const list: string[] = [];
+  if (teacherProfile.value?.subjects_list && Array.isArray(teacherProfile.value.subjects_list)) {
+    list.push(...teacherProfile.value.subjects_list);
+  }
+  if (teacherProfile.value?.subject) {
+    const parts = teacherProfile.value.subject.split(',').map((s: string) => s.trim()).filter(Boolean);
+    list.push(...parts);
+  }
+  return Array.from(new Set(list));
+});
+
+function handleGroupCreated() {
+  fetchGroups();
+  fetchProfile();
+}
 
 const attendanceInitialGroup = ref('');
 const attendanceInitialSubject = ref('');

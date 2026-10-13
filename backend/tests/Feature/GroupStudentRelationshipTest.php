@@ -138,4 +138,82 @@ class GroupStudentRelationshipTest extends TestCase
         // Vérifier qu'il n'y a qu'une seule ligne dans la table pivot
         $this->assertDatabaseCount('group_student', 1);
     }
+
+    /**
+     * Teste qu'un enseignant peut créer son propre groupe via POST /api/groups
+     * avec assignation automatique de teacher_id = auth()->id().
+     */
+    public function test_teacher_can_create_group_with_auto_assigned_teacher_id(): void
+    {
+        $teacherUser = User::create([
+            'name' => 'Professeur Mohamed',
+            'email' => 'teacher.mohamed@studycenter.com',
+            'password' => bcrypt('password123'),
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        $payload = [
+            'name' => 'Groupe Terminale Math A',
+            'level' => 'Baccalauréat',
+            'subject' => 'Mathématiques',
+            'max_capacity' => 15,
+        ];
+
+        $response = $this->actingAs($teacherUser)
+            ->postJson('/api/groups', $payload);
+
+        $response->assertStatus(201);
+        $response->assertJson([
+            'name' => 'Groupe Terminale Math A',
+            'level' => 'Baccalauréat',
+            'subject' => 'Mathématiques',
+            'teacher_id' => $teacherUser->id,
+        ]);
+
+        $this->assertDatabaseHas('groups', [
+            'name' => 'Groupe Terminale Math A',
+            'level' => 'Baccalauréat',
+            'subject' => 'Mathématiques',
+            'teacher_id' => $teacherUser->id,
+        ]);
+    }
+
+    /**
+     * Teste que le groupe créé apparaît bien dans le portail enseignant /api/teacher/groups.
+     */
+    public function test_teacher_can_fetch_groups_including_newly_created(): void
+    {
+        $teacherUser = User::create([
+            'name' => 'Professeur Mohamed',
+            'email' => 'teacher.mohamed2@studycenter.com',
+            'password' => bcrypt('password123'),
+            'role' => 'teacher',
+            'is_active' => true,
+        ]);
+
+        \App\Models\Teacher::create([
+            'user_id' => $teacherUser->id,
+            'name' => 'Professeur Mohamed',
+            'subject' => 'Mathématiques',
+            'phone' => '+216 20 000 000',
+            'email' => 'teacher.mohamed2@studycenter.com',
+        ]);
+
+        $this->actingAs($teacherUser)
+            ->postJson('/api/groups', [
+                'name' => 'Groupe Pilote',
+                'level' => 'Baccalauréat',
+                'subject' => 'Mathématiques',
+            ])->assertStatus(201);
+
+        $response = $this->actingAs($teacherUser)
+            ->getJson('/api/teacher/groups');
+
+        $response->assertStatus(200);
+        $groups = $response->json();
+        $this->assertNotEmpty($groups);
+        $this->assertEquals('Groupe Pilote', $groups[0]['group_name']);
+    }
 }
+

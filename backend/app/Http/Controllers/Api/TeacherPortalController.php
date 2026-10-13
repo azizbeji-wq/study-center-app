@@ -90,6 +90,16 @@ class TeacherPortalController extends Controller
 
         $formatted = app(TeacherPayoutService::class)->formatTeacher($teacher, $request);
 
+        // Matières enseignées (sous forme de tableau propre)
+        $subjectsList = [];
+        if ($teacher && method_exists($teacher, 'subjects') && $teacher->subjects()->exists()) {
+            $subjectsList = $teacher->subjects->pluck('name')->toArray();
+        }
+        if (empty($subjectsList) && !empty($teacher->subject)) {
+            $subjectsList = array_map('trim', explode(',', $teacher->subject));
+        }
+        $formatted['subjects_list'] = array_values(array_unique(array_filter($subjectsList)));
+
         // Nombre de groupes distincts
         $groupsCount = StudentSubjectEnrollment::where('teacher_id', $teacher->id)
             ->whereNotNull('group_name')
@@ -170,6 +180,8 @@ class TeacherPortalController extends Controller
             return response()->json([]);
         }
 
+        $user = $request->user();
+
         // 1. Groupes issus des inscriptions d'élèves
         $enrollmentGroups = StudentSubjectEnrollment::where('teacher_id', $teacher->id)
             ->whereNotNull('group_name')
@@ -187,14 +199,29 @@ class TeacherPortalController extends Controller
             ->where('group_name', '!=', '')
             ->get();
 
-        // 3. Regroupement par nom de groupe
+        // 3. Groupes créés via le modèle Group
+        $directGroups = \App\Models\Group::with(['students', 'subject'])
+            ->where(function ($q) use ($user, $teacher) {
+                if ($user) {
+                    $q->where('teacher_id', $user->id);
+                }
+                if ($teacher) {
+                    $q->orWhere('teacher_id', $teacher->id);
+                }
+            })
+            ->get();
+
+        // 4. Regroupement par nom de groupe
         $groupNames = array_unique(array_filter(array_merge(
             $enrollmentGroups->pluck('group_name')->toArray(),
-            $scheduleGroups->pluck('group_name')->toArray()
+            $scheduleGroups->pluck('group_name')->toArray(),
+            $directGroups->pluck('name')->toArray()
         )));
 
         $result = [];
         foreach ($groupNames as $gName) {
+            $matchedDirectGroup = $directGroups->firstWhere('name', $gName);
+
             // Nombre d'élèves dans ce groupe pour cet enseignant
             $studentIds = StudentSubjectEnrollment::where('teacher_id', $teacher->id)
                 ->where('group_name', $gName)
@@ -206,16 +233,35 @@ class TeacherPortalController extends Controller
                 $studentIds = Student::where('group_name', $gName)->pluck('id')->toArray();
             }
 
+            // Si le groupe existe dans le modèle Group, inclure ses élèves rattachés via pivot
+            if ($matchedDirectGroup) {
+                $directStudentIds = $matchedDirectGroup->students()->pluck('students.id')->toArray();
+                $studentIds = array_unique(array_merge($studentIds, $directStudentIds));
+            }
+
             $studentCount = count(array_unique($studentIds));
 
             // Matières associées à ce groupe
+            $directSubj = null;
+            if ($matchedDirectGroup) {
+                if (is_string($matchedDirectGroup->getAttribute('subject')) && !empty($matchedDirectGroup->getAttribute('subject'))) {
+                    $directSubj = $matchedDirectGroup->getAttribute('subject');
+                } elseif (is_object($matchedDirectGroup->subject) && isset($matchedDirectGroup->subject->name)) {
+                    $directSubj = $matchedDirectGroup->subject->name;
+                }
+            }
+
             $subjects = array_unique(array_filter(array_merge(
                 $enrollmentGroups->where('group_name', $gName)->pluck('subject_name')->toArray(),
-                $scheduleGroups->where('group_name', $gName)->pluck('subject')->toArray()
+                $scheduleGroups->where('group_name', $gName)->pluck('subject')->toArray(),
+                $directSubj ? [$directSubj] : []
             )));
 
             // Niveaux scolaires associés
-            $levels = array_unique(array_filter($scheduleGroups->where('group_name', $gName)->pluck('level')->toArray()));
+            $levels = array_unique(array_filter(array_merge(
+                $scheduleGroups->where('group_name', $gName)->pluck('level')->toArray(),
+                $matchedDirectGroup && $matchedDirectGroup->level ? [$matchedDirectGroup->level] : []
+            )));
             if (empty($levels) && !empty($studentIds)) {
                 $levels = array_unique(array_filter(Student::whereIn('id', $studentIds)->pluck('level')->toArray()));
             }
@@ -231,6 +277,7 @@ class TeacherPortalController extends Controller
             })->values();
 
             $result[] = [
+                'id' => $matchedDirectGroup?->id,
                 'group_name' => $gName,
                 'student_count' => $studentCount,
                 'subjects' => !empty($subjects) ? array_values($subjects) : [explode(',', $teacher->subject)[0] ?? 'Cours'],

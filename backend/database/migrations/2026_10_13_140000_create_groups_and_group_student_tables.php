@@ -17,8 +17,9 @@ return new class extends Migration
                 $table->id();
                 $table->string('name');
                 $table->string('level')->nullable();
+                $table->string('subject')->nullable();
                 $table->foreignId('subject_id')->nullable()->constrained('subjects')->nullOnDelete();
-                $table->foreignId('teacher_id')->nullable()->constrained('teachers')->nullOnDelete();
+                $table->unsignedBigInteger('teacher_id')->nullable()->index();
                 $table->unsignedInteger('max_capacity')->nullable()->default(15);
                 $table->text('notes')->nullable();
                 $table->timestamps();
