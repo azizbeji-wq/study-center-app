@@ -1,0 +1,149 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
+use App\Models\Group;
+use App\Models\Student;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class GroupController extends Controller
+{
+    /**
+     * Lister les groupes avec effectifs et détails.
+     */
+    public function index(): JsonResponse
+    {
+        $groups = Group::with(['subject', 'teacher'])
+            ->withCount('students')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($groups);
+    }
+
+    /**
+     * Créer un nouveau groupe pédagogique.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'level' => 'nullable|string|max:100',
+            'subject_id' => 'nullable|exists:subjects,id',
+            'teacher_id' => 'nullable|exists:teachers,id',
+            'max_capacity' => 'nullable|integer|min:1',
+            'notes' => 'nullable|string|max:500',
+        ], [
+            'name.required' => 'Le nom du groupe est obligatoire.',
+        ]);
+
+        $group = Group::create($validated);
+
+        return response()->json([
+            'message' => "Le groupe {$group->name} a été créé avec succès.",
+            'group' => $group->load(['subject', 'teacher']),
+        ], 201);
+    }
+
+    /**
+     * Afficher les détails d'un groupe et la liste de ses élèves inscrits.
+     */
+    public function show($id): JsonResponse
+    {
+        $group = Group::with(['subject', 'teacher', 'students'])
+            ->withCount('students')
+            ->findOrFail($id);
+
+        return response()->json($group);
+    }
+
+    /**
+     * Attacher un élève existant à un groupe (avec validation et prévention des doublons).
+     *
+     * @param Request $request
+     * @param int|string $groupId
+     * @return JsonResponse
+     */
+    public function attachStudent(Request $request, $groupId): JsonResponse
+    {
+        $validated = $request->validate([
+            'student_id' => 'required|integer|exists:students,id',
+        ], [
+            'student_id.required' => 'L\'identifiant de l\'élève est obligatoire.',
+            'student_id.integer' => 'L\'identifiant de l\'élève doit être un entier valide.',
+            'student_id.exists' => 'Cet élève n\'existe pas dans la base de données.',
+        ]);
+
+        $group = Group::findOrFail($groupId);
+        $studentId = (int) $validated['student_id'];
+        $student = Student::findOrFail($studentId);
+
+        // 1. Prévention des doublons : vérifier si l'élève est déjà rattaché au groupe
+        if ($group->students()->where('students.id', $studentId)->exists()) {
+            return response()->json([
+                'status' => 'warning',
+                'message' => "L'élève {$student->name} est déjà inscrit dans le groupe {$group->name}.",
+                'group' => [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                ],
+                'student_id' => $studentId,
+            ], 409);
+        }
+
+        // 2. Attacher l'élève au groupe (remplit automatiquement la table pivot group_student avec timestamps)
+        $group->students()->attach($studentId);
+
+        // 3. Journal d'activité (si utilisateur authentifié)
+        if ($request->user()) {
+            ActivityLog::record(
+                $request->user(),
+                'group',
+                'student_attached',
+                "Élève {$student->name} rattaché au groupe {$group->name}",
+                ['group_id' => $group->id, 'student_id' => $student->id],
+                $request->ip()
+            );
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "L'élève {$student->name} a été rattaché avec succès au groupe {$group->name}.",
+            'group' => [
+                'id' => $group->id,
+                'name' => $group->name,
+                'students_count' => $group->students()->count(),
+            ],
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'level' => $student->level,
+                'phone' => $student->phone,
+            ],
+        ], 200);
+    }
+
+    /**
+     * Détacher un élève d'un groupe.
+     */
+    public function detachStudent(Request $request, $groupId, $studentId): JsonResponse
+    {
+        $group = Group::findOrFail($groupId);
+        $student = Student::findOrFail($studentId);
+
+        if (!$group->students()->where('students.id', $studentId)->exists()) {
+            return response()->json([
+                'message' => "L'élève {$student->name} n'appartient pas au groupe {$group->name}.",
+            ], 404);
+        }
+
+        $group->students()->detach($studentId);
+
+        return response()->json([
+            'message' => "L'élève {$student->name} a été retiré du groupe {$group->name}.",
+        ]);
+    }
+}

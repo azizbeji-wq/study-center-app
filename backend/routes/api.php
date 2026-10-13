@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\AiAssistantController;
 use App\Http\Controllers\Api\SubjectController; // Phase 1A
 use App\Http\Controllers\Api\TeacherPortalController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\GroupController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,6 +55,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('teachers', TeacherController::class)->except(['destroy']);
     Route::apiResource('students', StudentController::class)->except(['destroy']);
     Route::apiResource('daycare', DaycareController::class)->except(['destroy']);
+
+    // Groupes pédagogiques & Rattachement dynamique d'élèves
+    Route::post('/groups/{group}/students', [GroupController::class, 'attachStudent']);
+    Route::delete('/groups/{group}/students/{student}', [GroupController::class, 'detachStudent']);
+    Route::apiResource('groups', GroupController::class)->except(['destroy']);
 
     // Soldes a regler (calcules : seances par enseignant, mois de garderie)
     Route::get('/payment-dues', [PaymentController::class, 'dues']);

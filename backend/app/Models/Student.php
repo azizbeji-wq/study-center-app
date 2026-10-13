@@ -30,4 +30,13 @@ class Student extends Model
     {
         return $this->hasMany(Attendance::class);
     }
+
+    /**
+     * Groupes auxquels cet élève appartient (table pivot group_student).
+     */
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_student')
+                    ->withTimestamps();
+    }
 }
