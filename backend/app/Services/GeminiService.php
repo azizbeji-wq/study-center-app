@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\ActivityLog;
+use App\Models\Student;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -36,6 +38,8 @@ class GeminiService
         $url = "{$baseUrl}/models/{$model}:generateContent";
 
         try {
+            $tools = $this->buildTools();
+
             $payload = [
                 'systemInstruction' => [
                     'parts' => [
@@ -43,6 +47,7 @@ class GeminiService
                     ],
                 ],
                 'contents' => $contents,
+                'tools' => $tools,
                 'generationConfig' => [
                     'temperature' => 0.7,
                     'topK' => 40,
@@ -60,9 +65,121 @@ class GeminiService
 
             if ($response->successful()) {
                 $data = $response->json();
-                $replyText = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                $candidate = $data['candidates'][0] ?? null;
+                $parts = $candidate['content']['parts'] ?? [];
 
-                if (!empty($replyText)) {
+                // 1. Détection d'un functionCall éventuel
+                $functionCallPart = null;
+                foreach ($parts as $part) {
+                    if (isset($part['functionCall'])) {
+                        $functionCallPart = $part['functionCall'];
+                        break;
+                    }
+                }
+
+                if ($functionCallPart !== null) {
+                    $funcName = $functionCallPart['name'] ?? '';
+                    $funcArgs = $functionCallPart['args'] ?? [];
+                    $funcId = $functionCallPart['id'] ?? null;
+
+                    // Exécution locale de l'action demandée
+                    $functionResult = $this->executeFunctionCall($user, $funcName, $funcArgs);
+
+                    // Préparation du 2nd tour (renvoi de la functionResponse à Gemini pour formulation finale)
+                    $secondContents = $contents;
+                    $secondContents[] = $candidate['content'] ?? [
+                        'role' => 'model',
+                        'parts' => [
+                            ['functionCall' => $functionCallPart],
+                        ],
+                    ];
+
+                    $funcResponsePart = [
+                        'name' => $funcName,
+                        'response' => $functionResult,
+                    ];
+                    if (!empty($funcId)) {
+                        $funcResponsePart['id'] = $funcId;
+                    }
+
+                    $secondContents[] = [
+                        'role' => 'function',
+                        'parts' => [
+                            ['functionResponse' => $funcResponsePart],
+                        ],
+                    ];
+
+                    $secondPayload = [
+                        'systemInstruction' => [
+                            'parts' => [
+                                ['text' => $systemPrompt],
+                            ],
+                        ],
+                        'contents' => $secondContents,
+                        'tools' => $tools,
+                        'generationConfig' => [
+                            'temperature' => 0.7,
+                            'topK' => 40,
+                            'topP' => 0.95,
+                            'maxOutputTokens' => 2048,
+                        ],
+                    ];
+
+                    $secondResponse = Http::timeout(25)
+                        ->withHeaders([
+                            'Content-Type'   => 'application/json',
+                            'x-goog-api-key' => $apiKey,
+                        ])
+                        ->post($url, $secondPayload);
+
+                    if ($secondResponse->successful()) {
+                        $secondData = $secondResponse->json();
+                        $secondParts = $secondData['candidates'][0]['content']['parts'] ?? [];
+                        $secondText = '';
+                        foreach ($secondParts as $sp) {
+                            if (isset($sp['text'])) {
+                                $secondText .= $sp['text'];
+                            }
+                        }
+
+                        if (!empty(trim($secondText))) {
+                            return [
+                                'status' => 'success',
+                                'reply' => trim($secondText),
+                                'model' => $model,
+                                'is_fallback' => false,
+                            ];
+                        }
+                    }
+
+                    // En cas d'indisponibilité du second tour mais où l'action a réussi
+                    if ($functionResult['status'] === 'success') {
+                        $nomEleve = $functionResult['student']['nom_complet'] ?? '';
+                        return [
+                            'status' => 'success',
+                            'reply' => "✅ L'élève **{$nomEleve}** a bien été inscrit(e) dans Study Center !",
+                            'model' => $model,
+                            'is_fallback' => false,
+                        ];
+                    }
+
+                    return [
+                        'status' => 'success',
+                        'reply' => $functionResult['message'] ?? "L'opération a été traitée.",
+                        'model' => $model,
+                        'is_fallback' => false,
+                    ];
+                }
+
+                // 2. Réponse textuelle directe
+                $replyText = '';
+                foreach ($parts as $p) {
+                    if (isset($p['text'])) {
+                        $replyText .= $p['text'];
+                    }
+                }
+
+                if (!empty(trim($replyText))) {
                     return [
                         'status' => 'success',
                         'reply' => trim($replyText),
@@ -197,6 +314,14 @@ Tu es le copilote et assistant IA officiel de l'application « Study Center App 
 4. **Garderie Parascolaire** : Pointage journalier et forfaits mensuels pour les enfants accueillis.
 5. **Comptabilité & Bilan** : Réservé au directeur (recettes, dépenses fixes et variables, clôture mensuelle).
 
+### OUTILS DISPONIBLES ET RÈGLES DE FUNCTION CALLING :
+Tu disposes d'un outil `ajouter_eleve` pour inscrire un nouvel élève directement dans la base de données de Study Center :
+- Paramètres : `nom` (obligatoire), `prenom` (obligatoire), `niveau` (optionnel), `telephone_parent` (optionnel).
+- RÈGLE ESSENTIELLE : Si l'utilisateur demande d'ajouter ou d'inscrire un élève mais ne fournit pas encore son nom et son prénom, NE DÉCLENCHE PAS l'outil `ajouter_eleve`. Demande-lui poliment de préciser le prénom, le nom, ainsi que le niveau scolaire (ex: Bac, Lycée, Collège) et le numéro de téléphone des parents avant de procéder.
+- N'appelle `ajouter_eleve` que lorsque l'utilisateur t'a communiqué au minimum le prénom et le nom de l'élève.
+- Dès que tu reçois la `functionResponse` confirmant l'inscription, confirme à l'utilisateur avec bienveillance, clarté et professionnalisme (en reprenant le nom complet, le niveau et le numéro parent) en français ou en derja selon la langue de la conversation.
+- Si le résultat de la fonction indique une erreur de permission (accès refusé), explique courtoisement que seuls le directeur et le secrétariat autorisé ont le droit d'inscrire des élèves.
+
 Sois toujours structuré, courtois, encourageant et concis. Utilise des puces et des mises en gras pour aérer tes réponses.
 PROMPT;
     }
@@ -234,6 +359,121 @@ PROMPT;
         ];
 
         return $contents;
+    }
+
+    /**
+     * Déclaration des outils (Function Calling) disponibles pour Gemini.
+     */
+    private function buildTools(): array
+    {
+        return [
+            [
+                'functionDeclarations' => [
+                    [
+                        'name' => 'ajouter_eleve',
+                        'description' => "Inscrire un nouvel élève dans la base de données de Study Center. Cette fonction ne doit être déclenchée que lorsque l'utilisateur a fourni au minimum le prénom et le nom de l'élève.",
+                        'parameters' => [
+                            'type' => 'OBJECT',
+                            'properties' => [
+                                'nom' => [
+                                    'type' => 'STRING',
+                                    'description' => "Nom de famille de l'élève (ex: Ben Ali, Trabelsi).",
+                                ],
+                                'prenom' => [
+                                    'type' => 'STRING',
+                                    'description' => "Prénom de l'élève (ex: Mohamed, Yassine, Nour).",
+                                ],
+                                'niveau' => [
+                                    'type' => 'STRING',
+                                    'description' => "Niveau scolaire officiel tunisien de l'élève (ex: Bac Mathématiques, 3ème Sciences, 9ème Année de base, 6ème Primaire).",
+                                ],
+                                'telephone_parent' => [
+                                    'type' => 'STRING',
+                                    'description' => "Numéro de téléphone du parent ou tuteur pour les notifications et reçus (ex: 98123456 ou 21345678).",
+                                ],
+                            ],
+                            'required' => ['nom', 'prenom'],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Exécute une fonction appelée par Gemini (Function Calling).
+     */
+    private function executeFunctionCall(User $user, string $functionName, array $args): array
+    {
+        if ($functionName === 'ajouter_eleve') {
+            // Vérification des permissions : uniquement 'director' ou 'secretary' avec la permission 'students'
+            $isRoleAllowed = in_array($user->role, ['director', 'secretary'], true);
+            $hasPermission = method_exists($user, 'hasPermission') ? $user->hasPermission('students') : ($user->role === 'director');
+
+            if (!$isRoleAllowed || !$hasPermission) {
+                return [
+                    'status' => 'error',
+                    'message' => "Accès refusé : Seuls les utilisateurs avec le rôle Directeur ou Secrétaire autorisés peuvent inscrire des élèves.",
+                ];
+            }
+
+            $nom = trim($args['nom'] ?? $args['last_name'] ?? '');
+            $prenom = trim($args['prenom'] ?? $args['first_name'] ?? '');
+
+            if (empty($nom) || empty($prenom)) {
+                return [
+                    'status' => 'error',
+                    'message' => "Le prénom et le nom de l'élève sont obligatoires pour valider l'inscription.",
+                ];
+            }
+
+            $fullName = trim($prenom . ' ' . $nom);
+            $niveau = !empty($args['niveau']) ? trim($args['niveau']) : 'Non spécifié';
+            $parentPhone = !empty($args['telephone_parent']) ? trim($args['telephone_parent']) : null;
+            $phone = $parentPhone ?: 'Non renseigné';
+
+            $student = Student::create([
+                'name' => $fullName,
+                'level' => $niveau,
+                'phone' => $phone,
+                'parent_phone' => $parentPhone,
+                'status' => 'active',
+                'is_remise' => false,
+                'remise' => 0,
+                'discount_type' => 'fixed',
+                'base_fee' => 0,
+            ]);
+
+            ActivityLog::record(
+                $user,
+                'student',
+                'created',
+                "Inscription de l'élève {$student->name} par l'assistant IA Gemini",
+                [
+                    'student_id'   => $student->id,
+                    'name'         => $student->name,
+                    'level'        => $student->level,
+                    'parent_phone' => $student->parent_phone,
+                    'channel'      => 'gemini_function_calling',
+                ]
+            );
+
+            return [
+                'status' => 'success',
+                'message' => "L'élève {$student->name} a été inscrit avec succès dans la base de données.",
+                'student' => [
+                    'id'               => $student->id,
+                    'nom_complet'      => $student->name,
+                    'niveau'           => $student->level,
+                    'telephone_parent' => $student->parent_phone,
+                ],
+            ];
+        }
+
+        return [
+            'status' => 'error',
+            'message' => "Fonction inconnue : {$functionName}",
+        ];
     }
 
     /**
