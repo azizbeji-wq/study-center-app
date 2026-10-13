@@ -57,9 +57,36 @@ class TeacherPortalController extends Controller
             }
         }
 
-        // 4. Si directeur connecté et paramètre teacher_id passé
-        if ($user->role === 'director' && $request->filled('teacher_id')) {
+        // 4. Si directeur ou personnel connecté et paramètre teacher_id passé explicitement
+        if (in_array(strtolower($user->role), ['director', 'directeur', 'secretary', 'secretaire', 'admin']) && $request->filled('teacher_id')) {
             return Teacher::find($request->input('teacher_id'));
+        }
+
+        // 5. Directeur ou Personnel/Secrétaire pouvant enseigner (Double rôle) :
+        // Résolution ou création automatique d'une fiche enseignant liée à ce compte
+        if (in_array(strtolower($user->role), ['director', 'directeur', 'secretary', 'secretaire', 'admin', 'personnel'])) {
+            $teacher = Teacher::where('user_id', $user->id)->first();
+            if (!$teacher && $user->email) {
+                $teacher = Teacher::where('email', $user->email)->first();
+            }
+            if (!$teacher) {
+                $teacher = Teacher::create([
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email ?: ('staff_' . $user->id . '@studycenter.tn'),
+                    'phone' => $user->phone ?: '20 000 000',
+                    'subject' => $user->role === 'director' ? 'Direction & Enseignement' : 'Personnel & Enseignement',
+                    'weekly_lessons' => 4,
+                    'salary_per_lesson' => 25.00,
+                    'center_fixed_per_student' => 20.00,
+                    'remuneration_type' => 'percentage',
+                    'rate_percentage' => 70.00,
+                ]);
+            } elseif (!$teacher->user_id) {
+                $teacher->user_id = $user->id;
+                $teacher->save();
+            }
+            return $teacher;
         }
 
         return null;

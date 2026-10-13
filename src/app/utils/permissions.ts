@@ -59,6 +59,13 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         description: 'Calendrier des vacances et import des emplois du temps',
         category: 'Corps Enseignant & Planning',
       },
+      {
+        key: 'teacher_portal',
+        label: 'Espace Enseignant (Double Rôle)',
+        description: 'Permet à ce membre du personnel d\'enseigner des matières et gérer ses groupes/planning',
+        category: 'Corps Enseignant & Planning',
+        badge: 'Double rôle',
+      },
     ],
   },
   {

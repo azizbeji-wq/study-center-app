@@ -163,7 +163,23 @@
               <span class="text-base font-bold text-indigo-600">{{ getInitial(teacher.name) }}</span>
             </div>
             <div class="min-w-0">
-              <h3 class="text-sm font-semibold text-gray-900">{{ teacher.name }}</h3>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <h3 class="text-sm font-semibold text-gray-900">{{ teacher.name }}</h3>
+                <span
+                  v-if="teacher.user_role === 'director'"
+                  class="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 text-[10px] font-bold rounded shadow-2xs"
+                  title="Directeur assurant des cours"
+                >
+                  Directeur & Prof
+                </span>
+                <span
+                  v-else-if="teacher.user_role === 'secretary'"
+                  class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded shadow-2xs"
+                  title="Personnel assurant des cours"
+                >
+                  Personnel & Prof
+                </span>
+              </div>
               <div class="flex flex-wrap gap-1 mt-1">
                 <span
                   v-for="sub in getTeacherSubjects(teacher)"
@@ -338,7 +354,18 @@
 
         <form @submit.prevent="saveTeacher" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Nom complet *</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider">Nom complet *</label>
+              <button
+                v-if="!isEditing && currentUser?.name"
+                type="button"
+                @click="fillWithMyAccount"
+                class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                title="Créer un profil enseignant pour vous-même"
+              >
+                + Remplir avec mon compte ({{ currentUser.name }})
+              </button>
+            </div>
             <input
               v-model="formData.name"
               type="text"
@@ -901,6 +928,8 @@ interface Teacher {
   payout_date?: string | null;
   payout_month?: string | null;
   payout_amount?: number | null;
+  user_role?: string;
+  user_id?: number | null;
 }
 
 const tunisianSubjects = ALL_TUNISIAN_SUBJECTS;
@@ -1186,6 +1215,14 @@ function openAddModal() {
     center_fixed_per_student: 20
   };
   showModal.value = true;
+}
+
+function fillWithMyAccount() {
+  if (!currentUser.value) return;
+  if (currentUser.value.name) formData.value.name = currentUser.value.name;
+  const userObj = currentUser.value as any;
+  if (userObj.email) formData.value.email = userObj.email;
+  if (userObj.phone) formData.value.phone = userObj.phone;
 }
 
 function openEditModal(teacher: Teacher) {

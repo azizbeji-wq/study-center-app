@@ -43,6 +43,26 @@
         </button>
       </nav>
 
+      <!-- Bouton Passerelle : Mode Enseignant (Double Rôle) -->
+      <div class="px-3 pb-2 pt-1 border-t border-gray-100 shrink-0">
+        <button
+          @click="$emit('switch-portal', 'teacher'); isMobileMenuOpen = false"
+          class="w-full flex items-center justify-between p-2.5 rounded-xl bg-linear-to-r from-violet-50 to-purple-50 hover:from-violet-100 hover:to-purple-100 border border-violet-200/90 text-violet-800 transition-all shadow-2xs group cursor-pointer"
+          title="Gérer vos propres cours, groupes et fiches d'appel"
+        >
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-7 h-7 rounded-lg bg-violet-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+              👨‍🏫
+            </div>
+            <div class="text-left min-w-0">
+              <p class="text-xs font-bold text-gray-900 group-hover:text-violet-900 leading-tight truncate">Espace Enseignant</p>
+              <p class="text-[10px] text-violet-600 font-medium truncate">Mes cours & groupes</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-violet-500 group-hover:text-violet-700 group-hover:translate-x-0.5 transition-transform shrink-0">→</span>
+        </button>
+      </div>
+
       <!-- User Profile (Bottom of sidebar) -->
       <div class="p-4 border-t border-gray-200 flex flex-col gap-2 shrink-0">
         <button
@@ -83,6 +103,15 @@
             <h1 class="text-sm font-bold text-gray-900 leading-tight">Centre d'Études</h1>
           </div>
         </div>
+
+        <button
+          @click="$emit('switch-portal', 'teacher')"
+          class="px-2.5 py-1.5 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold flex items-center gap-1 hover:bg-violet-100 transition-colors shadow-2xs cursor-pointer"
+          title="Basculer vers l'espace enseignant"
+        >
+          <span>👨‍🏫</span>
+          <span class="text-[11px]">Mode Prof</span>
+        </button>
       </header>
 
       <!-- Content Area -->
@@ -130,6 +159,7 @@ const props = defineProps<{
 
 defineEmits<{
   (e: 'logout'): void;
+  (e: 'switch-portal', portal: 'teacher'): void;
 }>();
 
 const currentDisplayName = ref(props.userName);

@@ -148,10 +148,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     /*
     |----------------------------------------------------------------------
-    | 4. PORTAIL ENSEIGNANT (Rôle 'teacher' ou 'director')
+    | 4. PORTAIL ENSEIGNANT (Rôle 'teacher', 'director' ou 'secretary')
     |----------------------------------------------------------------------
     */
-    Route::middleware('role:teacher,director')->prefix('teacher')->group(function () {
+    Route::middleware('role:teacher,director,secretary')->prefix('teacher')->group(function () {
         Route::get('/profile', [TeacherPortalController::class, 'profile']);
         Route::get('/schedule', [TeacherPortalController::class, 'schedule']);
         Route::get('/groups', [TeacherPortalController::class, 'groups']);

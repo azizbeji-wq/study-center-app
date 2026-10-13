@@ -57,6 +57,10 @@ class GroupPolicy
      */
     public function delete(User $user, Group $group): bool
     {
-        return in_array(strtolower($user->role), ['director', 'directeur', 'admin']);
+        if (in_array(strtolower($user->role), ['director', 'directeur', 'admin'])) {
+            return true;
+        }
+
+        return $group->teacher_id === $user->id || $group->teacher_id === $user->teacher?->id;
     }
 }

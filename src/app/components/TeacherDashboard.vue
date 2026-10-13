@@ -54,6 +54,25 @@
 
       <!-- Résumé Enseignant & Profil (Bas de sidebar) -->
       <div class="p-4 border-t border-gray-200 flex flex-col gap-2 shrink-0">
+        <!-- Bouton Retour au Rôle Principal (Direction ou Secrétariat) -->
+        <button
+          v-if="primaryRole !== 'teacher'"
+          @click="$emit('switch-back'); isMobileMenuOpen = false"
+          class="w-full flex items-center justify-between p-2.5 rounded-xl bg-linear-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 border border-indigo-200 text-indigo-900 transition-all shadow-2xs group cursor-pointer"
+          :title="primaryRole === 'director' ? 'Retourner à l\'espace Direction' : 'Retourner à l\'espace Personnel'"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-base shrink-0">{{ primaryRole === 'director' ? '🏢' : '📋' }}</span>
+            <div class="text-left min-w-0">
+              <p class="text-xs font-bold leading-tight truncate">
+                {{ primaryRole === 'director' ? 'Retour Direction' : 'Retour Secrétariat' }}
+              </p>
+              <p class="text-[10px] text-indigo-600 font-medium truncate">Quitter mode enseignant</p>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-indigo-500 group-hover:text-indigo-700 group-hover:-translate-x-0.5 transition-transform shrink-0">←</span>
+        </button>
+
         <!-- Carte Enseignant -->
         <button
           @click="showAccountModal = true; isMobileMenuOpen = false"
@@ -101,13 +120,54 @@
           </div>
         </div>
 
-        <button
-          @click="showAccountModal = true"
-          class="w-8 h-8 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center font-bold text-xs"
-        >
-          {{ currentDisplayName ? currentDisplayName.charAt(0).toUpperCase() : 'P' }}
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            v-if="primaryRole !== 'teacher'"
+            @click="$emit('switch-back')"
+            class="px-2.5 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold flex items-center gap-1 hover:bg-indigo-100 transition-colors shadow-2xs cursor-pointer"
+            :title="primaryRole === 'director' ? 'Retourner à la Direction' : 'Retourner au Secrétariat'"
+          >
+            <span>←</span>
+            <span class="text-[11px]">{{ primaryRole === 'director' ? 'Direction' : 'Personnel' }}</span>
+          </button>
+
+          <button
+            @click="showAccountModal = true"
+            class="w-8 h-8 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center font-bold text-xs"
+          >
+            {{ currentDisplayName ? currentDisplayName.charAt(0).toUpperCase() : 'P' }}
+          </button>
+        </div>
       </header>
+
+      <!-- Bannière Mode Double Rôle (Directeur ou Personnel en Mode Enseignant) -->
+      <div v-if="primaryRole !== 'teacher'" class="px-4 md:px-6 pt-4 shrink-0">
+        <div class="bg-linear-to-r from-indigo-800 via-indigo-700 to-violet-700 text-white rounded-2xl p-3.5 px-4.5 shadow-sm border border-indigo-500/30 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-xl shadow-xs shrink-0">
+              {{ primaryRole === 'director' ? '🏢' : '📋' }}
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <p class="text-xs font-black uppercase tracking-wider text-indigo-200">Mode Enseignant Actif</p>
+                <span class="text-[10px] font-bold bg-white/25 px-2 py-0.5 rounded-full text-white">
+                  {{ primaryRole === 'director' ? 'Compte Directeur' : 'Compte Personnel' }}
+                </span>
+              </div>
+              <p class="text-xs text-indigo-100 mt-0.5">
+                Vous gérez ici vos propres classes, planning et fiches d'appel en tant qu'enseignant du centre.
+              </p>
+            </div>
+          </div>
+
+          <button
+            @click="$emit('switch-back')"
+            class="px-3.5 py-2 bg-white hover:bg-indigo-50 text-indigo-800 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer"
+          >
+            <span>← Revenir {{ primaryRole === 'director' ? 'à la Direction' : 'au Secrétariat' }}</span>
+          </button>
+        </div>
+      </div>
 
       <!-- Bannière d'accueil & métriques Enseignant -->
       <div v-if="teacherProfile" class="px-4 md:px-6 pt-4 shrink-0 hidden sm:block">
@@ -371,12 +431,19 @@ import EditGroupModal from './EditGroupModal.vue';
 import GroupStudentsModal from './GroupStudentsModal.vue';
 import api from '../utils/api';
 
-const props = defineProps<{
-  userName: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    userName: string;
+    primaryRole?: 'director' | 'secretary' | 'teacher';
+  }>(),
+  {
+    primaryRole: 'teacher',
+  }
+);
 
 defineEmits<{
   (e: 'logout'): void;
+  (e: 'switch-back'): void;
 }>();
 
 const currentDisplayName = ref(props.userName);

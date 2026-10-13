@@ -67,6 +67,15 @@ class TeacherController extends Controller
             unset($data['weeklyLessons']);
         }
 
+        if (empty($data['user_id'])) {
+            $matchingUser = \App\Models\User::where('email', $data['email'])
+                ->orWhere('name', $data['name'])
+                ->first();
+            if ($matchingUser) {
+                $data['user_id'] = $matchingUser->id;
+            }
+        }
+
         $teacher = Teacher::create($data);
         $teacher->load('enrollments');
 
@@ -133,6 +142,17 @@ class TeacherController extends Controller
         if (isset($data['weeklyLessons'])) {
             $data['weekly_lessons'] = $data['weeklyLessons'];
             unset($data['weeklyLessons']);
+        }
+
+        if (empty($teacher->user_id)) {
+            $searchEmail = $data['email'] ?? $teacher->email;
+            $searchName = $data['name'] ?? $teacher->name;
+            $matchingUser = \App\Models\User::where('email', $searchEmail)
+                ->orWhere('name', $searchName)
+                ->first();
+            if ($matchingUser) {
+                $data['user_id'] = $matchingUser->id;
+            }
         }
 
         $teacher->update($data);

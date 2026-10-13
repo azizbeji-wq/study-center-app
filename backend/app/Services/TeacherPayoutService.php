@@ -264,6 +264,8 @@ class TeacherPayoutService
 
         $row = [
             'id'                       => $t->id,
+            'user_id'                  => $t->user_id,
+            'user_role'                => $t->user?->role,
             'name'                     => $t->name,
             'subject'                  => $t->subject,
             'phone'                    => $t->phone,

@@ -7,25 +7,29 @@
     />
     <template v-else>
       <DirectorDashboard
-        v-if="user.role === 'director'"
+        v-if="activePortal === 'director'"
         :user-name="user.name"
+        @switch-portal="switchPortal"
         @logout="handleLogout"
       />
       <SecretaryDashboard
-        v-else-if="user.role === 'secretary'"
+        v-else-if="activePortal === 'secretary'"
         :user-name="user.name"
         :permissions="user.permissions"
+        @switch-portal="switchPortal"
         @logout="handleLogout"
       />
       <TeacherDashboard
-        v-else-if="user.role === 'teacher'"
+        v-else-if="activePortal === 'teacher'"
         :user-name="user.name"
+        :primary-role="user.role"
+        @switch-back="switchPortal(user.role)"
         @logout="handleLogout"
       />
 
       <!-- Widget Flottant Global Assistant IA Gemini -->
       <AiTutorialWidget
-        :user-role="user.role"
+        :user-role="activePortal || user.role"
         :user-name="user.name"
       />
     </template>
@@ -55,8 +59,14 @@ interface User {
 }
 
 const user = ref<User | null>(null);
+const activePortal = ref<'director' | 'secretary' | 'teacher'>('director');
 const sessionNotice = ref<string>('');
 let stopMonitor: (() => void) | null = null;
+
+const switchPortal = (portal: 'director' | 'secretary' | 'teacher') => {
+  activePortal.value = portal;
+  sessionStorage.setItem('active_portal', portal);
+};
 
 const onSessionExpired = (message: string) => {
   handleLogout(message);
@@ -84,6 +94,12 @@ onMounted(() => {
   const savedUser = getStoredUser();
   if (savedUser) {
     user.value = savedUser;
+    const savedPortal = sessionStorage.getItem('active_portal') as 'director' | 'secretary' | 'teacher' | null;
+    if (savedPortal && ['director', 'secretary', 'teacher'].includes(savedPortal)) {
+      activePortal.value = savedPortal;
+    } else {
+      activePortal.value = savedUser.role;
+    }
     stopMonitor = startSessionMonitor(onSessionExpired);
   } else {
     user.value = null;
@@ -99,6 +115,8 @@ onUnmounted(() => {
 
 const handleLogin = (role: 'director' | 'secretary' | 'teacher', name: string, permissions?: string[]) => {
   user.value = { role, name, permissions };
+  activePortal.value = role;
+  sessionStorage.setItem('active_portal', role);
   sessionNotice.value = '';
 
   if (stopMonitor) {
@@ -116,6 +134,7 @@ const handleLogout = (reason?: string) => {
   // Tentative de déconnexion côté serveur sans bloquer
   api.post('/api/logout').catch(() => {});
 
+  sessionStorage.removeItem('active_portal');
   clearSession(reason);
   user.value = null;
   sessionNotice.value = reason || '';
