@@ -59,7 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Groupes pédagogiques & Rattachement dynamique d'élèves
     Route::post('/groups/{group}/students', [GroupController::class, 'attachStudent']);
     Route::delete('/groups/{group}/students/{student}', [GroupController::class, 'detachStudent']);
-    Route::apiResource('groups', GroupController::class)->except(['destroy']);
+    Route::apiResource('groups', GroupController::class);
 
     // Soldes a regler (calcules : seances par enseignant, mois de garderie)
     Route::get('/payment-dues', [PaymentController::class, 'dues']);

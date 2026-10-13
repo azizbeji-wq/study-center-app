@@ -165,6 +165,8 @@
         <!-- Onglet 1 : Emploi du Temps -->
         <TeacherSchedule
           v-if="activeTab === 'schedule'"
+          :teacher-name="currentDisplayName"
+          :subjects="teacherSubjects"
           @take-attendance="handleTakeAttendanceFromSchedule"
         />
 
@@ -240,9 +242,25 @@
                   <div class="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center font-bold">
                     <Users class="w-5 h-5" />
                   </div>
-                  <span class="text-xs font-extrabold text-violet-700 bg-violet-50 px-2.5 py-1 rounded-full border border-violet-200/70">
-                    {{ grp.student_count }} élève(s)
-                  </span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-extrabold text-violet-700 bg-violet-50 px-2.5 py-1 rounded-full border border-violet-200/70">
+                      {{ grp.student_count }} élève(s)
+                    </span>
+                    <button
+                      @click="openEditGroup(grp)"
+                      class="p-1.5 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors cursor-pointer"
+                      title="Modifier les informations du groupe"
+                    >
+                      <Pencil class="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      @click="deleteGroup(grp)"
+                      class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      title="Supprimer ce groupe"
+                    >
+                      <Trash2 class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <h3 class="text-base font-black text-gray-900 mb-1">{{ grp.group_name }}</h3>
@@ -328,18 +346,28 @@
       @students-updated="handleStudentsUpdated"
       @open-attendance="(groupName, subjectName) => { showGroupStudentsModal = false; openAttendanceForGroup(groupName, subjectName); }"
     />
+
+    <!-- Modale Modification de Groupe Enseignant -->
+    <EditGroupModal
+      :is-open="showEditGroupModal"
+      :group="selectedGroupToEdit"
+      @close="showEditGroupModal = false"
+      @group-updated="handleGroupUpdated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
-  LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw, Plus, UserPlus
+  LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw, Plus, UserPlus,
+  Pencil, Trash2
 } from 'lucide-vue-next';
 import TeacherSchedule from './TeacherSchedule.vue';
 import TeacherAttendance from './TeacherAttendance.vue';
 import AccountManagementModal from './AccountManagementModal.vue';
 import CreateGroupModal from './CreateGroupModal.vue';
+import EditGroupModal from './EditGroupModal.vue';
 import GroupStudentsModal from './GroupStudentsModal.vue';
 import api from '../utils/api';
 
@@ -354,6 +382,8 @@ defineEmits<{
 const currentDisplayName = ref(props.userName);
 const showAccountModal = ref(false);
 const showCreateGroupModal = ref(false);
+const showEditGroupModal = ref(false);
+const selectedGroupToEdit = ref<any>(null);
 const showGroupStudentsModal = ref(false);
 const selectedGroupForStudents = ref<any>(null);
 const isMobileMenuOpen = ref(false);
@@ -361,6 +391,31 @@ const isMobileMenuOpen = ref(false);
 const teacherProfile = ref<any>(null);
 const groupsList = ref<any[]>([]);
 const loadingGroups = ref(false);
+
+function openEditGroup(grp: any) {
+  selectedGroupToEdit.value = grp;
+  showEditGroupModal.value = true;
+}
+
+function handleGroupUpdated() {
+  fetchGroups();
+  fetchProfile();
+}
+
+async function deleteGroup(grp: any) {
+  const gName = grp.group_name || grp.name;
+  const gId = grp.id || gName;
+  if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement le groupe « ${gName} » ?`)) {
+    return;
+  }
+  try {
+    await api.delete(`/api/groups/${gId}`);
+    fetchGroups();
+  } catch (err: any) {
+    console.error('Erreur suppression groupe:', err);
+    alert(err.response?.data?.message || 'Erreur lors de la suppression du groupe.');
+  }
+}
 
 function openGroupStudents(grp: any) {
   selectedGroupForStudents.value = grp;

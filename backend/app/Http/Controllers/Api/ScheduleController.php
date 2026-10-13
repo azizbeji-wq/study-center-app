@@ -20,12 +20,16 @@ class ScheduleController extends Controller
             'day' => 'required|string|max:255',
             'time' => 'required|string|max:255',
             'subject' => 'required|string|max:255',
-            'teacher' => 'required|string|max:255',
+            'teacher' => 'nullable|string|max:255',
             'level' => 'required|string|max:255',
             'room' => 'required|string|max:255',
             'group_name' => 'nullable|string|max:100',
             'force' => 'nullable|boolean',
         ]);
+
+        if (empty($data['teacher']) && $request->user()) {
+            $data['teacher'] = $request->user()->name;
+        }
 
         $force = (bool) ($data['force'] ?? false);
         unset($data['force']);

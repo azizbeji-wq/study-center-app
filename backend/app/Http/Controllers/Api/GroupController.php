@@ -125,6 +125,91 @@ class GroupController extends Controller
     }
 
     /**
+     * Mettre à jour un groupe existant.
+     */
+    public function update(Request $request, $id): JsonResponse
+    {
+        $group = $this->resolveGroupModel($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:100',
+            'level' => 'sometimes|required|string|max:100',
+            'subject' => 'nullable|string|max:100',
+            'subject_id' => 'nullable|exists:subjects,id',
+            'max_capacity' => 'nullable|integer|min:1|max:100',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        if (!empty($validated['subject']) && empty($validated['subject_id'])) {
+            $subjectModel = Subject::where('name', $validated['subject'])->first();
+            if ($subjectModel) {
+                $validated['subject_id'] = $subjectModel->id;
+            }
+        }
+
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('groups', 'subject')) {
+            unset($validated['subject']);
+        }
+
+        $oldName = $group->name;
+        $group->update($validated);
+
+        // Si le nom du groupe a changé, répercuter sur schedule_items et élèves si nécessaire
+        if (!empty($validated['name']) && $validated['name'] !== $oldName) {
+            \App\Models\ScheduleItem::where('group_name', $oldName)->update(['group_name' => $validated['name']]);
+            Student::where('group_name', $oldName)->update(['group_name' => $validated['name']]);
+        }
+
+        if ($request->user()) {
+            ActivityLog::record(
+                $request->user(),
+                'group',
+                'group_updated',
+                "Modification du groupe {$group->name}",
+                ['group_id' => $group->id],
+                $request->ip()
+            );
+        }
+
+        return response()->json([
+            'message' => "Le groupe {$group->name} a été mis à jour avec succès.",
+            'group' => $group->load(['subject', 'teacher', 'students']),
+        ]);
+    }
+
+    /**
+     * Supprimer un groupe.
+     */
+    public function destroy(Request $request, $id): JsonResponse
+    {
+        $group = $this->resolveGroupModel($id);
+        $name = $group->name;
+
+        // Détacher les élèves de la table pivot
+        $group->students()->detach();
+
+        // Détacher le nom de groupe dans les créneaux d'emploi du temps
+        \App\Models\ScheduleItem::where('group_name', $name)->update(['group_name' => null]);
+
+        $group->delete();
+
+        if ($request->user()) {
+            ActivityLog::record(
+                $request->user(),
+                'group',
+                'group_deleted',
+                "Suppression du groupe {$name}",
+                ['group_name' => $name],
+                $request->ip()
+            );
+        }
+
+        return response()->json([
+            'message' => "Le groupe {$name} a été supprimé avec succès.",
+        ]);
+    }
+
+    /**
      * Attacher un élève existant à un groupe (avec validation et prévention des doublons).
      *
      * @param Request $request
