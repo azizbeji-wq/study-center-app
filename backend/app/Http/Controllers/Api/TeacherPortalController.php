@@ -9,6 +9,7 @@ use App\Models\ScheduleItem;
 use App\Models\Student;
 use App\Models\StudentSubjectEnrollment;
 use App\Models\Teacher;
+use App\Services\TeacherPayoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -87,39 +88,7 @@ class TeacherPortalController extends Controller
             ]);
         }
 
-        // Calculs des effectifs et finances
-        $enrollmentStudentIds = $teacher->enrollments()->pluck('student_id')->toArray();
-        $attendanceStudentIds = Attendance::where('teacher_id', $teacher->id)->pluck('student_id')->toArray();
-        $allDistinctStudentIds = array_unique(array_filter(array_merge($enrollmentStudentIds, $attendanceStudentIds)));
-        $studentCount = count($allDistinctStudentIds);
-
-        $monthlyGross = (float) $teacher->enrollments->sum('price_per_month');
-        if ($monthlyGross == 0 && $studentCount > 0) {
-            $monthlyGross = $studentCount * ((float) ($teacher->salary_per_lesson ?? 35) * 4);
-        }
-
-        $remType = $teacher->remuneration_type ?? 'percentage';
-        $ratePct = (float) ($teacher->rate_percentage ?? 70);
-        $salaryPerLesson = (float) ($teacher->salary_per_lesson ?? 25);
-        $fixedStudentRate = (float) ($teacher->fixed_student_rate ?? 15);
-        $centerFixedPerStudent = (float) ($teacher->center_fixed_per_student ?? 20);
-        $weeklyLessons = (int) ($teacher->weekly_lessons ?? 4);
-        $monthlyLessons = max(1, $weeklyLessons * 4);
-
-        if ($remType === 'percentage') {
-            $teacherShare = round(($monthlyGross * $ratePct) / 100, 2);
-            $centerShare = round(max(0, $monthlyGross - $teacherShare), 2);
-            $perSessionEst = round($teacherShare / $monthlyLessons, 2);
-        } elseif ($remType === 'fixed_center') {
-            $totalCenterTarget = round($studentCount * $centerFixedPerStudent, 2);
-            $teacherShare = round(max(0, $monthlyGross - $totalCenterTarget), 2);
-            $centerShare = round(min($monthlyGross, $totalCenterTarget), 2);
-            $perSessionEst = round($teacherShare / max(1, $monthlyLessons), 2);
-        } else {
-            $teacherShare = round($studentCount * $fixedStudentRate, 2);
-            $centerShare = round(max(0, $monthlyGross - $teacherShare), 2);
-            $perSessionEst = round($teacherShare / max(1, $monthlyLessons), 2);
-        }
+        $formatted = app(TeacherPayoutService::class)->formatTeacher($teacher, $request);
 
         // Nombre de groupes distincts
         $groupsCount = StudentSubjectEnrollment::where('teacher_id', $teacher->id)
@@ -131,6 +100,9 @@ class TeacherPortalController extends Controller
         // Nombre de cours hebdomadaires dans le planning
         $scheduledCount = ScheduleItem::where('teacher', 'LIKE', '%' . $teacher->name . '%')->count();
 
+        $formatted['groups_count'] = $groupsCount;
+        $formatted['scheduled_lessons_count'] = $scheduledCount;
+
         return response()->json([
             'user' => [
                 'id' => $user->id,
@@ -138,28 +110,7 @@ class TeacherPortalController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
             ],
-            'teacher' => [
-                'id' => $teacher->id,
-                'name' => $teacher->name,
-                'subject' => $teacher->subject,
-                'phone' => $teacher->phone,
-                'email' => $teacher->email,
-                'weekly_lessons' => $teacher->weekly_lessons,
-                'student_count' => $studentCount,
-                'groups_count' => $groupsCount,
-                'scheduled_lessons_count' => $scheduledCount,
-                'remuneration_type' => $remType,
-                'rate_percentage' => $ratePct,
-                'fixed_student_rate' => $fixedStudentRate,
-                'center_fixed_per_student' => $centerFixedPerStudent,
-                'teacher_share' => $teacherShare,
-                'monthly_gross_revenue' => $monthlyGross,
-                'per_session_share' => $perSessionEst,
-                'payout_status' => $teacher->payout_status ?: 'pending',
-                'payout_date' => $teacher->payout_date ? $teacher->payout_date->format('Y-m-d') : null,
-                'payout_month' => $teacher->payout_month,
-                'payout_amount' => $teacher->payout_amount ? (float) $teacher->payout_amount : $teacherShare,
-            ],
+            'teacher' => $formatted,
             'is_linked' => true,
         ]);
     }

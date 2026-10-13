@@ -7,11 +7,11 @@
         <div>
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold mb-3 border border-white/20">
             <Sparkles class="w-3.5 h-3.5 text-amber-300" />
-            <span>Assistant Pédagogique Intelligent & Tutoriels</span>
+            <span>Assistant Pédagogique Google Gemini & Tutoriels</span>
           </div>
-          <h2 class="text-2xl md:text-3xl font-black tracking-tight">Gemini Enseignant & Guide Interactif</h2>
+          <h2 class="text-2xl md:text-3xl font-black tracking-tight">Gemini Chatbot & Guide Interactif</h2>
           <p class="text-violet-100 text-sm mt-1 max-w-2xl leading-relaxed">
-            Concevez vos plans de cours, générez des exercices et devoirs sur-mesure, communiquez avec les parents et maîtrisez votre portail enseignant en quelques secondes.
+            Votre copilote intelligent pour concevoir vos plans de cours, générer des exercices sur-mesure, rédiger des messages aux parents et maîtriser l'application Study Center en Français ou en Dérja.
           </p>
         </div>
 
@@ -27,7 +27,7 @@
             ]"
           >
             <Bot class="w-4 h-4" />
-            Assistant IA
+            Chatbot Gemini
           </button>
           <button
             @click="activeView = 'tutorial'"
@@ -50,23 +50,33 @@
       <!-- Panneau latéral : Suggestions rapides & Raccourcis pédagogiques -->
       <div class="lg:col-span-4 space-y-4">
         <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
-          <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <Zap class="w-4 h-4 text-violet-600" />
-            Générateurs Rapides
-          </h3>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <Zap class="w-4 h-4 text-violet-600" />
+              Suggestions Rapides
+            </h3>
+            <span class="text-[10px] font-bold bg-violet-50 text-violet-700 px-2 py-0.5 rounded-full border border-violet-200">
+              FR & Dérja
+            </span>
+          </div>
           <div class="space-y-2">
             <button
               v-for="(promptItem, idx) in quickPrompts"
               :key="idx"
               @click="applyQuickPrompt(promptItem)"
-              class="w-full text-left p-3 rounded-xl border border-gray-100 bg-gray-50/60 hover:bg-violet-50/80 hover:border-violet-200 transition-all group cursor-pointer"
+              class="w-full text-left p-2.5 rounded-xl border border-gray-100 bg-gray-50/60 hover:bg-violet-50/80 hover:border-violet-200 transition-all group cursor-pointer"
             >
               <div class="flex items-start gap-2.5">
-                <span class="p-1.5 rounded-lg bg-white group-hover:bg-violet-100 text-violet-600 transition-colors shadow-2xs">
-                  <component :is="promptItem.icon" class="w-4 h-4" />
+                <span class="p-1.5 rounded-lg bg-white group-hover:bg-violet-100 text-violet-600 transition-colors shadow-2xs shrink-0">
+                  <component :is="promptItem.icon" class="w-3.5 h-3.5" />
                 </span>
-                <div class="min-w-0">
-                  <p class="text-xs font-bold text-gray-900 group-hover:text-violet-800">{{ promptItem.title }}</p>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-1">
+                    <p class="text-xs font-bold text-gray-900 group-hover:text-violet-800 truncate">{{ promptItem.title }}</p>
+                    <span v-if="promptItem.lang" class="text-[9px] font-extrabold text-amber-700 bg-amber-50 px-1 py-0.2 rounded shrink-0">
+                      {{ promptItem.lang }}
+                    </span>
+                  </div>
                   <p class="text-[11px] text-gray-500 line-clamp-1 mt-0.5">{{ promptItem.description }}</p>
                 </div>
               </div>
@@ -77,7 +87,7 @@
         <!-- Paramètres Pédagogiques -->
         <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs space-y-3">
           <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider text-gray-500">
-            Contexte de classe
+            Contexte de classe (Optionnel)
           </h3>
           <div>
             <label class="block text-[11px] font-semibold text-gray-700 mb-1">Matière</label>
@@ -101,7 +111,7 @@
             </select>
           </div>
           <div>
-            <label class="block text-[11px] font-semibold text-gray-700 mb-1">Ton de réponse</label>
+            <label class="block text-[11px] font-semibold text-gray-700 mb-1">Ton souhaité</label>
             <select
               v-model="contextTone"
               class="w-full text-xs px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
@@ -109,14 +119,14 @@
               <option value="didactique">Didactique & Structuré (Plan de cours)</option>
               <option value="stimulant">Encourageant & Motivateur (Élèves)</option>
               <option value="bienveillant">Bienveillant & Rassurant (Parents)</option>
-              <option value="concis">Synthétique & Fiche de révision</option>
+              <option value="derja">Authentique en Dérja Tunisienne (دارجة)</option>
             </select>
           </div>
         </div>
       </div>
 
-      <!-- Zone de Conversation IA -->
-      <div class="lg:col-span-8 flex flex-col bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden h-[620px]">
+      <!-- Zone de Conversation Chatbot IA -->
+      <div class="lg:col-span-8 flex flex-col bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden h-[640px]">
         <!-- Barre supérieure du chat -->
         <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/70">
           <div class="flex items-center gap-3">
@@ -126,19 +136,31 @@
             <div>
               <div class="flex items-center gap-2">
                 <h4 class="text-sm font-bold text-gray-900">Assistant IA Gemini</h4>
-                <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Actif
+                <span
+                  :class="[
+                    'inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                    isFallbackActive
+                      ? 'text-amber-700 bg-amber-50 border-amber-200'
+                      : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'w-1.5 h-1.5 rounded-full',
+                      isFallbackActive ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'
+                    ]"
+                  ></span>
+                  <span>{{ activeModel }}</span>
                 </span>
               </div>
-              <p class="text-[11px] text-gray-500">Spécialisé pour le programme d'études tunisien</p>
+              <p class="text-[11px] text-gray-500">Tuteur officiel Study Center • Programme Tunisien (FR / دارجة)</p>
             </div>
           </div>
 
           <button
             @click="clearChat"
             class="text-xs text-gray-500 hover:text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5"
-            title="Effacer l'historique"
+            title="Effacer la conversation"
           >
             <RotateCcw class="w-3.5 h-3.5" />
             <span>Réinitialiser</span>
@@ -169,7 +191,7 @@
 
             <div
               :class="[
-                'rounded-2xl p-4 text-xs leading-relaxed space-y-2 select-text',
+                'rounded-2xl p-4 text-xs leading-relaxed space-y-2 select-text shadow-2xs',
                 msg.sender === 'user'
                   ? 'bg-indigo-600 text-white rounded-tr-none'
                   : 'bg-gray-50 border border-gray-200/80 text-gray-800 rounded-tl-none'
@@ -179,10 +201,11 @@
 
               <div
                 v-if="msg.sender === 'ai'"
-                class="pt-2 border-t border-gray-200/60 flex items-center justify-end gap-2 text-[10px] text-gray-400"
+                class="pt-2 border-t border-gray-200/60 flex items-center justify-between text-[10px] text-gray-400"
               >
+                <span class="text-[9px] text-gray-400 font-mono">Study Center AI</span>
                 <button
-                  @click="copyText(msg.text)"
+                  @click="copyText(msg.text, i)"
                   class="hover:text-violet-600 flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded hover:bg-white"
                 >
                   <Copy class="w-3 h-3" />
@@ -192,15 +215,18 @@
             </div>
           </div>
 
-          <!-- Indicateur d'écriture -->
+          <!-- Indicateur de réflexion IA -->
           <div v-if="isTyping" class="flex gap-3 max-w-[85%] animate-in fade-in">
             <div class="w-8 h-8 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center shrink-0">
               <Bot class="w-4 h-4" />
             </div>
-            <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-violet-400 animate-bounce"></span>
-              <span class="w-2 h-2 rounded-full bg-violet-500 animate-bounce [animation-delay:0.15s]"></span>
-              <span class="w-2 h-2 rounded-full bg-violet-600 animate-bounce [animation-delay:0.3s]"></span>
+            <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 flex items-center gap-2">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-violet-400 animate-bounce"></span>
+                <span class="w-2 h-2 rounded-full bg-violet-500 animate-bounce [animation-delay:0.15s]"></span>
+                <span class="w-2 h-2 rounded-full bg-violet-600 animate-bounce [animation-delay:0.3s]"></span>
+              </div>
+              <span class="text-xs text-violet-700 font-medium ml-1">Gemini analyse et rédige votre réponse...</span>
             </div>
           </div>
         </div>
@@ -211,14 +237,14 @@
             <input
               v-model="inputQuery"
               type="text"
-              placeholder="Posez une question ou demandez un exercice..."
-              class="flex-1 text-xs px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all"
+              placeholder="Posez une question en Français ou en Dérja (ex: Kifech na3mel appel ?)..."
+              class="flex-1 text-xs px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium"
               :disabled="isTyping"
             />
             <button
               type="submit"
               :disabled="!inputQuery.trim() || isTyping"
-              class="px-4 py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-md shadow-violet-600/20 cursor-pointer"
+              class="px-5 py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-md shadow-violet-600/20 cursor-pointer"
             >
               <Send class="w-4 h-4" />
               <span class="hidden sm:inline">Envoyer</span>
@@ -259,7 +285,7 @@
             <span class="text-[11px] font-semibold text-gray-400">{{ guide.badge }}</span>
             <button
               @click="$emit('navigate', guide.targetTab)"
-              class="text-xs font-bold text-violet-600 hover:text-violet-800 flex items-center gap-1 group"
+              class="text-xs font-bold text-violet-600 hover:text-violet-800 flex items-center gap-1 group cursor-pointer"
             >
               <span>Accéder</span>
               <ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -312,7 +338,7 @@
               Comment imprimer mon planning ?
             </h4>
             <p class="text-xs text-gray-600 leading-relaxed">
-              Dans l'onglet « Emploi du temps », cliquez sur le bouton « Imprimer / PDF » pour générer une version imprimable propre de votre semaine de cours.
+              Dans l'onglet « Emploi du temps », cliquez sur le bouton « Imprimer mon planning » pour générer une version imprimable propre de votre semaine de cours.
             </p>
           </div>
         </div>
@@ -328,6 +354,7 @@ import {
   BookOpen, FileText, MessageSquare, CheckCircle2, ChevronRight, HelpCircle,
   Calendar, Users, UserCheck
 } from 'lucide-vue-next';
+import api from '../utils/api';
 
 defineEmits<{
   (e: 'navigate', tab: string): void;
@@ -338,6 +365,9 @@ const inputQuery = ref('');
 const isTyping = ref(false);
 const chatContainer = ref<HTMLElement | null>(null);
 const copiedIndex = ref<number | null>(null);
+
+const activeModel = ref('Gemini 1.5 Flash');
+const isFallbackActive = ref(false);
 
 const contextSubject = ref('Mathématiques');
 const contextLevel = ref('Baccalauréat');
@@ -351,7 +381,7 @@ interface ChatMessage {
 const messages = ref<ChatMessage[]>([
   {
     sender: 'ai',
-    text: "Bonjour cher professeur ! Je suis votre assistant pédagogique IA.\n\nJe peux vous aider à préparer un plan de séance de 2 heures, créer des exercices progressifs avec corrigés, ou rédiger un mot pour les parents. Que souhaiteriez-vous concevoir aujourd'hui ?",
+    text: "Bonjour ! 3asslema ! Je suis l'assistant IA officiel de Study Center propulsé par Google Gemini.\n\nJe suis formé pour vous assister sur :\n• La préparation de vos séances de cours et exercices adaptés au programme tunisien\n• La prise d'appel et le suivi de vos présences\n• La consultation de vos plannings et groupes\n• La communication bienveillante avec les parents d'élèves\n\nN'hésitez pas à me poser vos questions en Français ou en Dérja tunisienne !",
   },
 ]);
 
@@ -361,24 +391,42 @@ const quickPrompts = [
     title: 'Plan de séance (2h)',
     description: 'Déroulé chronologique avec rappels, cours et pratique',
     query: "Conçois un plan de séance détaillé de 2h pour le cours de [Matière] niveau [Niveau]. Inclus les objectifs, 15 min de rappel, 45 min de notion clé, et 60 min d'exercices d'application.",
+    lang: 'FR',
   },
   {
     icon: FileText,
     title: 'Série de 3 Exercices + Corrigé',
     description: 'Niveau facile, intermédiaire et type examen',
     query: "Rédige une série de 3 exercices progressifs de [Matière] pour le niveau [Niveau]. Exercice 1 (Application directe), Exercice 2 (Approfondissement), Exercice 3 (Problème de synthèse). Fournis les solutions pas à pas.",
+    lang: 'FR',
   },
   {
     icon: MessageSquare,
-    title: 'Message d\'encouragement parents',
-    description: 'Bilan de progression pour WhatsApp / SMS',
+    title: 'Message WhatsApp Parents',
+    description: 'Bilan de progression ou encouragement',
     query: "Rédige un message bienveillant et professionnel destiné aux parents d'un élève pour les informer de ses progrès en [Matière] et l'encourager à maintenir ses efforts pour les prochains devoirs.",
+    lang: 'FR',
+  },
+  {
+    icon: UserCheck,
+    title: 'Kifech na3mel appel ?',
+    description: 'Tari9at tasjil el 7oudhour fel portail',
+    query: "3asslema, kifech na3mel l'appel fel application w nvalider les présences mte3 el groupe mte3i ?",
+    lang: 'Dérja',
+  },
+  {
+    icon: Calendar,
+    title: 'Kifech nchouf l\'emploi ?',
+    description: 'Planning w les salles attribuées',
+    query: "Kifech nchouf l'emploi du temps mte3i w les salles eli n9arri fehom jem3a hedhi ?",
+    lang: 'Dérja',
   },
   {
     icon: Zap,
     title: 'QCM de Révision Express (5 questions)',
     description: 'Test rapide de 10 minutes en début de séance',
     query: "Crée un QCM de 5 questions à choix multiples avec explications détaillées sur le chapitre en cours pour le niveau [Niveau].",
+    lang: 'FR',
   },
 ];
 
@@ -450,75 +498,38 @@ async function sendMessage() {
   isTyping.value = true;
   scrollToBottom();
 
-  // Génération intelligente spécialisée pédagogie
-  setTimeout(() => {
-    const responseText = generateSmartPedagogicalResponse(query, contextSubject.value, contextLevel.value, contextTone.value);
-    messages.value.push({ sender: 'ai', text: responseText });
+  try {
+    const res = await api.post('/api/ai/ask', {
+      message: query,
+      history: messages.value.slice(0, -1).map(m => ({
+        sender: m.sender,
+        text: m.text,
+      })),
+      context: {
+        subject: contextSubject.value,
+        level: contextLevel.value,
+        tone: contextTone.value,
+      },
+    });
+
+    const reply = res.data?.reply || "Une réponse n'a pas pu être générée.";
+    activeModel.value = res.data?.model || 'Gemini 1.5 Flash';
+    isFallbackActive.value = !!res.data?.is_fallback;
+    messages.value.push({ sender: 'ai', text: reply });
+  } catch (err: any) {
+    console.error('Erreur API Chatbot Gemini:', err);
+    // En cas d'erreur réseau, message élégant
+    const errMsg = err.response?.data?.message || "Impossible de joindre le service IA. Vérifiez la connexion au serveur.";
+    messages.value.push({ sender: 'ai', text: `⚠️ ${errMsg}` });
+  } finally {
     isTyping.value = false;
     scrollToBottom();
-  }, 1000);
+  }
 }
 
-function generateSmartPedagogicalResponse(query: string, subject: string, level: string, tone: string): string {
-  const lower = query.toLowerCase();
-
-  if (lower.includes('plan') || lower.includes('séance') || lower.includes('2h')) {
-    return `📚 PLAN DE SÉANCE PÉDAGOGIQUE (2 HEURES)\n` +
-      `Matière : ${subject} | Niveau : ${level}\n` +
-      `Objectif principal : Maîtrise des méthodes clés et autonomie sur les applications types.\n\n` +
-      `⏱️ 00:00 - 00:15 | Accueil & Réactivation (15 min)\n` +
-      `• Appel rapide sur le portail.\n` +
-      `• Mini-quiz ou 2 questions orales de rappel sur la séance précédente.\n\n` +
-      `⏱️ 00:15 - 00:55 | Développement de la notion (40 min)\n` +
-      `• Démonstration au tableau d'un exemple type.\n` +
-      `• Mise en évidence des pièges fréquents rencontrés par les élèves.\n` +
-      `• Synthèse des formules / théorèmes fondamentaux.\n\n` +
-      `⏱️ 00:55 - 01:45 | Travail dirigé & Pratique guidée (50 min)\n` +
-      `• Exercice 1 : Application directe en binôme ou individuel (15 min).\n` +
-      `• Exercice 2 : Problème de réflexion et d'analyse (25 min).\n` +
-      `• Correction collective ciblée avec passage au tableau.\n\n` +
-      `⏱️ 01:45 - 02:00 | Bilan & Travail personnel (15 min)\n` +
-      `• Synthèse des points à retenir.\n` +
-      `• Prescription de 2 exercices ciblés pour la prochaine séance.`;
-  }
-
-  if (lower.includes('exercice') || lower.includes('qcm') || lower.includes('devoir') || lower.includes('série')) {
-    return `📝 SÉRIE D'EXERCICES D'APPLICATION & CORRIGÉ\n` +
-      `Discipline : ${subject} | Public cible : ${level}\n\n` +
-      `--- EXERCICE 1 (Socle fondamental - 5 points) ---\n` +
-      `Énoncé : Identifier et expliciter la propriété principale du chapitre appliquée à une situation simple.\n` +
-      `Indication : Rédiger avec soin chaque étape du raisonnement.\n` +
-      `💡 Corrigé succinct : Application de la formule directrice. Résultat obtenu en 3 lignes de justification claire.\n\n` +
-      `--- EXERCICE 2 (Approfondissement & Méthode - 7 points) ---\n` +
-      `Énoncé : Étude d'un cas composé nécessitant deux étapes successives de résolution.\n` +
-      `Indication : Attention aux unités et à la cohérence du résultat final.\n` +
-      `💡 Corrigé succinct : Étape 1 : modélisation. Étape 2 : calcul algébrique ou démonstration rigoureuse.\n\n` +
-      `--- EXERCICE 3 (Problème type Examen - 8 points) ---\n` +
-      `Énoncé : Problème contextualisé sollicitant la capacité d'analyse et de synthèse.\n` +
-      `💡 Corrigé succinct : Raisonnement complet par disjonction de cas ou méthode analytique classique.`;
-  }
-
-  if (lower.includes('parent') || lower.includes('message') || lower.includes('whatsapp') || lower.includes('sms')) {
-    return `✉️ MODÈLE DE MESSAGE PROFESSIONNEL AUX PARENTS\n\n` +
-      `« Chers parents,\n\n` +
-      `Je tiens à vous partager un retour très positif sur l'engagement de [Prénom de l'élève] lors de nos dernières séances de ${subject} au Centre d'Études.\n\n` +
-      `Son assiduité et son sérieux se ressentent directement dans sa compréhension des notions. Afin de consolider ces acquis, je l'invite à refaire les 2 exercices d'application corrigés en classe avant notre prochaine séance.\n\n` +
-      `Restant à votre entière disposition pour tout échange pédagogique.\n\n` +
-      `Bien cordialement,\n` +
-      `Votre Enseignant de ${subject} — Centre d'Études »`;
-  }
-
-  return `💡 RÉPONSE PÉDAGOGIQUE PERSONNALISÉE\n` +
-    `Matière : ${subject} (${level})\n\n` +
-    `Pour répondre au mieux à votre demande (« ${query} ») :\n\n` +
-    `1. Approche recommandée : Structurer l'apprentissage autour d'exemples concrets adaptés au programme tunisien de ${level}.\n` +
-    `2. Clé d'efficacité : Vérifier systématiquement la compréhension des définitions avant d'aborder des exercices complexes.\n` +
-    `3. Suivi individuel : Vous pouvez noter les observations sur la feuille d'appel du portail pour garder un historique par élève.`;
-}
-
-function copyText(text: string) {
+function copyText(text: string, index: number) {
   navigator.clipboard.writeText(text);
-  copiedIndex.value = messages.value.findIndex(m => m.text === text);
+  copiedIndex.value = index;
   setTimeout(() => {
     copiedIndex.value = null;
   }, 2000);

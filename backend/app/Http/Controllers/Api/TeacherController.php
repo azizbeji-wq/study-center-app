@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
+use App\Services\TeacherPayoutService;
 use Illuminate\Http\Request;
 
 class TeacherController extends Controller
@@ -219,72 +220,11 @@ class TeacherController extends Controller
      */
     private function formatTeacher(Request $request, Teacher $t): array
     {
-        $enrollmentStudentIds = $t->enrollments()->pluck('student_id')->toArray();
-        $attendanceStudentIds = \App\Models\Attendance::where('teacher_id', $t->id)->pluck('student_id')->toArray();
-        $allDistinctStudentIds = array_unique(array_filter(array_merge($enrollmentStudentIds, $attendanceStudentIds)));
-        $studentCount = count($allDistinctStudentIds);
+        $payoutService = app(TeacherPayoutService::class);
+        $formatted = $payoutService->formatTeacher($t, $request);
+        $formatted['subjects'] = $this->splitSubjects($t->subject);
 
-        $monthlyGross = (float) $t->enrollments->sum('price_per_month');
-        if ($monthlyGross == 0 && $studentCount > 0) {
-            $monthlyGross = $studentCount * ((float) ($t->salary_per_lesson ?? 35) * 4);
-        }
-
-        $remType = $t->remuneration_type ?? 'percentage';
-        $ratePct = (float) ($t->rate_percentage ?? 70);
-        $salaryPerLesson = (float) ($t->salary_per_lesson ?? 25);
-        $fixedStudentRate = (float) ($t->fixed_student_rate ?? 15);
-        $centerFixedPerStudent = (float) ($t->center_fixed_per_student ?? 20);
-        $weeklyLessons = (int) ($t->weekly_lessons ?? 4);
-        $monthlyLessons = max(1, $weeklyLessons * 4);
-
-        if ($remType === 'percentage') {
-            // Formule C : Pourcentage (%) du montant des cours
-            $teacherShare = round(($monthlyGross * $ratePct) / 100, 2);
-            $centerShare = round(max(0, $monthlyGross - $teacherShare), 2);
-            $perSessionEst = round($teacherShare / $monthlyLessons, 2);
-        } elseif ($remType === 'fixed_center') {
-            // Formule A : Part Fixe Administration par élève (ex: 20 TND/élève) - Professeur prend le reste
-            $totalCenterTarget = round($studentCount * $centerFixedPerStudent, 2);
-            $teacherShare = round(max(0, $monthlyGross - $totalCenterTarget), 2);
-            $centerShare = round(min($monthlyGross, $totalCenterTarget), 2);
-            $perSessionEst = round($teacherShare / max(1, $monthlyLessons), 2);
-        } else {
-            // Formule B : Montant fixe Enseignant par élève inscrit
-            $teacherShare = round($studentCount * $fixedStudentRate, 2);
-            $centerShare = round(max(0, $monthlyGross - $teacherShare), 2);
-            $perSessionEst = round($teacherShare / max(1, $monthlyLessons), 2);
-        }
-
-        $payoutDateStr = $t->payout_date instanceof \DateTimeInterface 
-            ? $t->payout_date->format('Y-m-d') 
-            : ($t->payout_date ?: null);
-
-        return $this->hideSalary($request, [
-            'id' => $t->id,
-            'name' => $t->name,
-            'subject' => $t->subject,
-            'subjects' => $this->splitSubjects($t->subject),
-            'phone' => $t->phone,
-            'email' => $t->email,
-            'studentCount' => $studentCount,
-            'lesson_rate' => $salaryPerLesson,
-            'weeklyLessons' => $weeklyLessons,
-            'monthlyLessons' => $monthlyLessons,
-            'remuneration_type' => $remType,
-            'rate_percentage' => $ratePct,
-            'salary_per_lesson' => $salaryPerLesson,
-            'fixed_student_rate' => $fixedStudentRate,
-            'center_fixed_per_student' => $centerFixedPerStudent,
-            'monthly_gross_revenue' => $monthlyGross,
-            'teacher_share' => $teacherShare,
-            'center_share' => $centerShare,
-            'per_session_share' => $perSessionEst,
-            'payout_status' => $t->payout_status ?: 'pending',
-            'payout_date' => $payoutDateStr,
-            'payout_month' => $t->payout_month,
-            'payout_amount' => $t->payout_amount ? (float) $t->payout_amount : $teacherShare,
-            'payout_by_user_name' => $t->payout_by_user_name ?: ($t->payout_status === 'paid' ? 'Directeur Fondateur' : null),
-        ]);
+        return $formatted;
     }
 
     /**

@@ -27,16 +27,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Compte Secrétaire
-        User::updateOrCreate(
-            ['email' => 'secretary@studycenter.com'],
-            [
-                'name' => 'Secrétaire',
-                'password' => Hash::make('secretary123'),
-                'role' => 'secretary',
-                'is_active' => true,
-            ]
-        );
+
 
         // Compte Enseignant
         $teacherUser = User::updateOrCreate(

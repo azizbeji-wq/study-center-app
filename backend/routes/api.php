@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\SchoolController;
 use App\Http\Controllers\Api\SchoolCalendarController;
+use App\Http\Controllers\Api\AiAssistantController;
 use App\Http\Controllers\Api\SubjectController; // Phase 1A
 use App\Http\Controllers\Api\TeacherPortalController;
 use App\Http\Controllers\Api\UserController;
@@ -43,6 +44,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [UserController::class, 'profile']);
     Route::put('/profile', [UserController::class, 'updateProfile']);
     Route::put('/profile/password', [UserController::class, 'updatePassword']);
+
+    // Chatbot Assistant IA Gemini (accessible à tous les utilisateurs connectés)
+    Route::post('/ai/ask', [AiAssistantController::class, 'ask']);
+    Route::post('/ai/chat', [AiAssistantController::class, 'ask']);
 
     Route::get('/stats', [DashboardController::class, 'index']);
 
