@@ -22,6 +22,12 @@
         :user-name="user.name"
         @logout="handleLogout"
       />
+
+      <!-- Widget Flottant Global Assistant IA Gemini -->
+      <AiTutorialWidget
+        :user-role="user.role"
+        :user-name="user.name"
+      />
     </template>
   </div>
 </template>
@@ -32,6 +38,7 @@ import LoginPage from './components/LoginPage.vue';
 import DirectorDashboard from './components/DirectorDashboard.vue';
 import SecretaryDashboard from './components/SecretaryDashboard.vue';
 import TeacherDashboard from './components/TeacherDashboard.vue';
+import AiTutorialWidget from './components/AiTutorialWidget.vue';
 import api from './utils/api';
 import {
   checkSessionValidity,

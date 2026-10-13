@@ -105,62 +105,95 @@ class GeminiService
      */
     private function buildSystemInstruction(User $user, array $context): string
     {
-        $roleLabel = match ($user->role) {
+        $role = $user->role ?? 'secretary';
+        $roleLabel = match ($role) {
             'director' => 'Directeur / Direction Générale',
             'teacher' => 'Enseignant / Professeur',
             default => 'Personnel Administratif / Secrétaire',
         };
 
         $teacherInfo = '';
-        if ($user->role === 'teacher' && $user->teacher) {
+        if ($role === 'teacher' && $user->teacher) {
             $t = $user->teacher;
             $teacherInfo = "\n- Matière(s) de l'enseignant : {$t->subject}\n- Séances hebdo : {$t->weekly_lessons}\n- Téléphone : {$t->phone}";
         }
 
         $extraContext = '';
         if (!empty($context['subject'])) {
-            $extraContext .= "\n- Matière en cours d'étude : {$context['subject']}";
+            $extraContext .= "\n- Matière en cours : {$context['subject']}";
         }
         if (!empty($context['level'])) {
-            $extraContext .= "\n- Niveau scolaire sélectionné : {$context['level']}";
+            $extraContext .= "\n- Niveau scolaire : {$context['level']}";
         }
 
+        // Posture spécifique au rôle de l'utilisateur
+        $rolePosture = match ($role) {
+            'director' => <<<DIR
+### POSTURE DU MODÈLE : CONSEILLER STRATÉGIQUE, FINANCIER & DE GESTION DE DIRECTION
+Tu es le bras droit analytique et conseiller du DIRECTEUR de Study Center.
+- **Missions prioritaires** :
+  1. **Pilotage Financier & Rentabilité** : Analyse du chiffre d'affaires, marge nette du centre, frais fixes/variables, clôture mensuelle des comptes.
+  2. **Rémunérations Enseignants (3 modes)** :
+     - Formule A (`fixed_center`) : Part fixe convenue prélevée par élève (ex: 20 TND/élève/mois), reliquat reversé au professeur.
+     - Formule B (`fixed`) : Tarif fixe par élève présent (ex: 15 TND) ou forfait par cours effectué.
+     - Formule C (`percentage`) : Pourcentage conventionné (ex: 70% prof / 30% centre).
+     - RÈGLE STRICTE NON-NÉGOCIABLE : L'administration absorbe 100% des remises accordées aux élèves. Le salaire prof est obligatoirement calculé sur le prix plein avant remise.
+  3. **Supervision Opérationnelle** : Analyse des effectifs, détection des retards de paiement, optimisation des plannings de salles et gestion des comptes utilisateurs/permissions.
+DIR,
+            'teacher' => <<<TEA
+### POSTURE DU MODÈLE : COPILOTE PÉDAGOGIQUE EXPERT DU SYSTÈME ÉDUCATIF TUNISIEN
+Tu es le tuteur et copilote pédagogique de l'ENSEIGNANT de Study Center.
+- **Missions prioritaires** :
+  1. **Conception de Séances (2h)** : Structuration pédagogique conforme aux programmes tunisiens (Accueil 15 min, Notion clé 40 min, Pratique dirigée 50 min, Synthèse 15 min).
+  2. **Génération d'Exercices & Évaluations** : Élaboration de séries progressives (Application directe, Approfondissement, Synthèse type Examen / Devoir de contrôle ou synthèse / Baccalauréat tunisien).
+  3. **Gestion de Classe & Suivi** : Prise des présences en ligne, gestion des retards/absences, communication professionnelle et bienveillante avec les parents d'élèves (SMS/WhatsApp).
+  4. **Emploi du temps & Groupes** : Consultation des créneaux, attribution des salles et suivi des effectifs.
+TEA,
+            default => <<<SEC
+### POSTURE DU MODÈLE : ASSISTANTE ADMINISTRATIVE & RELATION CLIENTÈLE/FAMILLES
+Tu es la conseillère et assistante administrative de la SECRÉTAIRE / DU PERSONNEL de Study Center.
+- **Missions prioritaires** :
+  1. **Accueil & Inscriptions** : Enregistrement des nouveaux élèves, affectation aux groupes, suivi des coordonnées parents.
+  2. **Encaissements & Caisse** : Facturation des séances et forfaits mensuels, émission des reçus de paiement, gestion des impayés et suivi des remises autorisées.
+  3. **Communication Parents** : Rédaction de messages WhatsApp/SMS bienveillants et clairs pour rappeler une échéance de paiement, signaler une absence imprévue ou confirmer une inscription.
+  4. **Garderie Parascolaire** : Pointage journalier des arrivées/départs des enfants, suivi des forfaits cantine et parascolaire.
+  5. **Coordination des Salles** : Planning hebdomadaire et détection des chevauchements d'horaires.
+SEC
+        };
+
         return <<<PROMPT
-Tu es le tuteur et assistant IA officiel de l'application « Study Center App » (Centre d'Études pour le soutien scolaire et parascolaire en Tunisie).
+Tu es le copilote et assistant IA officiel de l'application « Study Center App » (Centre d'Études de soutien scolaire et parascolaire en Tunisie).
 
 ### IDENTITÉ DE L'UTILISATEUR CONNECTÉ :
 - Nom : {$user->name}
-- Rôle : {$roleLabel} ({$user->role})
+- Rôle : {$roleLabel} ({$role})
 - Email : {$user->email}{$teacherInfo}{$extraContext}
+
+{$rolePosture}
 
 ### RÈGLE LINGUISTIQUE ESSENTIELLE :
 - Détecte automatiquement la langue ou le dialecte utilisé par l'utilisateur.
-- Si l'utilisateur s'adresse à toi en FRANÇAIS, réponds en français soigné, professionnel et pédagogique.
+- Si l'utilisateur s'adresse à toi en FRANÇAIS, réponds en français soigné, professionnel, encourageant et concis.
 - Si l'utilisateur s'adresse à toi en DÉRJA TUNISIENNE (Arabe dialectal tunisien en caractères latins 'arabizi' ou arabes), RÉPONDS OBLIGATOIREMENT EN DÉRJA TUNISIENNE authentique, chaleureuse et naturelle (exemples: "3asslema", "Ahla bik", "Kifech n3awnek", "Tnajjem temchi l onglet...", "Famma bouton...").
-- Tu peux mixer le français et la derja comme c'est l'usage courant en Tunisie chez les enseignants et éducateurs.
+- Tu peux mixer le français et la derja comme c'est l'usage courant en Tunisie chez les professionnels de l'éducation.
 
 ### GARDE-FOUS STRICTS (GUARDRAILS) - NON NÉGOCIABLE :
 - Tu dois STRICTEMENT REFUSER tout sujet qui sort du cadre de l'application Study Center, de l'éducation, des cours, des devoirs, des plannings, des présences, des finances de cours ou de la pédagogie scolaire tunisienne.
 - Sujets INTERDITS : politique générale, polémiques, jeux vidéo, célébrités, crypto-monnaies, piratage, recettes de cuisine sans rapport avec l'école, conseils médicaux hors premiers soins scolaires, astrologie, etc.
 - Réponse en cas de question hors sujet :
-  * En français : « Je suis exclusivement dédié à l'assistance du Centre d'Études (Study Center). Je ne peux répondre qu'aux questions relatives à vos cours, vos plannings, vos élèves, vos présences, aux finances du centre ou à la pédagogie scolaire. »
+  * En français : « Je suis exclusivement dédié à l'assistance du Centre d'Études (Study Center). Je ne peux répondre qu'aux questions relatives à vos cours, plannings, présences, finances du centre ou à la gestion scolaire. »
   * En derja tunisienne : « Ena l'assistant mte3 Study Center khw. Njewbek ken f 7ajet teb3a el 9raya, les cours, l'emploi du temps, el 7oudhour, les élèves w gestion mte3 el centre. »
 
 ### CONNAISSANCES APPROFONDIES DE L'APPLICATION « STUDY CENTER APP » :
 1. **Emploi du temps & Salles** : Planning hebdomadaire par jour (Lundi à Dimanche), gestion des salles (ex: Salle 1, Salle 2) avec détection bloquante des conflits de salle, et avertissement pour conflit de groupe.
-2. **Présences & Appel** : Pointage par séance en 1 clic (Présent [vert], Absent [rouge], En retard [orange], Excusé [bleu]), calcul automatique du taux d'assiduité et comptabilisation des séances réelles pour la facturation des élèves.
-3. **Pédagogie & Enseignants** :
-   - Structure de séances types de 2 heures (accueil/réactivation 15 min, notion clé 40 min, pratique dirigée 50 min, bilan 15 min).
-   - Séries d'exercices progressifs (Application directe, Approfondissement, Synthèse type Examen/Bac) conformes au programme tunisien (Primaire, Collège 7ème-9ème, Lycée 1ère-4ème Bac).
-   - Modèles de messages bienveillants et clairs pour les parents (WhatsApp/SMS) pour signaler absences ou féliciter les progrès.
-4. **Finances & Rémunération Enseignants** :
-   - Formule A (fixed_center) : Part fixe centre par élève (ex: 20 TND/élève) — le prof prend le reste.
-   - Formule B (fixed) : Tarif fixe par élève inscrit pour l'enseignant (ex: 15 TND/élève).
+2. **Présences & Appel** : Pointage par séance en 1 clic (Présent [vert], Absent [rouge], En retard [orange], Excusé [bleu]), calcul automatique du taux d'assiduité et facturation des séances réelles.
+3. **Finances & Rémunération Enseignants** :
+   - Formule A (fixed_center) : Part fixe centre par élève (ex: 20 TND/élève) — le prof prend le reliquat.
+   - Formule B (fixed) : Tarif fixe par élève inscrit ou forfait par séance pour l'enseignant.
    - Formule C (percentage) : Pourcentage sur le montant des cours (ex: 70% prof / 30% centre).
    - Les remises accordées aux élèves sont intégralement prises en charge par la direction du centre.
-   - Statut de paiement : L'administration bascule la rémunération en "Payé" dès remise physique des fonds.
-5. **Garderie Parascolaire** : Pointage journalier et forfaits mensuels pour les enfants accueillis.
-6. **Comptabilité & Bilan** : Réservé au directeur (recettes, dépenses fixes et variables, clôture mensuelle).
+4. **Garderie Parascolaire** : Pointage journalier et forfaits mensuels pour les enfants accueillis.
+5. **Comptabilité & Bilan** : Réservé au directeur (recettes, dépenses fixes et variables, clôture mensuelle).
 
 Sois toujours structuré, courtois, encourageant et concis. Utilise des puces et des mises en gras pour aérer tes réponses.
 PROMPT;
@@ -209,6 +242,7 @@ PROMPT;
         $lower = mb_strtolower(trim($message));
         $subject = $context['subject'] ?? ($user->teacher?->subject ?? 'Mathématiques');
         $level = $context['level'] ?? 'Lycée / Baccalauréat';
+        $userRole = $user->role ?? 'secretary';
 
         // Détection de derja tunisienne
         $isDerja = preg_match('/(3asslema|ahla|kifech|chkoun|chnowa|n7eb|billehi|fama|famma|behi|mte3|el\s+|w\s+ken|ya3tik|9ol)/iu', $message);
@@ -224,7 +258,36 @@ PROMPT;
             }
         }
 
-        // 2. Appel et Présences
+        // 2. Directeur : Chiffre d'affaires, clôture, rentabilité
+        if ($userRole === 'director' && (str_contains($lower, 'chiffre') || str_contains($lower, 'rentabilité') || str_contains($lower, 'clôture') || str_contains($lower, 'bilan') || str_contains($lower, 'recette'))) {
+            if ($isDerja) {
+                return "📊 **Suivi Financier & Bilan (Directeur) :**\n\n" .
+                    "1. Emchi l'onglet **« Rapports & Bilan »** fel menu.\n" .
+                    "2. Tchouf el Chiffre d'affaires brut, les remises absorbées wel Marge nette mte3 el centre.\n" .
+                    "3. Les régularisations mte3 les profs tet7seb automatique selon el formule (A, B walla C).\n" .
+                    "4. F ekher kol ch'har, tcliqui **« Clôturer le mois »** pour verrouiller les écritures.";
+            }
+            return "📊 **Pilotage Financier & Bilan (Directeur) :**\n\n" .
+                "• **Vue globale** : Rendez-vous dans l'onglet **« Rapports & Bilan »** pour visualiser les recettes, dépenses fixes/variables et la marge nette.\n" .
+                "• **Rémunérations** : Consultez les fiches de paie détaillées par enseignant calculées automatiquement (Formules A, B, C).\n" .
+                "• **Clôture mensuelle** : Utilisez le bouton **« Clôturer le mois »** à la fin de chaque période pour archiver le bilan certifié.";
+        }
+
+        // 3. Secrétaire : Relances impayés parents & Garderie
+        if (($userRole === 'secretary' || $userRole === 'director') && (str_contains($lower, 'relance') || str_contains($lower, 'impayé') || str_contains($lower, 'retard paiement') || str_contains($lower, 'khlas'))) {
+            if ($isDerja) {
+                return "📞 **Modèle de Message de Relance WhatsApp (Parents) :**\n\n" .
+                    "« 3asslema madame/monsieur,\nNfakkroukom b li el mensualité mte3 [Nom de l'élève] pour le mois en cours mazzelet en attente fel administration mte3 Study Center.\nFadhlan tnajmou tcharfoune fel centre walla tkallmouna pour régulariser el wadhiya.\nMerci l tfehomkom ! »";
+            }
+            return "📞 **Modèle de Relance Bienveillante aux Parents :**\n\n" .
+                "« Bonjour Chers Parents,\n\n" .
+                "Nous espérons que vous allez bien. Sauf erreur de notre part, la mensualité de [Prénom de l'élève] pour le mois en cours est actuellement en attente de règlement au secrétariat du Centre d'Études.\n\n" .
+                "Nous vous remercions de bien vouloir régulariser cette situation lors de votre prochain passage ou de nous contacter si besoin.\n\n" .
+                "Bien cordialement,\n" .
+                "L'Administration — Centre d'Études »";
+        }
+
+        // 4. Appel et Présences
         if (str_contains($lower, 'appel') || str_contains($lower, 'présence') || str_contains($lower, '7oudhour') || str_contains($lower, 'ghiyeb')) {
             if ($isDerja) {
                 return "📌 **Kifech ta3mel l'appel fel application ?**\n\n" .
@@ -243,23 +306,23 @@ PROMPT;
                 "6. Cliquez sur **« Enregistrer et valider l'appel »** pour consigner la séance.";
         }
 
-        // 3. Emploi du temps / Planning
+        // 5. Emploi du temps / Planning
         if (str_contains($lower, 'emploi') || str_contains($lower, 'planning') || str_contains($lower, 'salle') || str_contains($lower, 'wa9t')) {
             if ($isDerja) {
-                return "📅 **Emploi du temps mte3ek :**\n\n" .
-                    "• Tnajjem tchouf les séances mte3ek el kol fel onglet **« Emploi du temps »**.\n" .
-                    "• Les séances mte3 lyoum yabdew tal3in mel fou9 f cadre mlawen b bouton direct pour faire l'appel.\n" .
-                    "• Kol séance fiha l'horaire, la salle attribuee, wel groupe.\n" .
-                    "• Tnajjem zeda t'imprimi l'emploi b bouton **« Imprimer mon planning »**.";
+                return "📅 **Emploi du temps :**\n\n" .
+                    "• Tnajjem tchouf les séances el kol fel onglet **« Emploi du temps »**.\n" .
+                    "• Kol séance fiha l'horaire, la salle attribuée, wel groupe.\n" .
+                    "• Détection automatique mte3 les conflits de salle b rouge ken fama overlap.\n" .
+                    "• Tnajjem zeda t'imprimi l'emploi b bouton **« Imprimer le planning »**.";
             }
-            return "📅 **Votre Emploi du Temps :**\n\n" .
-                "• Consultez tous vos créneaux hebdomadaires dans l'onglet **« Emploi du temps »**.\n" .
-                "• Vos cours du jour apparaissent en tête de page avec accès direct à l'appel.\n" .
-                "• Chaque fiche indique la salle de classe attribuée, le niveau et le groupe.\n" .
-                "• Vous pouvez imprimer une version propre via le bouton **« Imprimer mon planning »**.";
+            return "📅 **Gestion de l'Emploi du Temps :**\n\n" .
+                "• Consultez tous les créneaux hebdomadaires dans l'onglet **« Emploi du temps »**.\n" .
+                "• Chaque cours indique la salle attribuée, la matière, le niveau et le groupe.\n" .
+                "• L'application détecte et bloque automatiquement les conflits de salle en cas de double réservation.\n" .
+                "• Vous pouvez imprimer une version claire via le bouton **« Imprimer le planning »**.";
         }
 
-        // 4. Plan de séance / Cours
+        // 6. Plan de séance / Cours
         if (str_contains($lower, 'plan') || str_contains($lower, 'séance') || str_contains($lower, 'cours') || str_contains($lower, 'dars')) {
             return "📚 **Modèle de Plan de Séance (2 Heures) — {$subject} ({$level})**\n\n" .
                 "⏱️ **00:00 - 00:15 | Accueil & Réactivation (15 min)**\n" .
@@ -276,7 +339,7 @@ PROMPT;
                 "• Bilan des acquis clés et exercices à préparer pour la prochaine séance.";
         }
 
-        // 5. Exercices et Devoirs
+        // 7. Exercices et Devoirs
         if (str_contains($lower, 'exercice') || str_contains($lower, 'qcm') || str_contains($lower, 'devoir') || str_contains($lower, 'tamrin')) {
             return "📝 **Série d'Exercices Recommandée — {$subject} ({$level})**\n\n" .
                 "**Exercice 1 (Socle / 5 pts) :**\n" .
@@ -287,7 +350,7 @@ PROMPT;
                 "Problème de synthèse avec question ouverte. Sollicite l'esprit d'initiative et la démarche d'investigation.";
         }
 
-        // 6. Finances et Rémunération
+        // 8. Finances et Rémunération
         if (str_contains($lower, 'rémunération') || str_contains($lower, 'salaire') || str_contains($lower, 'flous') || str_contains($lower, 'remise') || str_contains($lower, 'paiement')) {
             if ($isDerja) {
                 return "💰 **Régularisation & Rémunération :**\n\n" .

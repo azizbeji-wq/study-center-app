@@ -272,12 +272,6 @@
           :initial-group="attendanceInitialGroup"
           :initial-subject="attendanceInitialSubject"
         />
-
-        <!-- Onglet 4 : Assistant IA & Tutoriel -->
-        <AiTutorialWidget
-          v-else-if="activeTab === 'ai-assistant'"
-          @navigate="selectTab"
-        />
       </div>
     </main>
 
@@ -295,11 +289,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import {
-  LogOut, Calendar, Users, UserCheck, Sparkles, UserCog, Menu, RotateCw
+  LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw
 } from 'lucide-vue-next';
 import TeacherSchedule from './TeacherSchedule.vue';
 import TeacherAttendance from './TeacherAttendance.vue';
-import AiTutorialWidget from './AiTutorialWidget.vue';
 import AccountManagementModal from './AccountManagementModal.vue';
 import api from '../utils/api';
 
@@ -322,13 +315,19 @@ const loadingGroups = ref(false);
 const attendanceInitialGroup = ref('');
 const attendanceInitialSubject = ref('');
 
-type Tab = 'schedule' | 'groups' | 'attendance' | 'ai-assistant';
+type Tab = 'schedule' | 'groups' | 'attendance';
 
-const tabs = [
-  { id: 'schedule' as Tab, label: 'Emploi du temps', icon: Calendar },
-  { id: 'groups' as Tab, label: 'Mes Groupes', icon: Users },
-  { id: 'attendance' as Tab, label: "Faire l'Appel", icon: UserCheck },
-  { id: 'ai-assistant' as Tab, label: 'Assistant IA Gemini', icon: Sparkles, badge: 'IA' },
+interface NavTab {
+  id: Tab;
+  label: string;
+  icon: any;
+  badge?: string;
+}
+
+const tabs: NavTab[] = [
+  { id: 'schedule', label: 'Emploi du temps', icon: Calendar },
+  { id: 'groups', label: 'Mes Groupes', icon: Users },
+  { id: 'attendance', label: "Faire l'Appel", icon: UserCheck },
 ];
 
 const activeTab = ref<Tab>('schedule');
