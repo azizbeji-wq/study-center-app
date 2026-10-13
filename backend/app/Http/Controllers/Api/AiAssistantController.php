@@ -23,18 +23,19 @@ class AiAssistantController extends Controller
     public function ask(Request $request)
     {
         $data = $request->validate([
-            'message' => 'required|string|max:4000',
-            'history' => 'nullable|array',
-            'history.*.text' => 'nullable|string',
-            'history.*.sender' => 'nullable|string',
-            'history.*.role' => 'nullable|string',
+            'message' => 'required|string|max:1000',
+            'history' => 'nullable|array|max:10',
+            'history.*.text' => 'nullable|string|max:1000',
+            'history.*.sender' => 'nullable|string|max:20',
+            'history.*.role' => 'nullable|string|max:20',
             'context' => 'nullable|array',
             'context.subject' => 'nullable|string|max:100',
             'context.level' => 'nullable|string|max:100',
             'context.tone' => 'nullable|string|max:50',
         ], [
             'message.required' => 'Le message est obligatoire.',
-            'message.max' => 'Le message ne peut pas dépasser 4000 caractères.',
+            'message.max' => 'Le message ne peut pas dépasser 1000 caractères.',
+            'history.max' => 'L\'historique ne peut pas dépasser 10 éléments.',
         ]);
 
         $user = $request->user();

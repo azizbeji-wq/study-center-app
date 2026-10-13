@@ -33,7 +33,7 @@ class GeminiService
         // Préparation du payload Gemini
         $contents = $this->buildContents($history, $message);
 
-        $url = "{$baseUrl}/models/{$model}:generateContent?key={$apiKey}";
+        $url = "{$baseUrl}/models/{$model}:generateContent";
 
         try {
             $payload = [
@@ -53,7 +53,8 @@ class GeminiService
 
             $response = Http::timeout(25)
                 ->withHeaders([
-                    'Content-Type' => 'application/json',
+                    'Content-Type'   => 'application/json',
+                    'x-goog-api-key' => $apiKey,
                 ])
                 ->post($url, $payload);
 
@@ -74,26 +75,27 @@ class GeminiService
             // En cas d'erreur API (quota, clé invalide, etc.)
             $errorData = $response->json();
             $errorMessage = $errorData['error']['message'] ?? $response->body();
-            Log::warning("Gemini API Error ({$response->status()}): " . $errorMessage);
+            Log::error("Gemini API Error ({$response->status()}): " . $errorMessage);
 
-            // Secours gracieux pour ne pas bloquer l'utilisateur
+            // Secours gracieux sans exposer le message technique de l'API externe
             return [
                 'status' => 'success',
                 'reply' => $this->generateFallbackResponse($user, $message, $context),
-                'model' => 'fallback-assisted',
+                'model' => 'local-smart-assistant',
                 'is_fallback' => true,
-                'api_warning' => "API Gemini temporairement indisponible ({$errorMessage}). Réponse fournie par le moteur pédagogique local.",
+                'notice' => "Le service d'assistance externe est momentanément indisponible. Réponse générée par le tuteur local Study Center.",
             ];
 
         } catch (\Throwable $e) {
+            // Log de l'exception sans jamais exposer $e->getMessage() ni l'URL au client
             Log::error('Erreur connexion Gemini: ' . $e->getMessage());
 
             return [
-                'status' => 'success',
-                'reply' => $this->generateFallbackResponse($user, $message, $context),
+                'status' => 'error',
+                'reply' => "Le service d'assistance est momentanément indisponible.",
                 'model' => 'fallback-assisted',
                 'is_fallback' => true,
-                'error' => $e->getMessage(),
+                'message' => "Le service d'assistance est momentanément indisponible.",
             ];
         }
     }

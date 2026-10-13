@@ -45,9 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [UserController::class, 'updateProfile']);
     Route::put('/profile/password', [UserController::class, 'updatePassword']);
 
-    // Chatbot Assistant IA Gemini (accessible à tous les utilisateurs connectés)
-    Route::post('/ai/ask', [AiAssistantController::class, 'ask']);
-    Route::post('/ai/chat', [AiAssistantController::class, 'ask']);
+    // Chatbot Assistant IA Gemini (accessible à tous les utilisateurs connectés, limité à 20 requêtes/minute)
+    Route::post('/ai/ask', [AiAssistantController::class, 'ask'])->middleware('throttle:20,1');
+    Route::post('/ai/chat', [AiAssistantController::class, 'ask'])->middleware('throttle:20,1');
 
     Route::get('/stats', [DashboardController::class, 'index']);
 

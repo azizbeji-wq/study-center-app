@@ -237,6 +237,7 @@
             <input
               v-model="inputQuery"
               type="text"
+              maxlength="1000"
               placeholder="Posez une question en Français ou en Dérja (ex: Kifech na3mel appel ?)..."
               class="flex-1 text-xs px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium"
               :disabled="isTyping"
@@ -501,7 +502,7 @@ async function sendMessage() {
   try {
     const res = await api.post('/api/ai/ask', {
       message: query,
-      history: messages.value.slice(0, -1).map(m => ({
+      history: messages.value.slice(0, -1).slice(-10).map(m => ({
         sender: m.sender,
         text: m.text,
       })),
