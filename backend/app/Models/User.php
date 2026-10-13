@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -56,6 +57,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Enseignant associé à ce compte utilisateur
+     */
+    public function teacher(): HasOne
+    {
+        return $this->hasOne(Teacher::class);
+    }
+
+    /**
      * Clés de toutes les permissions disponibles dans le système
      */
     public static function allPermissionKeys(): array
@@ -71,6 +80,7 @@ class User extends Authenticatable
             'schoolcalendar',
             'reports',
             'can_delete',
+            'teacher_portal',
         ];
     }
 
@@ -92,12 +102,28 @@ class User extends Authenticatable
     }
 
     /**
+     * Permissions standard par défaut pour les enseignants
+     */
+    public static function defaultTeacherPermissions(): array
+    {
+        return [
+            'teacher_portal',
+            'schedule',
+            'attendance',
+        ];
+    }
+
+    /**
      * Obtenir la liste effective des permissions
      */
     public function getEffectivePermissions(): array
     {
         if ($this->role === 'director') {
             return self::allPermissionKeys();
+        }
+
+        if ($this->role === 'teacher') {
+            return is_null($this->permissions) ? self::defaultTeacherPermissions() : (array) $this->permissions;
         }
 
         if (is_null($this->permissions)) {

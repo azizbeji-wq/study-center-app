@@ -110,7 +110,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'login', role: 'director' | 'secretary', name: string, permissions?: string[]): void
+  (e: 'login', role: 'director' | 'secretary' | 'teacher', name: string, permissions?: string[]): void
 }>();
 
 const email = ref('');

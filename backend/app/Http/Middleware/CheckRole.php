@@ -28,6 +28,9 @@ class CheckRole
             'directeur' => ['director', 'directeur', 'admin'],
             'secretary' => ['secretary', 'secretaire'],
             'secretaire' => ['secretary', 'secretaire'],
+            'teacher' => ['teacher', 'enseignant', 'professeur', 'prof'],
+            'enseignant' => ['teacher', 'enseignant', 'professeur', 'prof'],
+            'professeur' => ['teacher', 'enseignant', 'professeur', 'prof'],
         ];
 
         $matched = false;

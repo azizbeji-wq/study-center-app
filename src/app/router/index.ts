@@ -6,6 +6,7 @@ import StudentsManagement from '../components/StudentsManagement.vue';
 import TeachersManagement from '../components/TeachersManagement.vue';
 import PaymentsManagement from '../components/PaymentsManagement.vue';
 import AttendanceManagement from '../components/AttendanceManagement.vue';
+import TeacherDashboard from '../components/TeacherDashboard.vue';
 
 const routes = [
   { path: '/', redirect: '/dashboard' },
@@ -15,6 +16,7 @@ const routes = [
   { path: '/teachers', name: 'Teachers', component: TeachersManagement, meta: { requiresAuth: true } },
   { path: '/payments', name: 'Payments', component: PaymentsManagement, meta: { requiresAuth: true } },
   { path: '/attendance', name: 'Attendance', component: AttendanceManagement, meta: { requiresAuth: true } },
+  { path: '/teacher', name: 'Teacher', component: TeacherDashboard, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({

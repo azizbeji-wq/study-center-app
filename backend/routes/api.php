@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ScheduleController;
 use App\Http\Controllers\Api\SchoolController;
 use App\Http\Controllers\Api\SchoolCalendarController;
 use App\Http\Controllers\Api\SubjectController; // Phase 1A
+use App\Http\Controllers\Api\TeacherPortalController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -132,5 +133,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/users/{id}', [UserController::class, 'update']);
         Route::post('/users/{id}/reset-password', [UserController::class, 'resetPassword']);
         Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    });
+
+    /*
+    |----------------------------------------------------------------------
+    | 4. PORTAIL ENSEIGNANT (Rôle 'teacher' ou 'director')
+    |----------------------------------------------------------------------
+    */
+    Route::middleware('role:teacher,director')->prefix('teacher')->group(function () {
+        Route::get('/profile', [TeacherPortalController::class, 'profile']);
+        Route::get('/schedule', [TeacherPortalController::class, 'schedule']);
+        Route::get('/groups', [TeacherPortalController::class, 'groups']);
+        Route::get('/groups/{group}/students', [TeacherPortalController::class, 'groupStudents']);
+        Route::post('/attendance/batch', [TeacherPortalController::class, 'batchAttendance']);
+        Route::get('/attendances', [TeacherPortalController::class, 'attendances']);
     });
 });

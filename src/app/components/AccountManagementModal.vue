@@ -296,7 +296,7 @@
                     <div class="flex items-center gap-2.5">
                       <div
                         class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs"
-                        :class="user.role === 'director' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'"
+                        :class="user.role === 'director' ? 'bg-indigo-100 text-indigo-800' : (user.role === 'teacher' ? 'bg-violet-100 text-violet-800' : 'bg-emerald-100 text-emerald-800')"
                       >
                         {{ user.name.charAt(0).toUpperCase() }}
                       </div>
@@ -315,10 +315,10 @@
                   <td class="py-3 px-4">
                     <span
                       class="text-xs px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1"
-                      :class="user.role === 'director' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'"
+                      :class="user.role === 'director' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : (user.role === 'teacher' ? 'bg-violet-50 text-violet-700 border border-violet-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200')"
                     >
                       <UserCheck class="w-3 h-3" />
-                      {{ user.role === 'director' ? 'Directeur' : 'Personnel' }}
+                      {{ user.role === 'director' ? 'Directeur' : (user.role === 'teacher' ? 'Enseignant' : 'Personnel') }}
                     </span>
                     <div class="mt-1">
                       <span
@@ -473,6 +473,7 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs bg-white"
             >
               <option value="secretary">Personnel (Autorisations modulables personnalisées)</option>
+              <option value="teacher">Enseignant (Emploi du temps, présences, portail prof)</option>
               <option value="director">Directeur (Accès complet + comptabilité générale)</option>
             </select>
           </div>
@@ -720,7 +721,7 @@ import { PERMISSION_CATEGORIES, PRESET_PROFILES } from '../utils/permissions';
 
 const props = defineProps<{
   isOpen: boolean;
-  currentRole: 'director' | 'secretary';
+  currentRole: 'director' | 'secretary' | 'teacher';
   currentUserName: string;
 }>();
 

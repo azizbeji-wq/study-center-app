@@ -138,6 +138,10 @@ export const PRESET_PROFILES = [
 export function hasUserPermission(user: any, permissionKey: string): boolean {
   if (!user) return false;
   if (user.role === 'director') return true;
+  if (user.role === 'teacher') {
+    const teacherPerms = Array.isArray(user.permissions) ? user.permissions : ['teacher_portal', 'schedule', 'attendance'];
+    return teacherPerms.includes(permissionKey);
+  }
   if (Array.isArray(user.permissions)) {
     return user.permissions.includes(permissionKey);
   }

@@ -140,7 +140,7 @@ class UserController extends Controller
             'email' => 'required|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:40',
             'password' => 'required|string|min:6',
-            'role' => 'required|in:secretary,director',
+            'role' => 'required|in:secretary,director,teacher',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
         ], [
@@ -149,12 +149,14 @@ class UserController extends Controller
             'email.unique' => 'Cette adresse email est déjà enregistrée.',
             'password.required' => 'Le mot de passe initial est obligatoire.',
             'password.min' => 'Le mot de passe doit contenir au moins 6 caractères.',
-            'role.in' => 'Le rôle doit être soit Personnel, soit Directeur.',
+            'role.in' => 'Le rôle doit être Personnel, Enseignant ou Directeur.',
         ]);
 
-        $permissions = $validated['role'] === 'director'
-            ? null
-            : ($validated['permissions'] ?? User::defaultPersonnelPermissions());
+        $permissions = match ($validated['role']) {
+            'director' => null,
+            'teacher' => ($validated['permissions'] ?? User::defaultTeacherPermissions()),
+            default => ($validated['permissions'] ?? User::defaultPersonnelPermissions()),
+        };
 
         $user = User::create([
             'name' => $validated['name'],
@@ -207,7 +209,7 @@ class UserController extends Controller
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
             'phone' => 'nullable|string|max:40',
-            'role' => 'sometimes|in:secretary,director',
+            'role' => 'sometimes|in:secretary,director,teacher',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
             'is_active' => 'sometimes|boolean',

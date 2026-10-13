@@ -12,17 +12,24 @@ class AuthController extends Controller
     {
         // 1. Support role-based quick login (uniquement en environnement local)
         $role = $request->input('role');
-        if (app()->environment('local') && in_array($role, ['director', 'secretary'], true)) {
-            $email = $role === 'director' ? 'director@studycenter.com' : 'secretary@studycenter.com';
+        if (app()->environment('local') && in_array($role, ['director', 'secretary', 'teacher'], true)) {
+            $email = match ($role) {
+                'director' => 'director@studycenter.com',
+                'teacher' => 'teacher@studycenter.com',
+                default => 'secretary@studycenter.com',
+            };
             if (Auth::attempt(['email' => $email, 'password' => $role . '123'])) {
                 $user = Auth::user();
                 $token = $user->createToken('auth_token', ['*'], now()->addMinutes(120))->plainTextToken;
                 return response()->json([
                     'status' => 'success',
                     'user' => [
+                        'id' => $user->id,
                         'name' => $user->name,
                         'role' => $user->role,
                         'email' => $user->email,
+                        'permissions' => $user->getEffectivePermissions(),
+                        'teacher_id' => $user->teacher?->id,
                     ],
                     'token' => $token,
                     'expires_in' => 7200,
@@ -49,11 +56,17 @@ class AuthController extends Controller
 
                 $token = $user->createToken('auth_token', ['*'], now()->addMinutes(120))->plainTextToken;
 
+                $roleLabel = match ($user->role) {
+                    'director' => 'Directeur',
+                    'teacher' => 'Enseignant',
+                    default => 'Personnel',
+                };
+
                 \App\Models\ActivityLog::record(
                     $user,
                     'account',
                     'login',
-                    "Connexion de {$user->name} (" . ($user->role === 'secretary' ? 'Personnel' : 'Directeur') . ")",
+                    "Connexion de {$user->name} ({$roleLabel})",
                     ['email' => $user->email],
                     $request->ip()
                 );
@@ -61,10 +74,12 @@ class AuthController extends Controller
                 return response()->json([
                     'status' => 'success',
                     'user' => [
+                        'id' => $user->id,
                         'name' => $user->name,
                         'role' => $user->role,
                         'email' => $user->email,
                         'permissions' => $user->getEffectivePermissions(),
+                        'teacher_id' => $user->teacher?->id,
                     ],
                     'token' => $token,
                     'expires_in' => 7200,

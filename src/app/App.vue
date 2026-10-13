@@ -17,6 +17,11 @@
         :permissions="user.permissions"
         @logout="handleLogout"
       />
+      <TeacherDashboard
+        v-else-if="user.role === 'teacher'"
+        :user-name="user.name"
+        @logout="handleLogout"
+      />
     </template>
   </div>
 </template>
@@ -26,6 +31,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import LoginPage from './components/LoginPage.vue';
 import DirectorDashboard from './components/DirectorDashboard.vue';
 import SecretaryDashboard from './components/SecretaryDashboard.vue';
+import TeacherDashboard from './components/TeacherDashboard.vue';
 import api from './utils/api';
 import {
   checkSessionValidity,
@@ -36,7 +42,7 @@ import {
 } from './utils/session';
 
 interface User {
-  role: 'director' | 'secretary';
+  role: 'director' | 'secretary' | 'teacher';
   name: string;
   permissions?: string[];
 }
@@ -84,7 +90,7 @@ onUnmounted(() => {
   }
 });
 
-const handleLogin = (role: 'director' | 'secretary', name: string, permissions?: string[]) => {
+const handleLogin = (role: 'director' | 'secretary' | 'teacher', name: string, permissions?: string[]) => {
   user.value = { role, name, permissions };
   sessionNotice.value = '';
 
