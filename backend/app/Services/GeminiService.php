@@ -14,7 +14,7 @@ class GeminiService
     public function chat(User $user, string $message, array $history = [], array $context = []): array
     {
         $apiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
-        $model = config('services.gemini.model', 'gemini-1.5-flash');
+        $model = config('services.gemini.model', 'gemini-2.5-flash');
         $baseUrl = config('services.gemini.base_url', 'https://generativelanguage.googleapis.com/v1beta');
 
         $systemPrompt = $this->buildSystemInstruction($user, $context);
@@ -75,7 +75,7 @@ class GeminiService
             // En cas d'erreur API (quota, clé invalide, etc.)
             $errorData = $response->json();
             $errorMessage = $errorData['error']['message'] ?? $response->body();
-            Log::error("Gemini API Error ({$response->status()}): " . $errorMessage);
+            Log::error("Gemini API Error (HTTP {$response->status()}, Model {$model}): " . $errorMessage);
 
             // Secours gracieux sans exposer le message technique de l'API externe
             return [
@@ -83,12 +83,12 @@ class GeminiService
                 'reply' => $this->generateFallbackResponse($user, $message, $context),
                 'model' => 'local-smart-assistant',
                 'is_fallback' => true,
-                'notice' => "Le service d'assistance externe est momentanément indisponible. Réponse générée par le tuteur local Study Center.",
+                'notice' => "Le service d'assistance externe est momentanément indisponible (HTTP {$response->status()}). Réponse générée par le tuteur local Study Center.",
             ];
 
         } catch (\Throwable $e) {
             // Log de l'exception sans jamais exposer $e->getMessage() ni l'URL au client
-            Log::error('Erreur connexion Gemini: ' . $e->getMessage());
+            Log::error("Erreur connexion Gemini (Model {$model}): " . $e->getMessage());
 
             return [
                 'status' => 'error',
@@ -96,6 +96,7 @@ class GeminiService
                 'model' => 'fallback-assisted',
                 'is_fallback' => true,
                 'message' => "Le service d'assistance est momentanément indisponible.",
+                'notice' => "Erreur de connexion au service Gemini.",
             ];
         }
     }
@@ -139,6 +140,7 @@ Tu es le bras droit analytique et conseiller du DIRECTEUR de Study Center.
      - Formule C (`percentage`) : Pourcentage conventionné (ex: 70% prof / 30% centre).
      - RÈGLE STRICTE NON-NÉGOCIABLE : L'administration absorbe 100% des remises accordées aux élèves. Le salaire prof est obligatoirement calculé sur le prix plein avant remise.
   3. **Supervision Opérationnelle** : Analyse des effectifs, détection des retards de paiement, optimisation des plannings de salles et gestion des comptes utilisateurs/permissions.
+  4. **Gestion des Élèves** : Le directeur a accès à l'onglet « Élèves » pour inscrire un nouvel élève, consulter et modifier les fiches élèves, et gérer leurs affectations aux groupes.
 DIR,
             'teacher' => <<<TEA
 ### POSTURE DU MODÈLE : COPILOTE PÉDAGOGIQUE EXPERT DU SYSTÈME ÉDUCATIF TUNISIEN
@@ -373,6 +375,34 @@ PROMPT;
                 "Restant à votre entière écoute pour toute question.\n" .
                 "Bien cordialement,\n" .
                 "L'Enseignant de {$subject} — Centre d'Études »";
+        }
+
+        // 8. Règle « élève » / Inscription
+        if (str_contains($lower, 'élève') || str_contains($lower, 'eleve') || str_contains($lower, 'inscri') || str_contains($lower, 'tilmidh')) {
+            if ($isDerja) {
+                return "👨‍🎓 **Kifech tzid / tqayed tlemidha (Élève) fel application ?**\n\n" .
+                    "1. Emchi l'onglet **« Élèves »** fel menu à gauche.\n" .
+                    "2. Encliqui 3la el bouton **« Ajouter un élève »** (el fou9 3al imin) bech te7el el modale **« Inscrire un nouvel élève »**.\n" .
+                    "3. 3ammer el informations mte3ou :\n" .
+                    "   • **Nom et prénom** de l'élève.\n" .
+                    "   • **Niveau scolaire** (Programme tunisien : Primaire, Collège, Lycée walla Bac).\n" .
+                    "   • **Matières** suivies wel prof mte3 kol matière.\n" .
+                    "   • **Coordonnées des parents** (Numéro de téléphone pour le suivi et les reçus).\n" .
+                    "4. Affecter l'élève à un groupe correspondant.\n" .
+                    "5. Clic sur **« Enregistrer »** pour valider l'inscription.";
+            }
+
+            return "👨‍🎓 **Comment ajouter / inscrire un élève sur Study Center ?**\n\n" .
+                "Pour inscrire un nouvel élève, suivez ces étapes simples :\n\n" .
+                "1. Rendez-vous dans l'onglet **« Élèves »** dans le menu latéral gauche.\n" .
+                "2. Cliquez sur le bouton **« Ajouter un élève »** en haut à droite pour ouvrir la modale **« Inscrire un nouvel élève »**.\n" .
+                "3. Renseignez les informations demandées :\n" .
+                "   • **Nom** : Nom complet de l'élève.\n" .
+                "   • **Niveau** : Niveau scolaire officiel tunisien (Primaire, Collège, Lycée ou Baccalauréat avec la section).\n" .
+                "   • **Matières** : Matières suivies et enseignants assignés (ou garderie parascolaire).\n" .
+                "   • **Coordonnées des parents** : Numéro de téléphone des parents/tuteur (essentiel pour le suivi, les reçus et les relances).\n" .
+                "4. Affectez l'élève à son groupe d'étude si nécessaire.\n" .
+                "5. Cliquez sur le bouton **« Enregistrer »** pour finaliser l'inscription.";
         }
 
         // Réponse générique d'accueil

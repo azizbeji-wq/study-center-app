@@ -24,7 +24,7 @@ class GeminiServiceTest extends TestCase
             'role' => 'teacher',
         ]);
         Config::set('services.gemini.api_key', 'test-secret-key-12345');
-        Config::set('services.gemini.model', 'gemini-1.5-flash');
+        Config::set('services.gemini.model', 'gemini-2.5-flash');
         Config::set('services.gemini.base_url', 'https://generativelanguage.googleapis.com/v1beta');
     }
 
@@ -92,5 +92,26 @@ class GeminiServiceTest extends TestCase
         $this->assertStringNotContainsString('supersecret', $jsonString);
         $this->assertStringNotContainsString('internal.database.local', $jsonString);
         $this->assertStringNotContainsString('generativelanguage.googleapis.com', $jsonString);
+    }
+
+    /**
+     * Test que le tuteur local répond avec la procédure exacte pour "ajouter un élève".
+     */
+    public function test_fallback_answers_student_question_in_french_and_derja(): void
+    {
+        Config::set('services.gemini.api_key', '');
+
+        // 1. En français
+        $resFr = $this->service->chat($this->user, 'ajouter un élève');
+        $this->assertEquals('success', $resFr['status']);
+        $this->assertTrue($resFr['is_fallback']);
+        $this->assertStringContainsString('Ajouter un élève', $resFr['reply']);
+        $this->assertStringContainsString('Inscrire un nouvel élève', $resFr['reply']);
+
+        // 2. En derja tunisienne
+        $resTn = $this->service->chat($this->user, 'kifech nzid tilmidh ?');
+        $this->assertEquals('success', $resTn['status']);
+        $this->assertTrue($resTn['is_fallback']);
+        $this->assertStringContainsString('Ajouter un élève', $resTn['reply']);
     }
 }

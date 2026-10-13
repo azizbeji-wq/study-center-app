@@ -103,7 +103,7 @@
                       isFallbackActive ? 'bg-amber-400' : 'bg-emerald-400 animate-pulse'
                     ]"
                   ></span>
-                  <span>{{ isFallbackActive ? 'Tuteur local' : 'Gemini 1.5 Flash' }}</span>
+                  <span>{{ isFallbackActive ? 'Tuteur local' : activeModel }}</span>
                   <span class="text-violet-300">• FR & Dérja</span>
                 </div>
               </div>
@@ -236,8 +236,8 @@
                   <Copy v-else class="w-3.5 h-3.5" />
                 </button>
 
-                <!-- Contenu avec retour à la ligne préservé -->
-                <div class="whitespace-pre-wrap font-normal select-text">{{ msg.text }}</div>
+                <!-- Contenu avec retour à la ligne préservé et rendu Markdown sécurisé -->
+                <div class="whitespace-pre-wrap font-normal select-text" v-html="formatMessage(msg.text)"></div>
               </div>
 
               <!-- Avatar Utilisateur -->
@@ -365,7 +365,7 @@ const isTyping = ref(false);
 const chatContainer = ref<HTMLElement | null>(null);
 const copiedIndex = ref<number | null>(null);
 
-const activeModel = ref('Gemini 1.5 Flash');
+const activeModel = ref('Gemini 2.5 Flash');
 const isFallbackActive = ref(false);
 
 interface ChatMessage {
@@ -722,7 +722,7 @@ async function sendMessage() {
     });
 
     const reply = res.data?.reply || "Une réponse n'a pas pu être générée.";
-    activeModel.value = res.data?.model || 'Gemini 1.5 Flash';
+    activeModel.value = res.data?.model || 'Gemini 2.5 Flash';
     isFallbackActive.value = !!res.data?.is_fallback;
     messages.value.push({ sender: 'ai', text: reply });
   } catch (err: any) {
@@ -733,6 +733,23 @@ async function sendMessage() {
     isTyping.value = false;
     scrollToBottom();
   }
+}
+
+/**
+ * Formate le texte du message avec échappement XSS et support basique du Markdown
+ * - Échappe d'abord &, < et > (protection XSS)
+ * - Convertit **texte** en <strong>texte</strong>
+ * - Convertit *texte* en <em>texte</em>
+ */
+function formatMessage(text: string): string {
+  if (!text) return '';
+  let safe = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  safe = safe.replace(/\*([^\*]+?)\*/g, '<em>$1</em>');
+  return safe;
 }
 
 function copyText(text: string, index: number) {
