@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ActivityLog;
 use App\Models\Student;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -16,7 +17,7 @@ class GeminiService
     public function chat(User $user, string $message, array $history = [], array $context = []): array
     {
         $apiKey = config('services.gemini.api_key') ?: env('GEMINI_API_KEY');
-        $model = config('services.gemini.model', 'gemini-2.5-flash');
+        $model = config('services.gemini.model', 'gemini-3.5-flash');
         $baseUrl = config('services.gemini.base_url', 'https://generativelanguage.googleapis.com/v1beta');
 
         $systemPrompt = $this->buildSystemInstruction($user, $context);
@@ -192,6 +193,9 @@ class GeminiService
             // En cas d'erreur API (quota, clé invalide, etc.)
             $errorData = $response->json();
             $errorMessage = $errorData['error']['message'] ?? $response->body();
+            if (!empty($apiKey)) {
+                $errorMessage = str_replace($apiKey, '***REDACTED***', (string) $errorMessage);
+            }
             Log::error("Gemini API Error (HTTP {$response->status()}, Model {$model}): " . $errorMessage);
 
             // Secours gracieux sans exposer le message technique de l'API externe
@@ -204,8 +208,12 @@ class GeminiService
             ];
 
         } catch (\Throwable $e) {
-            // Log de l'exception sans jamais exposer $e->getMessage() ni l'URL au client
-            Log::error("Erreur connexion Gemini (Model {$model}): " . $e->getMessage());
+            // Log de l'exception sans jamais exposer $e->getMessage() ni l'URL au client, et sans fuite de clé API
+            $safeExceptionMessage = $e->getMessage();
+            if (!empty($apiKey)) {
+                $safeExceptionMessage = str_replace($apiKey, '***REDACTED***', $safeExceptionMessage);
+            }
+            Log::error("Erreur connexion Gemini (Model {$model}): " . $safeExceptionMessage);
 
             return [
                 'status' => 'error',
@@ -280,7 +288,7 @@ Tu es la conseillère et assistante administrative de la SECRÉTAIRE / DU PERSON
 SEC
         };
 
-        return <<<PROMPT
+        $prompt = <<<PROMPT
 Tu es le copilote et assistant IA officiel de l'application « Study Center App » (Centre d'Études de soutien scolaire et parascolaire en Tunisie).
 
 ### IDENTITÉ DE L'UTILISATEUR CONNECTÉ :
@@ -297,6 +305,7 @@ Tu es le copilote et assistant IA officiel de l'application « Study Center App 
 - Tu peux mixer le français et la derja comme c'est l'usage courant en Tunisie chez les professionnels de l'éducation.
 
 ### GARDE-FOUS STRICTS (GUARDRAILS) - NON NÉGOCIABLE :
+- Pour les tarifs, horaires et règles du centre, utilise uniquement la base de connaissances. Si une information est absente ou marquée "À COMPLÉTER", dis que tu ne la connais pas et renvoie vers le directeur. N'invente jamais.
 - Tu dois STRICTEMENT REFUSER tout sujet qui sort du cadre de l'application Study Center, de l'éducation, des cours, des devoirs, des plannings, des présences, des finances de cours ou de la pédagogie scolaire tunisienne.
 - Sujets INTERDITS : politique générale, polémiques, jeux vidéo, célébrités, crypto-monnaies, piratage, recettes de cuisine sans rapport avec l'école, conseils médicaux hors premiers soins scolaires, astrologie, etc.
 - Réponse en cas de question hors sujet :
@@ -324,6 +333,13 @@ Tu disposes d'un outil `ajouter_eleve` pour inscrire un nouvel élève directeme
 
 Sois toujours structuré, courtois, encourageant et concis. Utilise des puces et des mises en gras pour aérer tes réponses.
 PROMPT;
+
+        $knowledge = $this->loadKnowledgeBase();
+        if (trim($knowledge) !== '') {
+            $prompt .= "\n\n=== BASE DE CONNAISSANCES DU CENTRE ===\n" . trim($knowledge);
+        }
+
+        return $prompt;
     }
 
     /**
@@ -645,6 +661,12 @@ PROMPT;
                 "5. Cliquez sur le bouton **« Enregistrer »** pour finaliser l'inscription.";
         }
 
+        // Recherche dans la FAQ de la base de connaissances (fallback sans clé API)
+        $faqReply = $this->findFaqResponse($message);
+        if ($faqReply !== null) {
+            return $faqReply;
+        }
+
         // Réponse générique d'accueil
         if ($isDerja) {
             return "3asslema cher(e) {$user->name} ! Ena l'assistant IA mte3 Study Center.\n\n" .
@@ -662,5 +684,152 @@ PROMPT;
             "• **Gérer votre classe** : Faire l'appel, suivre l'assiduité, rédiger un mot aux parents.\n" .
             "• **Comprendre l'application** : Emploi du temps, répartition des salles, formules de rémunération.\n\n" .
             "Que souhaitez-vous explorer ou préparer ensemble ?";
+    }
+
+    /**
+     * Charge le contenu de la base de connaissances Markdown du centre avec mise en cache (10 min).
+     */
+    private function loadKnowledgeBase(): string
+    {
+        $path = resource_path('knowledge/knowledge.md');
+        if (!file_exists($path)) {
+            return '';
+        }
+
+        $content = Cache::remember('ai_knowledge_base', 600, function () use ($path) {
+            return file_exists($path) ? (file_get_contents($path) ?: '') : '';
+        });
+
+        return mb_substr($content, 0, 30000);
+    }
+
+    /**
+     * Recherche une réponse correspondante dans la section « Questions fréquentes » de knowledge.md.
+     */
+    private function findFaqResponse(string $userMessage): ?string
+    {
+        $knowledge = $this->loadKnowledgeBase();
+        if (empty($knowledge)) {
+            return null;
+        }
+
+        // 1. Extraction de la section "Questions fréquentes"
+        if (!preg_match('/(?:^|\n)##?\s*(?:\d+[\.\)]\s*)?Questions fréquentes[^\n]*\n(.*?)(?=(?:\n##|\n---|\z))/is', $knowledge, $matches)) {
+            return null;
+        }
+
+        $faqSection = $matches[1];
+
+        // 2. Extraction des paires Q / R
+        if (!preg_match_all('/(?:^|\n)\s*[-*]?\s*\*{0,2}Q\s*[:\?]\*{0,2}\s*(.*?)\*{0,2}\s*\n\s*[-*]?\s*\*{0,2}R\s*[:\-]\*{0,2}\s*(.*?)(?=(?:\n\s*[-*]?\s*\*{0,2}Q\s*[:\?]|\z))/is', $faqSection, $pairs, PREG_SET_ORDER)) {
+            return null;
+        }
+
+        $userKeywords = $this->extractSignificantKeywords($userMessage);
+        if (count($userKeywords) < 2) {
+            return null;
+        }
+
+        $bestMatch = null;
+        $maxCommonCount = 0;
+
+        foreach ($pairs as $pair) {
+            $question = trim($pair[1], "* \t\n\r");
+            $answer = trim($pair[2], "* \t\n\r");
+
+            // Règle stricte : les réponses contenant « À COMPLÉTER » ne doivent jamais être renvoyées
+            if ($this->containsACompleter($answer)) {
+                continue;
+            }
+
+            $questionKeywords = $this->extractSignificantKeywords($question);
+            $commonKeywords = array_intersect($userKeywords, $questionKeywords);
+            $commonCount = count($commonKeywords);
+
+            // Au moins 2 mots-clés significatifs en commun
+            if ($commonCount >= 2 && $commonCount > $maxCommonCount) {
+                $maxCommonCount = $commonCount;
+                $bestMatch = $answer;
+            }
+        }
+
+        return $bestMatch;
+    }
+
+    /**
+     * Vérifie si un texte contient la mention « À COMPLÉTER » (insensible à la casse et aux accents).
+     */
+    private function containsACompleter(string $text): bool
+    {
+        $normalized = $this->removeAccents(mb_strtolower($text, 'UTF-8'));
+        return str_contains($normalized, 'a completer');
+    }
+
+    /**
+     * Supprime les accents d'une chaîne UTF-8.
+     */
+    private function removeAccents(string $text): string
+    {
+        if (function_exists('transliterator_transliterate')) {
+            $trans = transliterator_transliterate('Any-Latin; Latin-ASCII', $text);
+            if ($trans !== false) {
+                return $trans;
+            }
+        }
+
+        $accents = [
+            'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a', 'å' => 'a',
+            'ç' => 'c',
+            'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i',
+            'ñ' => 'n',
+            'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
+            'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ý' => 'y', 'ÿ' => 'y',
+            'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ä' => 'A', 'Å' => 'A',
+            'Ç' => 'C',
+            'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E',
+            'Ì' => 'I', 'Í' => 'I', 'Î' => 'I', 'Ï' => 'I',
+            'Ñ' => 'N',
+            'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O',
+            'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ü' => 'U',
+            'Ý' => 'Y',
+        ];
+
+        return strtr($text, $accents);
+    }
+
+    /**
+     * Extrait les mots-clés significatifs (minuscules, sans accents, sans mots vides, longueur >= 3).
+     */
+    private function extractSignificantKeywords(string $text): array
+    {
+        $clean = $this->removeAccents(mb_strtolower($text, 'UTF-8'));
+        $clean = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $clean);
+        $tokens = preg_split('/\s+/u', trim($clean), -1, PREG_SPLIT_NO_EMPTY);
+
+        $stopWords = [
+            // Articles & Déterminants
+            'les', 'une', 'des', 'cet', 'cette', 'ces', 'mes', 'tes', 'ses', 'nos', 'vos', 'leurs',
+            // Pronoms
+            'ils', 'elles', 'lui', 'leur', 'qui', 'que', 'quoi', 'dont',
+            // Prépositions & Conjonctions
+            'aux', 'pour', 'par', 'sur', 'sous', 'dans', 'avec', 'sans', 'chez', 'mais', 'donc',
+            // Verbes auxiliaires
+            'est', 'sont', 'suis', 'sommes', 'etes', 'etre', 'avoir', 'avons', 'avez', 'ont',
+            // Adverbes & Négations
+            'pas', 'plus', 'moins', 'tres', 'bien',
+            // Marqueurs FAQ
+            'faq',
+        ];
+
+        $keywords = [];
+        foreach ($tokens as $token) {
+            if (mb_strlen($token) >= 3 && !in_array($token, $stopWords, true)) {
+                $keywords[] = $token;
+            }
+        }
+
+        return array_values(array_unique($keywords));
     }
 }

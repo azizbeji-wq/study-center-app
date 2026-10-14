@@ -365,7 +365,7 @@ const isTyping = ref(false);
 const chatContainer = ref<HTMLElement | null>(null);
 const copiedIndex = ref<number | null>(null);
 
-const activeModel = ref('Gemini 2.5 Flash');
+const activeModel = ref('Gemini 3.5 Flash');
 const isFallbackActive = ref(false);
 
 interface ChatMessage {
@@ -722,7 +722,7 @@ async function sendMessage() {
     });
 
     const reply = res.data?.reply || "Une réponse n'a pas pu être générée.";
-    activeModel.value = res.data?.model || 'Gemini 2.5 Flash';
+    activeModel.value = res.data?.model || 'Gemini 3.5 Flash';
     isFallbackActive.value = !!res.data?.is_fallback;
     messages.value.push({ sender: 'ai', text: reply });
   } catch (err: any) {

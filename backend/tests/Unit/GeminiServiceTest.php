@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\User;
 use App\Services\GeminiService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +22,7 @@ class GeminiServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Cache::flush();
         $this->service = new GeminiService();
         $this->user = new User([
             'name' => 'Professeur Test',
@@ -28,7 +30,7 @@ class GeminiServiceTest extends TestCase
             'role' => 'teacher',
         ]);
         Config::set('services.gemini.api_key', 'test-secret-key-12345');
-        Config::set('services.gemini.model', 'gemini-2.5-flash');
+        Config::set('services.gemini.model', 'gemini-3.5-flash');
         Config::set('services.gemini.base_url', 'https://generativelanguage.googleapis.com/v1beta');
     }
 
@@ -290,5 +292,220 @@ class GeminiServiceTest extends TestCase
             }
             return false;
         });
+    }
+
+    /**
+     * Test 1 : avec un fichier de connaissances de test, le prompt système envoyé à Gemini
+     * (Http::fake) contient le bloc « BASE DE CONNAISSANCES ».
+     */
+    public function test_system_prompt_contains_knowledge_base_block(): void
+    {
+        Cache::flush();
+        $knowledgeDir = resource_path('knowledge');
+        $knowledgePath = $knowledgeDir . '/knowledge.md';
+
+        if (!is_dir($knowledgeDir)) {
+            mkdir($knowledgeDir, 0755, true);
+        }
+        $originalContent = file_exists($knowledgePath) ? file_get_contents($knowledgePath) : null;
+        file_put_contents($knowledgePath, "# Base de test\nInformations spécifiques du centre de test.");
+
+        try {
+            Http::fake([
+                'https://generativelanguage.googleapis.com/*' => Http::response([
+                    'candidates' => [
+                        [
+                            'content' => [
+                                'parts' => [
+                                    ['text' => 'Bonjour !']
+                                ]
+                            ]
+                        ]
+                    ]
+                ], 200)
+            ]);
+
+            $response = $this->service->chat($this->user, 'Bonjour');
+            $this->assertEquals('success', $response['status']);
+
+            Http::assertSent(function ($request) {
+                $data = $request->data();
+                $systemText = $data['systemInstruction']['parts'][0]['text'] ?? '';
+                return str_contains($systemText, 'BASE DE CONNAISSANCES') &&
+                       str_contains($systemText, 'Informations spécifiques du centre de test.');
+            });
+        } finally {
+            Cache::flush();
+            if ($originalContent !== null) {
+                file_put_contents($knowledgePath, $originalContent);
+            } else {
+                @unlink($knowledgePath);
+            }
+        }
+    }
+
+    /**
+     * Test 2 : si le fichier est absent, le service fonctionne normalement sans erreur.
+     */
+    public function test_service_works_normally_when_knowledge_file_is_absent(): void
+    {
+        Cache::flush();
+        $knowledgePath = resource_path('knowledge/knowledge.md');
+        $originalContent = file_exists($knowledgePath) ? file_get_contents($knowledgePath) : null;
+
+        if (file_exists($knowledgePath)) {
+            unlink($knowledgePath);
+        }
+
+        try {
+            Http::fake([
+                'https://generativelanguage.googleapis.com/*' => Http::response([
+                    'candidates' => [
+                        [
+                            'content' => [
+                                'parts' => [
+                                    ['text' => 'Réponse normale sans base de connaissances.']
+                                ]
+                            ]
+                        ]
+                    ]
+                ], 200)
+            ]);
+
+            $response = $this->service->chat($this->user, 'Bonjour');
+
+            $this->assertEquals('success', $response['status']);
+            $this->assertEquals('Réponse normale sans base de connaissances.', $response['reply']);
+
+            Http::assertSent(function ($request) {
+                $data = $request->data();
+                $systemText = $data['systemInstruction']['parts'][0]['text'] ?? '';
+                return !str_contains($systemText, 'BASE DE CONNAISSANCES');
+            });
+        } finally {
+            Cache::flush();
+            if ($originalContent !== null) {
+                file_put_contents($knowledgePath, $originalContent);
+            }
+        }
+    }
+
+    /**
+     * Test 3 : une réponse de FAQ contenant « À COMPLÉTER » n'est jamais renvoyée par le fallback.
+     */
+    public function test_faq_response_containing_a_completer_is_never_returned(): void
+    {
+        Config::set('services.gemini.api_key', ''); // Active le fallback local
+        Cache::flush();
+
+        $knowledgeDir = resource_path('knowledge');
+        $knowledgePath = $knowledgeDir . '/knowledge.md';
+        $originalContent = file_exists($knowledgePath) ? file_get_contents($knowledgePath) : null;
+
+        if (!is_dir($knowledgeDir)) {
+            mkdir($knowledgeDir, 0755, true);
+        }
+
+        $testFaq = <<<MD
+# Base de connaissances
+## 9. Questions fréquentes
+**Q : Quel est le tarif de la cantine scolaire ?**
+R : Le tarif est À COMPLÉTER.
+
+**Q : Quels sont les horaires du secrétariat le samedi ?**
+R : Le secrétariat est ouvert le samedi de 8h à 13h.
+MD;
+
+        file_put_contents($knowledgePath, $testFaq);
+
+        try {
+            // 1. Question dont la réponse contient « À COMPLÉTER » -> ne doit JAMAIS renvoyer la réponse
+            $response = $this->service->chat($this->user, 'Quel est le tarif de la cantine scolaire ?');
+            $this->assertEquals('success', $response['status']);
+            $this->assertTrue($response['is_fallback']);
+            $this->assertStringNotContainsString('À COMPLÉTER', $response['reply']);
+            $this->assertStringNotContainsString('A COMPLETER', $response['reply']);
+            $this->assertStringNotContainsString('Le tarif est À COMPLÉTER', $response['reply']);
+
+            // 2. Question dont la réponse est valide -> doit être retournée
+            $responseValid = $this->service->chat($this->user, 'Quels sont les horaires du secrétariat le samedi ?');
+            $this->assertEquals('success', $responseValid['status']);
+            $this->assertTrue($responseValid['is_fallback']);
+            $this->assertStringContainsString('Le secrétariat est ouvert le samedi de 8h à 13h', $responseValid['reply']);
+        } finally {
+            Cache::flush();
+            if ($originalContent !== null) {
+                file_put_contents($knowledgePath, $originalContent);
+            } else {
+                @unlink($knowledgePath);
+            }
+        }
+    }
+
+    /**
+     * Test 4 : la clé API n'apparaît jamais dans la réponse ni dans les logs.
+     */
+    public function test_api_key_never_appears_in_response_nor_in_logs(): void
+    {
+        $secretKey = 'super-secret-gemini-key-987654';
+        Config::set('services.gemini.api_key', $secretKey);
+
+        $loggedMessages = [];
+        Log::shouldReceive('error')
+            ->andReturnUsing(function ($message) use (&$loggedMessages) {
+                $loggedMessages[] = $message;
+            });
+        Log::shouldReceive('info')->andReturnNull();
+        Log::shouldReceive('warning')->andReturnNull();
+
+        // 1. Erreur 500 API Gemini
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'error' => [
+                    'code' => 500,
+                    'message' => 'Erreur interne API : contact admin with key ' . $secretKey,
+                ]
+            ], 500)
+        ]);
+
+        $responseErr = $this->service->chat($this->user, 'Test erreur 500');
+        $jsonErr = json_encode($responseErr);
+        $this->assertStringNotContainsString($secretKey, $jsonErr);
+
+        // 2. Exception réseau
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => function () use ($secretKey) {
+                throw new \Exception('Erreur réseau avec token ' . $secretKey);
+            }
+        ]);
+
+        $responseEx = $this->service->chat($this->user, 'Test exception');
+        $jsonEx = json_encode($responseEx);
+        $this->assertStringNotContainsString($secretKey, $jsonEx);
+
+        // 3. Réponse succès
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [
+                    [
+                        'content' => [
+                            'parts' => [
+                                ['text' => 'Réponse normale']
+                            ]
+                        ]
+                    ]
+                ]
+            ], 200)
+        ]);
+
+        $responseOk = $this->service->chat($this->user, 'Test succès');
+        $jsonOk = json_encode($responseOk);
+        $this->assertStringNotContainsString($secretKey, $jsonOk);
+
+        // 4. Vérifier que la clé secrète n'apparaît dans aucun log enregistré
+        $this->assertNotEmpty($loggedMessages);
+        foreach ($loggedMessages as $log) {
+            $this->assertStringNotContainsString($secretKey, (string)$log);
+        }
     }
 }
