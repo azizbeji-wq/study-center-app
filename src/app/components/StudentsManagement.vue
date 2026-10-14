@@ -296,14 +296,13 @@
 
             <div>
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                Groupe *
+                Groupe (Optionnel)
               </label>
               <div class="relative">
                 <input
                   v-model="formData.group_name"
                   list="group-suggestions"
-                  required
-                  placeholder="Ex: M1, Sc2..."
+                  placeholder="Ex: SC1... (ou laisser vide)"
                   class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase font-semibold"
                 />
                 <datalist id="group-suggestions">
@@ -386,20 +385,34 @@
             <div class="flex items-center justify-between mb-2">
               <div>
                 <label class="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Enseignants & Matières sélectionnées
+                  Enseignants & Matières (Optionnel)
                 </label>
-                <p class="text-[11px] text-gray-500">Calcul : Nombre de séances × Prix séance fixé par l'administration (somme de toutes les matières)</p>
+                <p class="text-[11px] text-gray-500">Facultatif : le professeur pourra ajouter cet élève directement à son groupe depuis son espace.</p>
               </div>
               <button
                 type="button"
                 @click="addSubjectRow"
-                class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1"
+                class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 cursor-pointer"
               >
                 <Plus class="w-3 h-3" /> Ajouter matière
               </button>
             </div>
 
-            <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+            <!-- État vide : aucune matière pour l'instant -->
+            <div v-if="formData.subjects.length === 0" class="p-3.5 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center space-y-1.5">
+              <p class="text-xs text-gray-600 font-medium">Aucun cours assigné pour le moment (optionnel)</p>
+              <p class="text-[11px] text-gray-400">Le professeur pourra ajouter cet élève à son groupe, ou vous pouvez lui assigner un cours maintenant.</p>
+              <button
+                type="button"
+                @click="addSubjectRow"
+                class="mt-1 inline-flex items-center gap-1 px-3 py-1 bg-white hover:bg-gray-100 text-indigo-600 border border-indigo-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <Plus class="w-3 h-3" />
+                <span>+ Assigner une matière maintenant</span>
+              </button>
+            </div>
+
+            <div v-else class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
               <div v-for="(sub, idx) in formData.subjects" :key="idx" class="p-2.5 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
                 <div class="flex items-center gap-2">
                   <!-- 1. Enseignant -->
@@ -779,7 +792,7 @@ function openAddModal() {
   formData.value = {
     name: '',
     level: TUNISIAN_LEVELS[4].name, // 2ème Sciences
-    group_name: 'Sc1',
+    group_name: '',
     phone: '',
     parent_phone: '',
     status: 'active',
@@ -787,9 +800,7 @@ function openAddModal() {
     remise: 0,
     discount_type: 'fixed',
     base_fee: 0,
-    subjects: [
-      { subject_name: '', teacher_id: undefined, group_name: 'Sc1', sessions_per_month: 4, price_per_session: 0, price_per_month: 0 }
-    ]
+    subjects: []
   };
   showModal.value = true;
 }
@@ -853,7 +864,7 @@ async function saveStudent() {
   const payload = {
     name: formData.value.name,
     level: formData.value.level,
-    group_name: formData.value.group_name,
+    group_name: formData.value.group_name ? formData.value.group_name.trim() : null,
     phone: formData.value.phone,
     parent_phone: formData.value.parent_phone,
     status: formData.value.status,
@@ -861,19 +872,21 @@ async function saveStudent() {
     remise: formData.value.remise,
     discount_type: formData.value.discount_type,
     base_fee: 0,
-    subjects: formData.value.subjects.map(s => {
-      const teacherRate = getTeacherLessonRate(s.teacher_id);
-      const sessionRate = Number(s.price_per_session) || teacherRate;
-      const sessions = Number(s.sessions_per_month) || 4;
-      return {
-        subject: s.subject_name,
-        teacher_id: s.teacher_id,
-        group_name: s.group_name || formData.value.group_name,
-        sessions_per_month: sessions,
-        price_per_session: sessionRate,
-        price_per_month: Math.round(sessionRate * sessions * 100) / 100,
-      };
-    })
+    subjects: formData.value.subjects
+      .filter(s => s.teacher_id && s.subject_name)
+      .map(s => {
+        const teacherRate = getTeacherLessonRate(s.teacher_id);
+        const sessionRate = Number(s.price_per_session) || teacherRate;
+        const sessions = Number(s.sessions_per_month) || 4;
+        return {
+          subject: s.subject_name,
+          teacher_id: s.teacher_id,
+          group_name: s.group_name || formData.value.group_name,
+          sessions_per_month: sessions,
+          price_per_session: sessionRate,
+          price_per_month: Math.round(sessionRate * sessions * 100) / 100,
+        };
+      })
   };
   try {
     if (isEditing.value && editingId.value) {
