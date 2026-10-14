@@ -70,16 +70,33 @@ class StudentController extends Controller
                     $pricePerMonth = (float) ($sub['price_per_month'] ?? 0);
                     if ($pricePerMonth <= 0) $pricePerMonth = $pricePerSession * $sessionsPerMonth;
 
+                    $grpName = $sub['group_name'] ?? $student->group_name;
                     StudentSubjectEnrollment::create([
                         'student_id'        => $student->id,
                         'subject_name'      => $sub['subject'] ?? $sub['subject_name'] ?? 'Matière',
                         'teacher_id'        => $sub['teacher_id'] ?? null,
-                        'group_name'        => $sub['group_name'] ?? $student->group_name,
+                        'group_name'        => $grpName,
                         'sessions_per_month'=> $sessionsPerMonth,
                         'price_per_month'   => $pricePerMonth,
                         'price_per_session' => $pricePerSession,
                     ]);
+
+                    if (!empty($grpName)) {
+                        $grp = \App\Models\Group::firstOrCreate(
+                            ['name' => $grpName],
+                            ['level' => $student->level, 'teacher_id' => $sub['teacher_id'] ?? null, 'max_capacity' => 25]
+                        );
+                        $grp->students()->syncWithoutDetaching([$student->id]);
+                    }
                 }
+            }
+
+            if (!empty($student->group_name)) {
+                $mainGrp = \App\Models\Group::firstOrCreate(
+                    ['name' => $student->group_name],
+                    ['level' => $student->level, 'max_capacity' => 25]
+                );
+                $mainGrp->students()->syncWithoutDetaching([$student->id]);
             }
 
             return $student;
@@ -155,16 +172,33 @@ class StudentController extends Controller
                     $pricePerMonth = (float) ($sub['price_per_month'] ?? 0);
                     if ($pricePerMonth <= 0) $pricePerMonth = $pricePerSession * $sessionsPerMonth;
 
+                    $grpName = $sub['group_name'] ?? $student->group_name;
                     StudentSubjectEnrollment::create([
                         'student_id'        => $student->id,
                         'subject_name'      => $sub['subject'] ?? $sub['subject_name'] ?? 'Matière',
                         'teacher_id'        => $sub['teacher_id'] ?? null,
-                        'group_name'        => $sub['group_name'] ?? $student->group_name,
+                        'group_name'        => $grpName,
                         'sessions_per_month'=> $sessionsPerMonth,
                         'price_per_month'   => $pricePerMonth,
                         'price_per_session' => $pricePerSession,
                     ]);
+
+                    if (!empty($grpName)) {
+                        $grp = \App\Models\Group::firstOrCreate(
+                            ['name' => $grpName],
+                            ['level' => $student->level, 'teacher_id' => $sub['teacher_id'] ?? null, 'max_capacity' => 25]
+                        );
+                        $grp->students()->syncWithoutDetaching([$student->id]);
+                    }
                 }
+            }
+
+            if (!empty($student->group_name)) {
+                $mainGrp = \App\Models\Group::firstOrCreate(
+                    ['name' => $student->group_name],
+                    ['level' => $student->level, 'max_capacity' => 25]
+                );
+                $mainGrp->students()->syncWithoutDetaching([$student->id]);
             }
         });
 

@@ -230,7 +230,7 @@ class TeacherPortalController extends Controller
         $directGroups = \App\Models\Group::with(['students', 'subject'])
             ->where(function ($q) use ($user, $teacher) {
                 if ($user) {
-                    $q->where('teacher_id', $user->id);
+                    $q->where('user_id', $user->id);
                 }
                 if ($teacher) {
                     $q->orWhere('teacher_id', $teacher->id);
@@ -254,7 +254,8 @@ class TeacherPortalController extends Controller
                 $matchedDirectGroup = \App\Models\Group::firstOrCreate(
                     ['name' => $gName],
                     [
-                        'teacher_id' => $user?->id ?? $teacher->id,
+                        'user_id' => $user?->id,
+                        'teacher_id' => $teacher?->id,
                         'level' => 'Secondaire',
                         'max_capacity' => 25,
                     ]

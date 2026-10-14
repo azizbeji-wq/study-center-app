@@ -39,4 +39,12 @@ class Student extends Model
         return $this->belongsToMany(Group::class, 'group_student')
                     ->withTimestamps();
     }
+
+    /**
+     * Paiements associés à cet élève.
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

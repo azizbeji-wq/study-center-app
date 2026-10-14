@@ -57,5 +57,29 @@ class Teacher extends Model
         return $this->belongsToMany(Subject::class, 'teacher_subject')
                     ->withTimestamps();
     }
+
+    /**
+     * Groupes pédagogiques sous la responsabilité de cet enseignant.
+     */
+    public function groups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'teacher_id');
+    }
+
+    /**
+     * Registre de présence des séances tenues par cet enseignant.
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Règlements / paiements associés aux cours de cet enseignant.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
 }
 

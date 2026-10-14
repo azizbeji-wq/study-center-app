@@ -26,7 +26,7 @@ class GroupController extends Controller
             $userId = $request->user()->id;
             $teacherId = $request->user()->teacher?->id;
             $query->where(function ($q) use ($userId, $teacherId) {
-                $q->where('teacher_id', $userId);
+                $q->where('user_id', $userId);
                 if ($teacherId) {
                     $q->orWhere('teacher_id', $teacherId);
                 }
@@ -59,11 +59,21 @@ class GroupController extends Controller
 
         $user = $request->user();
 
-        // Si l'utilisateur connecté est un enseignant ou si aucun teacher_id n'est spécifié,
-        // associer automatiquement le teacher_id (en privilégiant la fiche Teacher liée pour satisfaire les FK)
-        if ($user && ($user->role === 'teacher' || empty($validated['teacher_id']))) {
+        // Enregistrer le créateur
+        $validated['user_id'] = $user?->id;
+
+        // Déterminer le teacher_id réel
+        if (!empty($validated['teacher_id'])) {
+            $teacherExists = \App\Models\Teacher::where('id', $validated['teacher_id'])->exists();
+            if (!$teacherExists) {
+                $linkedTeacher = \App\Models\Teacher::where('user_id', $validated['teacher_id'])->first();
+                $validated['teacher_id'] = $linkedTeacher ? $linkedTeacher->id : $validated['teacher_id'];
+            }
+        } elseif ($user && $user->role === 'teacher') {
             $linkedTeacher = $user->teacher ?? \App\Models\Teacher::where('user_id', $user->id)->orWhere('email', $user->email)->first();
             $validated['teacher_id'] = $linkedTeacher ? $linkedTeacher->id : $user->id;
+        } else {
+            $validated['teacher_id'] = null;
         }
 
         // Associer la matière correspondante
@@ -273,10 +283,8 @@ class GroupController extends Controller
         // 2. Attacher l'élève au groupe (remplit automatiquement la table pivot group_student avec timestamps)
         $group->students()->attach($studentId);
 
-        // 3. Mettre à jour le nom de groupe principal si vide
-        if (empty($student->group_name)) {
-            $student->update(['group_name' => $group->name]);
-        }
+        // 3. Mettre à jour le nom de groupe principal
+        $student->update(['group_name' => $group->name]);
 
         // 4. Journal d'activité (si utilisateur authentifié)
         if ($request->user()) {

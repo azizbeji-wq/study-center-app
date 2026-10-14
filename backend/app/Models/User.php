@@ -65,6 +65,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Groupes créés par cet utilisateur.
+     */
+    public function createdGroups(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Group::class, 'user_id');
+    }
+
+    /**
      * Clés de toutes les permissions disponibles dans le système
      */
     public static function allPermissionKeys(): array

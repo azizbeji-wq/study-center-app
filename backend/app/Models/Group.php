@@ -17,7 +17,8 @@ class Group extends Model
         'level',
         'subject',
         'subject_id',
-        'teacher_id',
+        'teacher_id',   // FK vers teachers.id (enseignant responsable)
+        'user_id',      // FK vers users.id (créateur du groupe)
         'max_capacity',
         'notes',
     ];
@@ -44,7 +45,7 @@ class Group extends Model
     }
 
     /**
-     * Enseignant responsable de ce groupe.
+     * Enseignant responsable de ce groupe (FK teachers.id).
      */
     public function teacher(): BelongsTo
     {
@@ -52,10 +53,11 @@ class Group extends Model
     }
 
     /**
-     * Utilisateur ayant créé ou responsable du groupe.
+     * Utilisateur créateur du groupe (FK users.id).
+     * Séparé de teacher() pour éviter toute ambigüité.
      */
-    public function user(): BelongsTo
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'teacher_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
