@@ -532,7 +532,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Plus, Search, Edit2, Trash2, Eye, BookOpen, Tag, Users, FileText } from 'lucide-vue-next';
 import api from '../utils/api';
 import PaymentExtractModal from './PaymentExtractModal.vue';
@@ -752,7 +752,26 @@ async function loadData() {
 
 onMounted(() => {
   loadData();
+  // Écouter les mises à jour de groupe depuis GroupStudentsModal
+  window.addEventListener('student-group-changed', handleStudentGroupChanged as EventListener);
 });
+
+onUnmounted(() => {
+  window.removeEventListener('student-group-changed', handleStudentGroupChanged as EventListener);
+});
+
+// Mise à jour locale instantanée quand un professeur attache/détache un élève
+function handleStudentGroupChanged(event: CustomEvent) {
+  const { studentId, groupName, action } = event.detail;
+  const student = students.value.find(s => s.id === studentId);
+  if (!student) return;
+  if (action === 'attach' && !student.group_name) {
+    // Seulement si pas encore assigné (le backend fait la même logique)
+    student.group_name = groupName;
+  } else if (action === 'detach' && student.group_name === groupName) {
+    student.group_name = undefined;
+  }
+}
 
 function getSubjectsForTeacher(teacherId?: number): string[] {
   if (!teacherId) return availableLevelSubjects.value;

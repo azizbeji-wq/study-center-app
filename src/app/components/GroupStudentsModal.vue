@@ -364,6 +364,8 @@ const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'studentsUpdated', groupName: string, newCount: number): void;
   (e: 'openAttendance', groupName: string, subjectName?: string): void;
+  (e: 'studentAttached', studentId: number, groupName: string): void;
+  (e: 'studentDetached', studentId: number): void;
 }>();
 
 const activeSubTab = ref<'list' | 'add'>('list');
@@ -484,17 +486,31 @@ async function addStudentToGroup(student: any) {
       student_id: student.id,
     });
 
+    const attachedGroupName = props.group?.group_name || props.group?.name || '';
     showToast(res.data?.message || `Élève ${student.name} rattaché avec succès.`, 'success');
 
-    // Mettre à jour la liste locale
+    // Mettre à jour la liste du groupe
     if (!groupStudents.value.some(s => s.id === student.id)) {
       groupStudents.value.push({
         ...student,
+        group_name: attachedGroupName,
         current_status: 'present',
       });
     }
 
-    emit('studentsUpdated', props.group?.group_name || props.group?.name, groupStudents.value.length);
+    // Mettre à jour localement allStudentsList (le group_name de cet élève)
+    const inAll = allStudentsList.value.find(s => s.id === student.id);
+    if (inAll && !inAll.group_name) {
+      inAll.group_name = attachedGroupName;
+    }
+
+    emit('studentsUpdated', attachedGroupName, groupStudents.value.length);
+    // Notifier le parent pour mise à jour locale de la liste principale
+    emit('studentAttached', student.id, attachedGroupName);
+    // Notifier globalement (StudentsManagement, etc.) sans rechargement
+    window.dispatchEvent(new CustomEvent('student-group-changed', {
+      detail: { studentId: student.id, groupName: attachedGroupName, action: 'attach' }
+    }));
   } catch (err: any) {
     console.error('Erreur attachement élève:', err);
     const msg = err.response?.data?.message || "Erreur lors de l'ajout de l'élève au groupe.";
@@ -511,13 +527,25 @@ async function removeStudentFromGroup(student: any) {
 
   actionStudentId.value = student.id;
   try {
+    const removedGroupName = props.group?.group_name || props.group?.name || '';
     const res = await api.delete(`/api/groups/${groupIdOrName.value}/students/${student.id}`);
     showToast(res.data?.message || `Élève ${student.name} retiré du groupe.`, 'success');
 
-    // Mettre à jour la liste locale
+    // Mettre à jour la liste du groupe
     groupStudents.value = groupStudents.value.filter(s => s.id !== student.id);
 
-    emit('studentsUpdated', props.group?.group_name || props.group?.name, groupStudents.value.length);
+    // Effacer group_name dans allStudentsList si c'était ce groupe
+    const inAll = allStudentsList.value.find(s => s.id === student.id);
+    if (inAll && inAll.group_name === removedGroupName) {
+      inAll.group_name = '';
+    }
+
+    emit('studentsUpdated', removedGroupName, groupStudents.value.length);
+    emit('studentDetached', student.id);
+    // Notifier globalement (StudentsManagement, etc.)
+    window.dispatchEvent(new CustomEvent('student-group-changed', {
+      detail: { studentId: student.id, groupName: '', action: 'detach' }
+    }));
   } catch (err: any) {
     console.error('Erreur retrait élève:', err);
     const msg = err.response?.data?.message || "Erreur lors du retrait de l'élève.";

@@ -404,6 +404,8 @@
       :group="selectedGroupForStudents"
       @close="showGroupStudentsModal = false"
       @students-updated="handleStudentsUpdated"
+      @student-attached="handleStudentAttached"
+      @student-detached="handleStudentDetached"
       @open-attendance="(groupName, subjectName) => { showGroupStudentsModal = false; openAttendanceForGroup(groupName, subjectName); }"
     />
 
@@ -493,8 +495,31 @@ function handleStudentsUpdated(groupName: string, newCount: number) {
   const match = groupsList.value.find(g => g.group_name === groupName || g.name === groupName);
   if (match) {
     match.student_count = newCount;
+    match.students_count = newCount;
   }
   fetchGroups();
+}
+
+// Mise à jour locale immédiate quand un élève est rattaché à un groupe
+function handleStudentAttached(studentId: number, groupName: string) {
+  const match = groupsList.value.find(g => g.group_name === groupName || g.name === groupName);
+  if (match) {
+    const prev = match.student_count ?? match.students_count ?? 0;
+    match.student_count = prev + 1;
+    match.students_count = prev + 1;
+  }
+}
+
+// Mise à jour locale immédiate quand un élève est retiré d'un groupe
+function handleStudentDetached(studentId: number) {
+  const grpName = selectedGroupForStudents.value?.group_name || selectedGroupForStudents.value?.name;
+  if (!grpName) return;
+  const match = groupsList.value.find(g => g.group_name === grpName || g.name === grpName);
+  if (match) {
+    const prev = match.student_count ?? match.students_count ?? 1;
+    match.student_count = Math.max(0, prev - 1);
+    match.students_count = Math.max(0, prev - 1);
+  }
 }
 
 const teacherSubjects = computed<string[]>(() => {
