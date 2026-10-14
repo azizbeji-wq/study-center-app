@@ -342,9 +342,7 @@ class TeacherPortalController extends Controller
 
         $decodedGroup = urldecode($group);
 
-        // Trouver les élèves via enrollments ou student.group_name
-        $query = Student::query();
-
+        // 1. Élèves via enrollments enseignant (si teacher résolu)
         $enrolledIds = [];
         if ($teacher) {
             $enrolledIds = StudentSubjectEnrollment::where('teacher_id', $teacher->id)
@@ -353,21 +351,24 @@ class TeacherPortalController extends Controller
                 ->toArray();
         }
 
-        // Vérifier également les élèves rattachés directement via la table pivot group_student
+        // 2. Élèves rattachés via la table pivot group_student (Group model)
         $directGroup = \App\Models\Group::where('name', $decodedGroup)
             ->orWhere('id', is_numeric($decodedGroup) ? (int)$decodedGroup : 0)
             ->first();
         $directStudentIds = $directGroup ? $directGroup->students()->pluck('students.id')->toArray() : [];
 
-        $allMatchingIds = array_unique(array_filter(array_merge($enrolledIds, $directStudentIds)));
+        // 3. Élèves dont student.group_name correspond directement
+        $groupNameStudentIds = Student::where('group_name', $decodedGroup)->pluck('id')->toArray();
 
+        // Fusion des 3 sources
+        $allMatchingIds = array_unique(array_filter(array_merge($enrolledIds, $directStudentIds, $groupNameStudentIds)));
+
+        $query = Student::query();
         if (!empty($allMatchingIds)) {
-            $query->where(function ($q) use ($allMatchingIds, $decodedGroup) {
-                $q->whereIn('id', $allMatchingIds)
-                  ->orWhere('group_name', $decodedGroup);
-            });
+            $query->whereIn('id', $allMatchingIds);
         } else {
-            $query->where('group_name', $decodedGroup);
+            // Fallback : aucun élève trouvé
+            return response()->json([]);
         }
 
         $students = $query->orderBy('name')->get();
