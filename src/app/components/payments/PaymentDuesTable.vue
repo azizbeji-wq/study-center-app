@@ -180,7 +180,7 @@ const props = defineProps<{
   duesKind: Kind;
   duesFilter: 'all' | 'pending' | 'overdue';
   searchTerm: string;
-  isDirector: boolean;
+  isDirector?: boolean;
 }>();
 
 defineEmits<{

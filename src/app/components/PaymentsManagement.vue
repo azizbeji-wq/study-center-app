@@ -214,8 +214,8 @@ try {
   if (saved) currentUser.value = JSON.parse(saved);
 } catch {}
 
-const isDirector = computed(() => {
-  return currentUser.value?.role === 'director' || localStorage.getItem('user')?.includes('director');
+const isDirector = computed<boolean>(() => {
+  return Boolean(currentUser.value?.role === 'director' || localStorage.getItem('user')?.includes('director'));
 });
 
 const paidCount = computed(() => {

@@ -112,7 +112,7 @@ import { usePayments } from '../../composables/usePayments';
 const props = defineProps<{
   payments: Payment[];
   searchTerm: string;
-  isDirector: boolean;
+  isDirector?: boolean;
 }>();
 
 defineEmits<{
