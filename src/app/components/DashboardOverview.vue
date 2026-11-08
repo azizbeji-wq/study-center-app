@@ -1,93 +1,199 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Tableau de Bord</h2>
-        <p class="text-sm text-gray-500 mt-1">Vue d'ensemble en temps réel de votre centre d'études</p>
+        <h2 class="text-2xl font-black text-gray-900 tracking-tight">Tableau de Bord</h2>
+        <p class="text-xs text-gray-500 mt-1">Vue d'ensemble en temps réel et gestion opérationnelle du centre</p>
       </div>
       <button
         @click="loadStats"
-        class="text-xs bg-white border border-gray-200 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-50 shadow-xs flex items-center gap-1.5 font-medium"
+        class="min-h-[44px] px-4 py-2 text-xs bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 shadow-xs flex items-center justify-center gap-2 font-bold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer"
+        aria-label="Actualiser les données du tableau de bord"
       >
-        <span :class="{ 'animate-spin': loading }">🔄</span> Actualiser
+        <span :class="{ 'animate-spin': loading }">🔄</span>
+        <span>Actualiser les données</span>
       </button>
     </div>
 
-    <!-- Stats Grid -->
+    <!-- BLOC ACTIONS RAPIDES (Directeur et Secrétaire) -->
+    <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-5 shadow-md border border-indigo-700/50">
+      <div class="flex items-center justify-between mb-3.5">
+        <div class="flex items-center gap-2">
+          <Zap class="w-4 h-4 text-amber-400" />
+          <h3 class="text-xs font-black uppercase tracking-wider text-indigo-100">Actions Rapides</h3>
+        </div>
+        <span class="text-[11px] text-indigo-300 font-medium">Accès direct aux tâches fréquentes</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <!-- Action 1 : Ajouter un élève -->
+        <button
+          @click="$emit('quick-action', 'add-student')"
+          class="min-h-[44px] px-4 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 backdrop-blur-md rounded-xl text-left font-bold text-xs text-white border border-white/15 transition-all flex items-center gap-3 shadow-sm hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-900 cursor-pointer"
+          title="Ouvrir le formulaire d'inscription d'un nouvel élève"
+        >
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/30 flex items-center justify-center shrink-0 text-white">
+            <UserPlus class="w-4 h-4" />
+          </div>
+          <div class="min-w-0">
+            <p class="leading-tight truncate">Ajouter un élève</p>
+            <p class="text-[10px] font-medium text-indigo-200 truncate">Inscription & matières</p>
+          </div>
+        </button>
+
+        <!-- Action 2 : Faire l'appel -->
+        <button
+          @click="$emit('quick-action', 'take-attendance')"
+          class="min-h-[44px] px-4 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 backdrop-blur-md rounded-xl text-left font-bold text-xs text-white border border-white/15 transition-all flex items-center gap-3 shadow-sm hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-900 cursor-pointer"
+          title="Pointer les présences d'une classe ou séance"
+        >
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-300">
+            <UserCheck class="w-4 h-4" />
+          </div>
+          <div class="min-w-0">
+            <p class="leading-tight truncate">Faire l'appel</p>
+            <p class="text-[10px] font-medium text-emerald-200 truncate">Présences de groupe</p>
+          </div>
+        </button>
+
+        <!-- Action 3 : Encaisser un paiement -->
+        <button
+          @click="$emit('quick-action', 'add-payment')"
+          class="min-h-[44px] px-4 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 backdrop-blur-md rounded-xl text-left font-bold text-xs text-white border border-white/15 transition-all flex items-center gap-3 shadow-sm hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-900 cursor-pointer"
+          title="Enregistrer un nouveau paiement et éditer un reçu"
+        >
+          <div class="w-8 h-8 rounded-lg bg-amber-500/30 flex items-center justify-center shrink-0 text-amber-300">
+            <DollarSign class="w-4 h-4" />
+          </div>
+          <div class="min-w-0">
+            <p class="leading-tight truncate">Encaisser un paiement</p>
+            <p class="text-[10px] font-medium text-amber-200 truncate">Reçus & cotisations</p>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid (avec Indicateur Impayés Cliquable) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <!-- Total Élèves -->
+      <div class="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-3">
-          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+          <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
             <Users class="w-5 h-5 text-blue-600" />
           </div>
-          <span class="text-xs text-green-600 flex items-center gap-1 font-medium bg-green-50 px-2 py-0.5 rounded-full">
+          <span class="text-xs text-green-600 flex items-center gap-1 font-semibold bg-green-50 px-2.5 py-0.5 rounded-full border border-green-200">
             <TrendingUp class="w-3 h-3" />
             {{ statsData.activeStudents }} actifs
           </span>
         </div>
-        <p class="text-2xl font-bold text-gray-900 mb-1">{{ statsData.totalStudents }}</p>
-        <p class="text-sm font-medium text-gray-500">Total Élèves</p>
-        <p class="text-xs text-gray-400 mt-1">{{ statsData.activeStudents }} réguliers</p>
+        <p class="text-2xl font-black text-gray-900 mb-1">{{ statsData.totalStudents }}</p>
+        <p class="text-xs font-bold text-gray-700">Total Élèves</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">{{ statsData.activeStudents }} réguliers</p>
       </div>
 
-      <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <!-- Garderie -->
+      <div class="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-3">
-          <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+          <div class="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
             <Baby class="w-5 h-5 text-orange-600" />
           </div>
-          <span class="text-xs text-orange-700 font-medium bg-orange-50 px-2 py-0.5 rounded-full">
+          <span class="text-xs text-orange-700 font-semibold bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200">
             Garderie
           </span>
         </div>
-        <p class="text-2xl font-bold text-gray-900 mb-1">{{ daycareCount }}</p>
-        <p class="text-sm font-medium text-gray-500">Élèves de garde</p>
-        <p class="text-xs text-gray-400 mt-1">6-11 ans inscrits</p>
+        <p class="text-2xl font-black text-gray-900 mb-1">{{ daycareCount }}</p>
+        <p class="text-xs font-bold text-gray-700">Élèves de garde</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">Enfants inscrits</p>
       </div>
 
-      <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <!-- INDICATEUR IMPAYÉS À RELANCER (CLIQUABLE) -->
+      <div
+        role="button"
+        tabindex="0"
+        @click="$emit('open-unpaid-dues')"
+        @keydown.enter.prevent="$emit('open-unpaid-dues')"
+        @keydown.space.prevent="$emit('open-unpaid-dues')"
+        :class="[
+          'bg-white rounded-2xl p-5 shadow-xs transition-all cursor-pointer group border-2',
+          unpaidCount > 0
+            ? 'border-amber-300 hover:border-amber-500 hover:shadow-md bg-gradient-to-br from-white via-amber-50/20 to-amber-100/30'
+            : 'border-emerald-200 hover:border-emerald-400'
+        ]"
+        class="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 min-h-[44px]"
+        :title="unpaidCount > 0 ? 'Cliquer pour ouvrir la liste des impayés à relancer' : 'Aucun impayé en attente'"
+        aria-label="Impayés à relancer. Ouvrir les paiements filtrés."
+      >
         <div class="flex items-center justify-between mb-3">
-          <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-            <UserPlus class="w-5 h-5 text-indigo-600" />
+          <div
+            :class="[
+              'w-10 h-10 rounded-xl flex items-center justify-center',
+              unpaidCount > 0 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+            ]"
+          >
+            <AlertCircle v-if="unpaidCount > 0" class="w-5 h-5" />
+            <ShieldCheck v-else class="w-5 h-5" />
           </div>
+          <span
+            v-if="unpaidCount > 0"
+            class="text-[11px] font-extrabold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300 group-hover:bg-amber-200 transition-colors flex items-center gap-1"
+          >
+            <span>À relancer</span>
+            <span class="text-xs">→</span>
+          </span>
+          <span
+            v-else
+            class="text-[11px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full"
+          >
+            À jour
+          </span>
         </div>
-        <p class="text-2xl font-bold text-gray-900 mb-1">{{ statsData.totalTeachers }}</p>
-        <p class="text-sm font-medium text-gray-500">Enseignants</p>
-        <p class="text-xs text-gray-400 mt-1">Corps professoral</p>
+
+        <p class="text-2xl font-black text-gray-900 mb-1">
+          {{ unpaidAmount.toFixed(2) }} <span class="text-sm font-bold text-gray-500">TND</span>
+        </p>
+        <p class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+          <span>Impayés à relancer</span>
+        </p>
+        <p class="text-[11px] font-semibold text-amber-700 mt-0.5">
+          {{ unpaidCount }} élève(s) en attente / retard
+        </p>
       </div>
 
-      <div v-if="showRevenue" class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <!-- Recettes ou Leçons -->
+      <div v-if="showRevenue" class="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-3">
-          <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+          <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
             <DollarSign class="w-5 h-5 text-green-600" />
           </div>
-          <span class="text-xs text-green-700 font-semibold bg-green-50 px-2 py-0.5 rounded-full">
+          <span class="text-xs text-green-700 font-semibold bg-green-50 px-2.5 py-0.5 rounded-full border border-green-200">
             Encaissé
           </span>
         </div>
-        <p class="text-2xl font-bold text-gray-900 mb-1">{{ Number(statsData.totalRevenue).toFixed(2) }} TND</p>
-        <p class="text-sm font-medium text-gray-500">Revenus perçus</p>
-        <p class="text-xs text-amber-600 font-medium mt-1">{{ statsData.pendingPayments }} en attente</p>
+        <p class="text-2xl font-black text-gray-900 mb-1">{{ Number(statsData.totalRevenue).toFixed(2) }} TND</p>
+        <p class="text-xs font-bold text-gray-700">Revenus perçus</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">Mois en cours</p>
       </div>
 
-      <div v-else class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <div v-else class="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-3">
-          <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+          <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
             <Calendar class="w-5 h-5 text-purple-600" />
           </div>
         </div>
-        <p class="text-2xl font-bold text-gray-900 mb-1">{{ statsData.weeklyLessons }}</p>
-        <p class="text-sm font-medium text-gray-500">Leçons/Semaine</p>
-        <p class="text-xs text-gray-400 mt-1">Planning d'activités</p>
+        <p class="text-2xl font-black text-gray-900 mb-1">{{ statsData.weeklyLessons }}</p>
+        <p class="text-xs font-bold text-gray-700">Leçons / Semaine</p>
+        <p class="text-[11px] text-gray-400 mt-0.5">Planning d'activités</p>
       </div>
     </div>
 
+    <!-- Section Détails Enseignants & Activité -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Teachers Performance -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <div class="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-xs">
         <div class="flex items-center gap-2 mb-4">
           <BookOpen class="w-5 h-5 text-indigo-600" />
-          <h3 class="text-lg font-bold text-gray-900">Enseignants & Matières</h3>
+          <h3 class="text-base font-black text-gray-900">Enseignants & Matières</h3>
         </div>
         <div class="space-y-3">
           <div
@@ -125,11 +231,11 @@
       </div>
 
       <!-- Recent Activity -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      <div class="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
             <Activity class="w-5 h-5 text-indigo-600" />
-            <h3 class="text-lg font-bold text-gray-900">Activité Récente</h3>
+            <h3 class="text-base font-black text-gray-900">Activité Récente</h3>
           </div>
           <span class="text-xs text-gray-400 font-medium">Historique en direct</span>
         </div>
@@ -144,7 +250,7 @@
                 'w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0',
                 activity.type === 'payment' ? 'bg-emerald-100 text-emerald-600' :
                 activity.type === 'student' ? 'bg-blue-100 text-blue-600' :
-                activity.type === 'daycare' ? 'bg-amber-100 text-amber-600' :
+                activity.type === 'daycare' ? 'bg-orange-100 text-orange-600' :
                 activity.type === 'expense' ? 'bg-rose-100 text-rose-600' :
                 activity.type === 'teacher' ? 'bg-teal-100 text-teal-600' :
                 activity.type === 'account' ? 'bg-indigo-100 text-indigo-600' :
@@ -164,7 +270,6 @@
             <div class="flex-1 min-w-0">
               <p class="text-sm font-semibold text-gray-900 leading-snug">{{ activity.message }}</p>
               <div class="flex flex-wrap items-center gap-2 mt-1.5">
-                <!-- Badge de l'utilisateur qui a fait l'action -->
                 <span
                   class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold"
                   :class="activity.user_role === 'secretary'
@@ -193,19 +298,29 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Users, UserPlus, DollarSign, Calendar, TrendingUp, BookOpen, Baby, Activity, User, Clock, Receipt, ShieldCheck, UserCheck } from 'lucide-vue-next';
+import {
+  Users, UserPlus, DollarSign, Calendar, TrendingUp, BookOpen, Baby,
+  Activity, User, Clock, Receipt, ShieldCheck, UserCheck, Zap, AlertCircle
+} from 'lucide-vue-next';
 import api from '../utils/api';
 
 const props = withDefaults(defineProps<{
-  role?: 'director' | 'secretary'
+  role?: 'director' | 'secretary';
 }>(), {
   role: 'director'
 });
+
+defineEmits<{
+  (e: 'quick-action', action: 'add-student' | 'take-attendance' | 'add-payment'): void;
+  (e: 'open-unpaid-dues'): void;
+}>();
 
 const showRevenue = computed(() => props.role === 'director');
 
 const loading = ref(false);
 const daycareCount = ref(0);
+const unpaidCount = ref(0);
+const unpaidAmount = ref(0);
 
 const statsData = ref({
   totalStudents: 0,
@@ -240,9 +355,10 @@ const recentActivity = ref<ActivityItem[]>([]);
 async function loadStats() {
   loading.value = true;
   try {
-    const [statsRes, daycareRes] = await Promise.all([
+    const [statsRes, daycareRes, duesRes] = await Promise.all([
       api.get('/api/stats'),
-      api.get('/api/daycare')
+      api.get('/api/daycare'),
+      api.get('/api/payment-dues')
     ]);
 
     if (statsRes.data.stats) {
@@ -256,6 +372,15 @@ async function loadStats() {
     }
     if (Array.isArray(daycareRes.data)) {
       daycareCount.value = daycareRes.data.length;
+    }
+    if (duesRes.data && duesRes.data.totals) {
+      const pCount = duesRes.data.totals.pendingCount || 0;
+      const oCount = duesRes.data.totals.overdueCount || 0;
+      unpaidCount.value = pCount + oCount;
+
+      const pAmount = duesRes.data.totals.pending || 0;
+      const oAmount = duesRes.data.totals.overdue || 0;
+      unpaidAmount.value = pAmount + oAmount;
     }
   } catch (e) {
     console.error('Erreur chargement statistiques:', e);

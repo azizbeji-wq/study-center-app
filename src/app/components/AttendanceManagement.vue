@@ -494,6 +494,14 @@ import api from '../utils/api';
 import { TUNISIAN_LEVELS, COMMON_TUNISIAN_GROUPS, getSubjectsForLevel } from '../utils/tunisianEducation';
 import { filterTeachersBySubject } from '../utils/teacherSubjects';
 
+const props = defineProps<{
+  openBatchOnMount?: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: 'batch-modal-closed'): void;
+}>();
+
 interface StudentSubject {
   subject: string;
   teacher?: string;
@@ -650,7 +658,18 @@ async function loadData() {
   }
 }
 
-onMounted(loadData);
+onMounted(async () => {
+  await loadData();
+  if (props.openBatchOnMount) {
+    openBatchModal();
+  }
+});
+
+watch(() => props.openBatchOnMount, (open) => {
+  if (open) {
+    openBatchModal();
+  }
+});
 
 function resetFilters() {
   filterGroup.value = '';
@@ -666,6 +685,7 @@ function openBatchModal() {
 
 function closeBatchModal() {
   showBatchModal.value = false;
+  emit('batch-modal-closed');
 }
 
 function onBatchGroupChange() {

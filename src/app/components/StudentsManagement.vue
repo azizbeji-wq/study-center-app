@@ -588,6 +588,14 @@ interface Teacher {
   subjects?: string[];
 }
 
+const props = defineProps<{
+  openAddOnMount?: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: 'add-modal-closed'): void;
+}>();
+
 const tunisianLevels = TUNISIAN_LEVELS;
 const students = ref<Student[]>([]);
 const teachers = ref<Teacher[]>([]);
@@ -750,10 +758,19 @@ async function loadData() {
   }
 }
 
-onMounted(() => {
-  loadData();
+onMounted(async () => {
+  await loadData();
+  if (props.openAddOnMount) {
+    openAddModal();
+  }
   // Écouter les mises à jour de groupe depuis GroupStudentsModal
   window.addEventListener('student-group-changed', handleStudentGroupChanged as EventListener);
+});
+
+watch(() => props.openAddOnMount, (open) => {
+  if (open) {
+    openAddModal();
+  }
 });
 
 onUnmounted(() => {
@@ -860,6 +877,7 @@ function openEditModal(student: Student) {
 function closeModal() {
   showModal.value = false;
   errorMessage.value = '';
+  emit('add-modal-closed');
 }
 
 function addSubjectRow() {

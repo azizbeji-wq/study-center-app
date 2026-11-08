@@ -222,6 +222,105 @@
 
       <!-- Content Area -->
       <div class="flex-1 overflow-auto p-4 md:p-6 relative">
+        <!-- Onglet 0 : Mes Séances d'Aujourd'hui (Accueil) -->
+        <div v-if="activeTab === 'today'" class="space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-violet-100 text-violet-700 text-xs font-bold mb-1">
+                <Sparkles class="w-3.5 h-3.5" />
+                <span>Accueil Enseignant</span>
+              </div>
+              <h2 class="text-2xl font-black text-gray-900 tracking-tight">Mes Séances d'Aujourd'hui</h2>
+              <p class="text-xs text-gray-500 mt-0.5">
+                {{ currentFullDateText }} • {{ todaySessions.length }} séance(s) programmée(s)
+              </p>
+            </div>
+
+            <button
+              @click="fetchScheduleData"
+              :disabled="loadingSchedule"
+              class="min-h-[44px] px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-500"
+              aria-label="Actualiser mes séances d'aujourd'hui"
+            >
+              <RotateCw :class="['w-3.5 h-3.5', loadingSchedule ? 'animate-spin text-violet-600' : '']" />
+              <span>Actualiser mes séances</span>
+            </button>
+          </div>
+
+          <!-- Liste des cartes de séances du jour -->
+          <div v-if="todaySessions.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div
+              v-for="session in todaySessions"
+              :key="session.id"
+              class="bg-white rounded-2xl p-5 border-2 border-violet-100 hover:border-violet-300 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center font-bold text-xs">
+                      <Clock class="w-4 h-4" />
+                    </span>
+                    <span class="text-sm font-black text-gray-900">{{ session.time }}</span>
+                  </div>
+                  <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-200">
+                    Salle {{ session.room || 'Standard' }}
+                  </span>
+                </div>
+
+                <h3 class="text-base font-black text-gray-900 mb-1">{{ session.subject }}</h3>
+                <p class="text-xs text-gray-600 mb-2">
+                  Groupe : <strong class="text-gray-900">{{ session.group_name || 'Général' }}</strong>
+                  <span v-if="session.level" class="text-gray-400"> ({{ session.level }})</span>
+                </p>
+              </div>
+
+              <div class="pt-4 mt-2 border-t border-gray-100">
+                <button
+                  @click="handleTakeAttendanceFromSchedule({ group_name: session.group_name, subject_name: session.subject })"
+                  class="min-h-[44px] w-full px-4 py-2.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm shadow-violet-600/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-600 cursor-pointer"
+                  :aria-label="`Faire l'appel pour le cours de ${session.subject} avec le groupe ${session.group_name}`"
+                >
+                  <UserCheck class="w-4 h-4" />
+                  <span>Faire l'appel</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- État vide : aucune séance aujourd'hui -->
+          <div
+            v-else-if="!loadingSchedule"
+            class="bg-white rounded-2xl p-8 border border-gray-200/90 text-center max-w-lg mx-auto space-y-4 shadow-xs"
+          >
+            <div class="w-16 h-16 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto text-2xl">
+              ☕
+            </div>
+            <div class="space-y-1">
+              <h3 class="text-lg font-black text-gray-900">Aucune séance aujourd'hui</h3>
+              <p class="text-xs text-gray-500 leading-relaxed">
+                Vous n'avez aucun cours programmé pour ce <strong>{{ currentDayName }}</strong>.
+                Profitez de votre journée ou consultez votre planning hebdomadaire complet.
+              </p>
+            </div>
+            <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                @click="selectTab('schedule')"
+                class="min-h-[44px] px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-violet-600/20 flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-600"
+              >
+                <Calendar class="w-4 h-4" />
+                <span>Consulter tout le planning</span>
+              </button>
+              <button
+                @click="selectTab('attendance')"
+                class="min-h-[44px] px-4 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                <UserCheck class="w-4 h-4" />
+                <span>Faire un appel libre</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Onglet 1 : Emploi du Temps -->
         <TeacherSchedule
           v-if="activeTab === 'schedule'"
@@ -423,7 +522,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
   LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw, Plus, UserPlus,
-  Pencil, Trash2
+  Pencil, Trash2, Sparkles, Clock
 } from 'lucide-vue-next';
 import TeacherSchedule from './TeacherSchedule.vue';
 import TeacherAttendance from './TeacherAttendance.vue';
@@ -542,7 +641,7 @@ function handleGroupCreated() {
 const attendanceInitialGroup = ref('');
 const attendanceInitialSubject = ref('');
 
-type Tab = 'schedule' | 'groups' | 'attendance';
+type Tab = 'today' | 'schedule' | 'groups' | 'attendance';
 
 interface NavTab {
   id: Tab;
@@ -551,13 +650,63 @@ interface NavTab {
   badge?: string;
 }
 
-const tabs: NavTab[] = [
+const tabs = computed<NavTab[]>(() => [
+  {
+    id: 'today',
+    label: "Séances du jour",
+    icon: Sparkles,
+    badge: todaySessions.value.length > 0 ? String(todaySessions.value.length) : undefined
+  },
   { id: 'schedule', label: 'Emploi du temps', icon: Calendar },
   { id: 'groups', label: 'Mes Groupes', icon: Users },
   { id: 'attendance', label: "Faire l'Appel", icon: UserCheck },
-];
+]);
 
-const activeTab = ref<Tab>('schedule');
+const activeTab = ref<Tab>('today');
+
+const teacherSchedule = ref<any[]>([]);
+const loadingSchedule = ref(false);
+
+const currentDayName = computed(() => {
+  const dayIndex = new Date().getDay(); // 0 = Dimanche, 1 = Lundi, ...
+  const map: Record<number, string> = {
+    0: 'Dimanche',
+    1: 'Lundi',
+    2: 'Mardi',
+    3: 'Mercredi',
+    4: 'Jeudi',
+    5: 'Vendredi',
+    6: 'Samedi',
+  };
+  return map[dayIndex] || 'Lundi';
+});
+
+const currentFullDateText = computed(() => {
+  const now = new Date();
+  return now.toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+});
+
+const todaySessions = computed(() => {
+  const day = currentDayName.value.toLowerCase();
+  return teacherSchedule.value.filter(s => (s.day || '').trim().toLowerCase() === day);
+});
+
+async function fetchScheduleData() {
+  loadingSchedule.value = true;
+  try {
+    const res = await api.get('/api/teacher/schedule');
+    teacherSchedule.value = res.data || [];
+  } catch (err) {
+    console.error('Erreur chargement planning enseignant:', err);
+  } finally {
+    loadingSchedule.value = false;
+  }
+}
 
 const selectTab = (tabId: string) => {
   activeTab.value = tabId as Tab;
@@ -605,7 +754,7 @@ async function fetchGroups() {
 
 const syncFromHash = () => {
   const hash = window.location.hash.replace('#', '') as Tab;
-  if (hash && tabs.some(t => t.id === hash)) {
+  if (hash && tabs.value.some(t => t.id === hash)) {
     activeTab.value = hash;
   }
 };
@@ -615,6 +764,7 @@ onMounted(() => {
   window.addEventListener('hashchange', syncFromHash);
   fetchProfile();
   fetchGroups();
+  fetchScheduleData();
 });
 
 onUnmounted(() => {

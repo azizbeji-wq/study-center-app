@@ -116,14 +116,33 @@
 
       <!-- Content Area -->
       <div class="flex-1 overflow-auto p-4 md:p-6 relative">
-        <DashboardOverview v-if="activeTab === 'dashboard'" role="secretary" />
-        <StudentsManagement v-else-if="activeTab === 'students'" />
+        <DashboardOverview
+          v-if="activeTab === 'dashboard'"
+          role="secretary"
+          @quick-action="handleQuickAction"
+          @open-unpaid-dues="handleOpenUnpaidDues"
+        />
+        <StudentsManagement
+          v-else-if="activeTab === 'students'"
+          :open-add-on-mount="shouldOpenStudentAdd"
+          @add-modal-closed="shouldOpenStudentAdd = false"
+        />
         <DaycareManagement v-else-if="activeTab === 'daycare'" />
         <SchoolCalendar v-else-if="activeTab === 'schoolcalendar'" />
-        <AttendanceManagement v-else-if="activeTab === 'attendance'" />
+        <AttendanceManagement
+          v-else-if="activeTab === 'attendance'"
+          :open-batch-on-mount="shouldOpenAttendanceBatch"
+          @batch-modal-closed="shouldOpenAttendanceBatch = false"
+        />
         <TeachersManagement v-else-if="activeTab === 'teachers'" />
         <ScheduleManagement v-else-if="activeTab === 'schedule'" />
-        <PaymentsManagement v-else-if="activeTab === 'payments'" />
+        <PaymentsManagement
+          v-else-if="activeTab === 'payments'"
+          :initial-main-tab="paymentsInitialMainTab"
+          :initial-dues-filter="paymentsInitialDuesFilter"
+          :open-add-on-mount="shouldOpenPaymentAdd"
+          @add-modal-closed="shouldOpenPaymentAdd = false"
+        />
         <FinancialReports v-else-if="activeTab === 'reports'" />
       </div>
     </main>
@@ -166,6 +185,31 @@ defineEmits<{
 const currentDisplayName = ref(props.userName);
 const showAccountModal = ref(false);
 const isMobileMenuOpen = ref(false);
+
+const shouldOpenStudentAdd = ref(false);
+const shouldOpenAttendanceBatch = ref(false);
+const shouldOpenPaymentAdd = ref(false);
+const paymentsInitialMainTab = ref<'dues' | 'history'>('dues');
+const paymentsInitialDuesFilter = ref<'all' | 'pending' | 'overdue'>('all');
+
+function handleQuickAction(action: 'add-student' | 'take-attendance' | 'add-payment') {
+  if (action === 'add-student') {
+    activeTab.value = 'students';
+    shouldOpenStudentAdd.value = true;
+  } else if (action === 'take-attendance') {
+    activeTab.value = 'attendance';
+    shouldOpenAttendanceBatch.value = true;
+  } else if (action === 'add-payment') {
+    activeTab.value = 'payments';
+    shouldOpenPaymentAdd.value = true;
+  }
+}
+
+function handleOpenUnpaidDues() {
+  paymentsInitialMainTab.value = 'dues';
+  paymentsInitialDuesFilter.value = 'pending';
+  activeTab.value = 'payments';
+}
 
 function handleUserUpdated(newName: string) {
   currentDisplayName.value = newName;

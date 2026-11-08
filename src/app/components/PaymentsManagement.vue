@@ -163,7 +163,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { Clock, CheckCircle, Search, Plus, FileText } from 'lucide-vue-next';
 import PaymentStats from './payments/PaymentStats.vue';
 import PaymentDuesTable from './payments/PaymentDuesTable.vue';
@@ -173,6 +173,20 @@ import PaymentReceiptModal from './payments/PaymentReceiptModal.vue';
 import PaymentExtractModal from './PaymentExtractModal.vue';
 import { usePayments } from '../composables/usePayments';
 import type { Payment, Kind } from '../types/payments';
+
+const props = withDefaults(defineProps<{
+  initialMainTab?: 'dues' | 'history';
+  initialDuesFilter?: 'all' | 'pending' | 'overdue';
+  openAddOnMount?: boolean;
+}>(), {
+  initialMainTab: 'dues',
+  initialDuesFilter: 'all',
+  openAddOnMount: false,
+});
+
+const emit = defineEmits<{
+  (e: 'add-modal-closed'): void;
+}>();
 
 const {
   payments,
@@ -188,15 +202,33 @@ const {
   deletePayment
 } = usePayments();
 
-const activeMainTab = ref<'dues' | 'history'>('dues');
+const activeMainTab = ref<'dues' | 'history'>(props.initialMainTab);
 const searchTerm = ref('');
 const duesKind = ref<Kind>('student');
-const duesFilter = ref<'all' | 'pending' | 'overdue'>('all');
+const duesFilter = ref<'all' | 'pending' | 'overdue'>(props.initialDuesFilter);
+
+watch(() => props.initialMainTab, (newTab) => {
+  if (newTab) activeMainTab.value = newTab;
+});
+
+watch(() => props.initialDuesFilter, (newFilter) => {
+  if (newFilter) duesFilter.value = newFilter;
+});
+
+watch(() => props.openAddOnMount, (open) => {
+  if (open) openAddModal();
+});
 
 const showModal = ref(false);
 const isEditing = ref(false);
 const editingPayment = ref<Payment | null>(null);
 const formPrefill = ref<{ kind?: Kind; studentId?: number; teacherId?: number; daycareChildId?: number }>({});
+
+watch(showModal, (isOpen) => {
+  if (!isOpen) {
+    emit('add-modal-closed');
+  }
+});
 
 // Extract modal state (Director only)
 const showExtractModal = ref(false);
