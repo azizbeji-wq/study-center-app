@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\SubjectController; // Phase 1A
 use App\Http\Controllers\Api\TeacherPortalController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GroupController;
+use App\Http\Controllers\Api\SearchController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,6 +41,9 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Recherche globale sécurisée (Élèves, Enseignants)
+    Route::get('/search', [SearchController::class, 'search']);
 
     // Profil utilisateur & Changement de mot de passe (Directeur & Secrétaire)
     Route::get('/profile', [UserController::class, 'profile']);

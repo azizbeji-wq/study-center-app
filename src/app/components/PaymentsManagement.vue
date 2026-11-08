@@ -178,6 +178,8 @@ const props = withDefaults(defineProps<{
   initialMainTab?: 'dues' | 'history';
   initialDuesFilter?: 'all' | 'pending' | 'overdue';
   openAddOnMount?: boolean;
+  initialCollectStudentId?: number;
+  initialExtractStudentId?: number;
 }>(), {
   initialMainTab: 'dues',
   initialDuesFilter: 'all',
@@ -300,7 +302,28 @@ async function onPaymentSaved() {
   await Promise.all([loadPayments(), loadDues()]);
 }
 
-onMounted(loadData);
+watch(() => props.initialCollectStudentId, (id) => {
+  if (id) {
+    activeMainTab.value = 'dues';
+    openAddModal({ kind: 'student', studentId: id });
+  }
+});
+
+watch(() => props.initialExtractStudentId, (id) => {
+  if (id) {
+    openExtractModal('students', id);
+  }
+});
+
+onMounted(async () => {
+  await loadData();
+  if (props.initialCollectStudentId) {
+    activeMainTab.value = 'dues';
+    openAddModal({ kind: 'student', studentId: props.initialCollectStudentId });
+  } else if (props.initialExtractStudentId) {
+    openExtractModal('students', props.initialExtractStudentId);
+  }
+});
 </script>
 
 <style>

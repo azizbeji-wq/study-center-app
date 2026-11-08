@@ -26,7 +26,21 @@
       </div>
 
       <!-- Navigation Links -->
-      <nav class="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
+      <div class="px-3 pt-3 pb-1 shrink-0">
+        <button
+          @click="isSearchOpen = true"
+          class="w-full min-h-[44px] px-3 py-2 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 border border-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer group shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          aria-label="Recherche globale rapide (Touche /)"
+        >
+          <div class="flex items-center gap-2">
+            <Search class="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+            <span>Rechercher...</span>
+          </div>
+          <kbd class="px-1.5 py-0.5 text-[10px] bg-white border border-gray-300 rounded text-gray-500 font-mono shadow-2xs">/</kbd>
+        </button>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-1">
         <button
           v-for="tab in tabs"
           :key="tab.id"
@@ -104,14 +118,25 @@
           </div>
         </div>
 
-        <button
-          @click="$emit('switch-portal', 'teacher')"
-          class="px-2.5 py-1.5 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold flex items-center gap-1 hover:bg-violet-100 transition-colors shadow-2xs cursor-pointer"
-          title="Basculer vers l'espace enseignant"
-        >
-          <span>👨‍🏫</span>
-          <span class="text-[11px]">Mode Prof</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            @click="isSearchOpen = true"
+            class="px-2.5 py-1.5 rounded-lg bg-gray-100 border border-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1.5 hover:bg-gray-200 transition-colors cursor-pointer min-h-[44px]"
+            aria-label="Rechercher partout"
+          >
+            <Search class="w-4 h-4 text-gray-500" />
+            <span class="text-xs">Rechercher</span>
+          </button>
+
+          <button
+            @click="$emit('switch-portal', 'teacher')"
+            class="px-2.5 py-1.5 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold flex items-center gap-1 hover:bg-violet-100 transition-colors shadow-2xs cursor-pointer min-h-[44px]"
+            title="Basculer vers l'espace enseignant"
+          >
+            <span>👨‍🏫</span>
+            <span class="text-[11px]">Mode Prof</span>
+          </button>
+        </div>
       </header>
 
       <!-- Content Area -->
@@ -125,6 +150,7 @@
         <StudentsManagement
           v-else-if="activeTab === 'students'"
           :open-add-on-mount="shouldOpenStudentAdd"
+          :initial-select-student-id="searchSelectedStudentId"
           @add-modal-closed="shouldOpenStudentAdd = false"
         />
         <DaycareManagement v-else-if="activeTab === 'daycare'" />
@@ -141,6 +167,8 @@
           :initial-main-tab="paymentsInitialMainTab"
           :initial-dues-filter="paymentsInitialDuesFilter"
           :open-add-on-mount="shouldOpenPaymentAdd"
+          :initial-collect-student-id="searchCollectStudentId"
+          :initial-extract-student-id="searchExtractStudentId"
           @add-modal-closed="shouldOpenPaymentAdd = false"
         />
         <FinancialReports v-else-if="activeTab === 'reports'" />
@@ -155,12 +183,25 @@
       @close="showAccountModal = false"
       @user-updated="handleUserUpdated"
     />
+
+    <!-- Modale de Recherche Globale (Touche /) -->
+    <GlobalSearchModal
+      :is-open="isSearchOpen"
+      @close="isSearchOpen = false"
+      @view-student="handleSearchStudentView"
+      @collect-student="handleSearchStudentCollect"
+      @statement-student="handleSearchStudentStatement"
+      @view-teacher="handleSearchTeacherView"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { LogOut, Users, DollarSign, Calendar, BookOpen, UserPlus, LayoutDashboard, Baby, UserCheck, UserCog, Menu, BarChart3 } from 'lucide-vue-next';
+import {
+  LogOut, Users, DollarSign, Calendar, BookOpen, UserPlus, LayoutDashboard,
+  Baby, UserCheck, UserCog, Menu, BarChart3, Search
+} from 'lucide-vue-next';
 import DashboardOverview from './DashboardOverview.vue';
 import StudentsManagement from './StudentsManagement.vue';
 import DaycareManagement from './DaycareManagement.vue';
@@ -171,6 +212,7 @@ import PaymentsManagement from './PaymentsManagement.vue';
 import FinancialReports from './FinancialReports.vue';
 import SchoolCalendar from './SchoolCalendar.vue';
 import AccountManagementModal from './AccountManagementModal.vue';
+import GlobalSearchModal from './GlobalSearchModal.vue';
 
 const props = defineProps<{
   userName: string;
@@ -185,6 +227,47 @@ defineEmits<{
 const currentDisplayName = ref(props.userName);
 const showAccountModal = ref(false);
 const isMobileMenuOpen = ref(false);
+const isSearchOpen = ref(false);
+
+const searchSelectedStudentId = ref<number | undefined>(undefined);
+const searchCollectStudentId = ref<number | undefined>(undefined);
+const searchExtractStudentId = ref<number | undefined>(undefined);
+
+function handleSearchStudentView(student: any) {
+  searchSelectedStudentId.value = student.id;
+  selectTab('students');
+}
+
+function handleSearchStudentCollect(student: any) {
+  searchCollectStudentId.value = student.id;
+  selectTab('payments');
+}
+
+function handleSearchStudentStatement(student: any) {
+  searchExtractStudentId.value = student.id;
+  selectTab('payments');
+}
+
+function handleSearchTeacherView(teacher: any) {
+  selectTab('teachers');
+}
+
+function onGlobalKeydown(e: KeyboardEvent) {
+  if (e.key === '/' && !isSearchOpen.value) {
+    const target = e.target as HTMLElement;
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+    e.preventDefault();
+    isSearchOpen.value = true;
+  }
+}
 
 const shouldOpenStudentAdd = ref(false);
 const shouldOpenAttendanceBatch = ref(false);
@@ -263,10 +346,12 @@ watch(() => tabs.value, (newTabs) => {
 onMounted(() => {
   syncFromHash();
   window.addEventListener('hashchange', syncFromHash);
+  window.addEventListener('keydown', onGlobalKeydown);
 });
 
 onUnmounted(() => {
   window.removeEventListener('hashchange', syncFromHash);
+  window.removeEventListener('keydown', onGlobalKeydown);
 });
 
 watch(activeTab, (newTab) => {

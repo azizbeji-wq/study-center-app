@@ -590,6 +590,7 @@ interface Teacher {
 
 const props = defineProps<{
   openAddOnMount?: boolean;
+  initialSelectStudentId?: number;
 }>();
 
 const emit = defineEmits<{

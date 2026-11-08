@@ -26,7 +26,21 @@
       </div>
 
       <!-- Navigation Links -->
-      <nav class="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
+      <div class="px-3 pt-3 pb-1 shrink-0">
+        <button
+          @click="isSearchOpen = true"
+          class="w-full min-h-[44px] px-3 py-2 rounded-xl bg-violet-50/70 hover:bg-violet-100/70 border border-violet-200/80 text-violet-800 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer group shadow-2xs focus:outline-none focus:ring-2 focus:ring-violet-500"
+          aria-label="Recherche rapide d'élèves (Touche /)"
+        >
+          <div class="flex items-center gap-2">
+            <Search class="w-4 h-4 text-violet-500" />
+            <span>Rechercher...</span>
+          </div>
+          <kbd class="px-1.5 py-0.5 text-[10px] bg-white border border-violet-200 rounded text-violet-700 font-mono shadow-2xs">/</kbd>
+        </button>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto py-3 px-3 flex flex-col gap-1">
         <button
           v-for="tab in tabs"
           :key="tab.id"
@@ -122,9 +136,18 @@
 
         <div class="flex items-center gap-2">
           <button
+            @click="isSearchOpen = true"
+            class="px-2.5 py-1.5 rounded-lg bg-gray-100 border border-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1.5 hover:bg-gray-200 transition-colors cursor-pointer min-h-[44px]"
+            aria-label="Rechercher des élèves"
+          >
+            <Search class="w-4 h-4 text-gray-500" />
+            <span class="text-xs">Rechercher</span>
+          </button>
+
+          <button
             v-if="primaryRole !== 'teacher'"
             @click="$emit('switch-back')"
-            class="px-2.5 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold flex items-center gap-1 hover:bg-indigo-100 transition-colors shadow-2xs cursor-pointer"
+            class="px-2.5 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold flex items-center gap-1 hover:bg-indigo-100 transition-colors shadow-2xs cursor-pointer min-h-[44px]"
             :title="primaryRole === 'director' ? 'Retourner à la Direction' : 'Retourner au Secrétariat'"
           >
             <span>←</span>
@@ -515,6 +538,16 @@
       @close="showEditGroupModal = false"
       @group-updated="handleGroupUpdated"
     />
+
+    <!-- Modale de Recherche Globale (Touche /) -->
+    <GlobalSearchModal
+      :is-open="isSearchOpen"
+      @close="isSearchOpen = false"
+      @view-student="handleSearchStudentView"
+      @collect-student="() => {}"
+      @statement-student="() => {}"
+      @view-teacher="() => {}"
+    />
   </div>
 </template>
 
@@ -522,7 +555,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
   LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw, Plus, UserPlus,
-  Pencil, Trash2, Sparkles, Clock
+  Pencil, Trash2, Sparkles, Clock, Search
 } from 'lucide-vue-next';
 import TeacherSchedule from './TeacherSchedule.vue';
 import TeacherAttendance from './TeacherAttendance.vue';
@@ -530,6 +563,7 @@ import AccountManagementModal from './AccountManagementModal.vue';
 import CreateGroupModal from './CreateGroupModal.vue';
 import EditGroupModal from './EditGroupModal.vue';
 import GroupStudentsModal from './GroupStudentsModal.vue';
+import GlobalSearchModal from './GlobalSearchModal.vue';
 import api from '../utils/api';
 
 const props = withDefaults(
@@ -555,6 +589,28 @@ const selectedGroupToEdit = ref<any>(null);
 const showGroupStudentsModal = ref(false);
 const selectedGroupForStudents = ref<any>(null);
 const isMobileMenuOpen = ref(false);
+const isSearchOpen = ref(false);
+
+function handleSearchStudentView(student: any) {
+  selectTab('groups');
+}
+
+function onGlobalKeydown(e: KeyboardEvent) {
+  if (e.key === '/' && !isSearchOpen.value) {
+    const target = e.target as HTMLElement;
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+    e.preventDefault();
+    isSearchOpen.value = true;
+  }
+}
 
 const teacherProfile = ref<any>(null);
 const groupsList = ref<any[]>([]);
@@ -762,6 +818,7 @@ const syncFromHash = () => {
 onMounted(() => {
   syncFromHash();
   window.addEventListener('hashchange', syncFromHash);
+  window.addEventListener('keydown', onGlobalKeydown);
   fetchProfile();
   fetchGroups();
   fetchScheduleData();
@@ -769,6 +826,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('hashchange', syncFromHash);
+  window.removeEventListener('keydown', onGlobalKeydown);
 });
 
 watch(activeTab, (newTab) => {
