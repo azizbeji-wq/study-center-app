@@ -14,6 +14,8 @@ export interface Payment {
   teacherName: string | null;
   sessionsPaid: number;
   monthsPaid: number;
+  paymentMethod?: string;
+  payment_method?: string;
   createdByName?: string;
   createdByRole?: string;
 }
@@ -23,6 +25,8 @@ export interface DueStudent {
   studentId: number;
   studentName: string;
   groupName: string | null;
+  parentPhone?: string | null;
+  phone?: string | null;
   teacherId: number;
   teacherName: string;
   subjects: string[];
@@ -41,6 +45,7 @@ export interface DueDaycare {
   daycareChildId: number;
   name: string;
   parentName: string;
+  phone?: string | null;
   monthlyFee: number;
   feeSource?: 'set' | 'default';
   monthsDue: number;
@@ -95,6 +100,7 @@ export interface PaymentFormState {
   month: string;
   status: 'paid' | 'pending' | 'overdue';
   studentName: string;
+  paymentMethod: string;
 }
 
 export interface PaymentPunctuality {

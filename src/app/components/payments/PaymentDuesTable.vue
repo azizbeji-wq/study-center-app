@@ -11,7 +11,7 @@
           :key="k.value"
           @click="$emit('update:duesKind', k.value)"
           :class="[
-            'px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors',
+            'px-3.5 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-colors focus:ring-2 focus:ring-indigo-500 focus:outline-none',
             duesKind === k.value
               ? 'bg-indigo-600 text-white'
               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
@@ -25,7 +25,7 @@
           :key="f.value"
           @click="$emit('update:duesFilter', f.value)"
           :class="[
-            'px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors',
+            'px-3.5 py-2 min-h-[44px] rounded-lg text-sm font-medium transition-colors focus:ring-2 focus:ring-indigo-500 focus:outline-none',
             duesFilter === f.value
               ? 'bg-gray-800 text-white'
               : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
@@ -87,18 +87,47 @@
               </div>
             </td>
             <td class="px-5 py-3.5 text-right">
-              <div class="flex items-center justify-end gap-1.5">
+              <div class="flex items-center justify-end gap-2 flex-wrap">
                 <button
                   v-if="isDirector"
+                  type="button"
                   @click="$emit('extractStudent', row.studentId)"
-                  class="p-1 hover:bg-indigo-50 text-indigo-600 rounded-md transition-colors"
+                  class="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center hover:bg-indigo-50 text-indigo-600 rounded-lg transition-colors border border-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   title="Générer l'extrait de compte de cet élève"
+                  aria-label="Générer l'extrait de compte de cet élève"
                 >
                   <FileText class="w-4 h-4" />
                 </button>
+
+                <template v-if="row.status === 'pending' || row.status === 'overdue'">
+                  <a
+                    v-if="getWhatsAppLink(row)"
+                    :href="getWhatsAppLink(row) || undefined"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-300 text-xs font-semibold rounded-lg transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    title="Envoyer un rappel par WhatsApp"
+                  >
+                    <MessageCircle class="w-4 h-4 text-emerald-600" />
+                    <span>Envoyer le rappel</span>
+                  </a>
+                  <button
+                    v-else
+                    type="button"
+                    disabled
+                    class="inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] bg-gray-100 text-gray-400 border border-gray-200 text-xs font-medium rounded-lg cursor-not-allowed"
+                    title="Numéro du parent manquant"
+                    aria-label="Numéro du parent manquant"
+                  >
+                    <MessageCircle class="w-4 h-4 text-gray-400" />
+                    <span>Numéro du parent manquant</span>
+                  </button>
+                </template>
+
                 <button
+                  type="button"
                   @click="$emit('collectStudent', { studentId: row.studentId, teacherId: row.teacherId })"
-                  class="px-2.5 py-1 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition-colors shadow-xs"
+                  class="inline-flex items-center justify-center px-3.5 py-2 min-h-[44px] bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   Encaisser
                 </button>
@@ -153,12 +182,40 @@
               </div>
             </td>
             <td class="px-5 py-3.5 text-right">
-              <button
-                @click="$emit('collectDaycare', row.daycareChildId)"
-                class="px-2.5 py-1 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700 transition-colors shadow-xs"
-              >
-                Encaisser
-              </button>
+              <div class="flex items-center justify-end gap-2 flex-wrap">
+                <template v-if="row.status === 'pending' || row.status === 'overdue'">
+                  <a
+                    v-if="getWhatsAppLinkDaycare(row)"
+                    :href="getWhatsAppLinkDaycare(row) || undefined"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-300 text-xs font-semibold rounded-lg transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    title="Envoyer un rappel par WhatsApp"
+                  >
+                    <MessageCircle class="w-4 h-4 text-emerald-600" />
+                    <span>Envoyer le rappel</span>
+                  </a>
+                  <button
+                    v-else
+                    type="button"
+                    disabled
+                    class="inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] bg-gray-100 text-gray-400 border border-gray-200 text-xs font-medium rounded-lg cursor-not-allowed"
+                    title="Numéro du parent manquant"
+                    aria-label="Numéro du parent manquant"
+                  >
+                    <MessageCircle class="w-4 h-4 text-gray-400" />
+                    <span>Numéro du parent manquant</span>
+                  </button>
+                </template>
+
+                <button
+                  type="button"
+                  @click="$emit('collectDaycare', row.daycareChildId)"
+                  class="inline-flex items-center justify-center px-3.5 py-2 min-h-[44px] bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                >
+                  Encaisser
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -172,8 +229,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Clock, AlertCircle, CheckCircle, FileText } from 'lucide-vue-next';
-import type { Dues, Kind } from '../../types/payments';
+import { Clock, AlertCircle, CheckCircle, FileText, MessageCircle } from 'lucide-vue-next';
+import type { Dues, Kind, DueStudent, DueDaycare } from '../../types/payments';
 
 const props = defineProps<{
   dues: Dues;
@@ -268,5 +325,59 @@ function getStatusTextColor(status: string) {
     case 'overdue': return 'text-red-700';
     default: return 'text-gray-500';
   }
+}
+
+function normalizeTunisianPhone(raw?: string | null): string | null {
+  if (!raw) return null;
+  let cleaned = String(raw).replace(/[^\d+]/g, '');
+  if (cleaned.startsWith('+')) {
+    cleaned = cleaned.slice(1);
+  } else if (cleaned.startsWith('00')) {
+    cleaned = cleaned.slice(2);
+  }
+  // Retirer le 0 initial si suivi de 8 chiffres (ex: 098123456)
+  if (cleaned.length === 9 && cleaned.startsWith('0')) {
+    cleaned = cleaned.slice(1);
+  }
+  // Ajouter l'indicatif 216 s'il y a exactement 8 chiffres
+  if (cleaned.length === 8) {
+    cleaned = '216' + cleaned;
+  }
+  // Format tunisien valide : exactement 11 chiffres débutant par 216
+  if (/^216\d{8}$/.test(cleaned)) {
+    return cleaned;
+  }
+  return null;
+}
+
+function getCurrentMonthName(): string {
+  try {
+    return new Intl.DateTimeFormat('fr-FR', { month: 'long' }).format(new Date());
+  } catch {
+    return 'ce mois';
+  }
+}
+
+function getStudentFirstName(fullName: string): string {
+  if (!fullName) return '';
+  return fullName.trim().split(/\s+/)[0] || fullName.trim();
+}
+
+function getWhatsAppLink(row: DueStudent): string | null {
+  const phone = normalizeTunisianPhone(row.parentPhone || row.phone);
+  if (!phone) return null;
+  const firstName = getStudentFirstName(row.studentName);
+  const month = getCurrentMonthName();
+  const text = `Bonjour Madame, Monsieur, la mensualité de ${month} pour ${firstName} n’a pas encore été réglée. Merci de passer au centre. Cordialement.`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
+function getWhatsAppLinkDaycare(row: DueDaycare): string | null {
+  const phone = normalizeTunisianPhone(row.phone);
+  if (!phone) return null;
+  const firstName = getStudentFirstName(row.name);
+  const month = getCurrentMonthName();
+  const text = `Bonjour Madame, Monsieur, la mensualité de ${month} pour ${firstName} n’a pas encore été réglée. Merci de passer au centre. Cordialement.`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 </script>

@@ -40,6 +40,12 @@
               {{ payment.daycareChildId ? payment.monthsPaid + ' mois de garderie' : payment.sessionsPaid + ' séance(s)' }}
             </span>
           </div>
+          <div v-if="payment.paymentMethod || payment.payment_method" class="flex justify-between py-1 border-b border-gray-100">
+            <span class="text-gray-500">Mode de règlement :</span>
+            <span class="font-semibold text-gray-800 capitalize">
+              {{ formatMethod(payment.paymentMethod || payment.payment_method) }}
+            </span>
+          </div>
 
           <!-- Cadre Montant -->
           <div class="mt-4 p-4 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-between">
@@ -71,17 +77,19 @@
       <!-- Boutons d'action -->
       <div class="flex items-center justify-end gap-3 mt-6 print:hidden">
         <button
+          type="button"
           @click="$emit('close')"
-          class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+          class="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors rounded-lg focus:ring-2 focus:ring-gray-300 focus:outline-none"
         >
           Fermer
         </button>
         <button
+          type="button"
           @click="printReceipt"
-          class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-md transition-colors"
+          class="min-h-[44px] flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-md transition-colors focus:ring-2 focus:ring-indigo-500 focus:outline-none"
         >
           <Printer class="w-4 h-4" />
-          Imprimer le reçu
+          <span>Imprimer le reçu</span>
         </button>
       </div>
     </div>
@@ -104,6 +112,17 @@ defineEmits<{
 
 const { paymentDetail } = usePayments();
 const today = () => new Date().toISOString().split('T')[0];
+
+function formatMethod(method?: string) {
+  if (!method) return '';
+  switch (method) {
+    case 'especes': return 'Espèces';
+    case 'cheque': return 'Chèque';
+    case 'virement': return 'Virement bancaire';
+    case 'en_ligne': return 'En ligne';
+    default: return method;
+  }
+}
 
 function printReceipt() {
   window.print();

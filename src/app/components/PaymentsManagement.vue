@@ -142,6 +142,7 @@
       :prefill="formPrefill"
       @close="showModal = false"
       @saved="onPaymentSaved"
+      @saved-and-print="onPaymentSavedAndPrint"
     />
 
     <!-- Printable Receipt Modal -->
@@ -298,8 +299,16 @@ function openReceipt(payment: Payment) {
   showReceiptModal.value = true;
 }
 
-async function onPaymentSaved() {
+async function onPaymentSaved(_payment?: Payment) {
   await Promise.all([loadPayments(), loadDues()]);
+}
+
+async function onPaymentSavedAndPrint(payment: Payment) {
+  await Promise.all([loadPayments(), loadDues()]);
+  if (payment) {
+    receiptPayment.value = payment;
+    showReceiptModal.value = true;
+  }
 }
 
 watch(() => props.initialCollectStudentId, (id) => {
@@ -328,6 +337,10 @@ onMounted(async () => {
 
 <style>
 @media print {
+  @page {
+    size: A5 portrait;
+    margin: 8mm;
+  }
   body * {
     visibility: hidden;
   }
@@ -337,12 +350,12 @@ onMounted(async () => {
   #printable-receipt {
     position: fixed;
     left: 50%;
-    top: 50px;
+    top: 20px;
     transform: translateX(-50%);
-    width: 600px;
-    max-width: 90%;
+    width: 140mm;
+    max-width: 95%;
     margin: 0;
-    padding: 24px;
+    padding: 16px;
     background: white;
     border: 2px solid #4f46e5 !important;
     border-radius: 12px;

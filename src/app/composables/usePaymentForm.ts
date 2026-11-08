@@ -31,7 +31,8 @@ export function usePaymentForm(
       date: today(),
       month: '',
       status: 'paid',
-      studentName: ''
+      studentName: '',
+      paymentMethod: 'especes'
     };
   }
 
@@ -134,7 +135,8 @@ export function usePaymentForm(
       amount: Number(payment.amount),
       date: payment.date || '',
       month: payment.month,
-      status: payment.status
+      status: payment.status,
+      paymentMethod: payment.paymentMethod || payment.payment_method || 'especes'
     };
   }
 
