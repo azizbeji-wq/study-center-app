@@ -298,17 +298,15 @@
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                 Groupe (Optionnel)
               </label>
-              <div class="relative">
-                <input
-                  v-model="formData.group_name"
-                  list="group-suggestions"
-                  placeholder="Ex: SC1... (ou laisser vide)"
-                  class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase font-semibold"
-                />
-                <datalist id="group-suggestions">
-                  <option v-for="grp in suggestedGroups" :key="grp" :value="grp" />
-                </datalist>
-              </div>
+              <select
+                v-model="formData.group_name"
+                class="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase font-semibold"
+              >
+                <option value="">-- Aucun groupe (Non assigné) --</option>
+                <option v-for="grp in groupOptions" :key="grp" :value="grp">
+                  {{ grp }}
+                </option>
+              </select>
             </div>
           </div>
 
@@ -422,7 +420,7 @@
                       v-model="sub.teacher_id"
                       @change="onTeacherChange(sub)"
                       required
-                      class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
+                      class="w-full px-2.5 py-2 min-h-[44px] border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
                     >
                       <option :value="undefined" disabled>Choisir l'enseignant...</option>
                       <option v-for="t in teachers" :key="t.id" :value="t.id">
@@ -434,17 +432,19 @@
                   <!-- 2. Matière -->
                   <div class="flex-1">
                     <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Matière</label>
-                    <input
+                    <select
                       v-model="sub.subject_name"
-                      :list="'teacher-subjects-' + idx"
                       required
                       :disabled="!sub.teacher_id"
-                      :placeholder="!sub.teacher_id ? 'Choisir le prof d\'abord' : 'Nom matière'"
-                      class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
-                    />
-                    <datalist :id="'teacher-subjects-' + idx">
-                      <option v-for="s in getSubjectsForTeacher(sub.teacher_id)" :key="s" :value="s" />
-                    </datalist>
+                      class="w-full px-2.5 py-2 min-h-[44px] border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 font-medium"
+                    >
+                      <option value="" disabled>
+                        {{ !sub.teacher_id ? 'Choisir le prof d\'abord' : 'Sélectionner la matière...' }}
+                      </option>
+                      <option v-for="s in getSubjectsForTeacher(sub.teacher_id)" :key="s" :value="s">
+                        {{ s }}
+                      </option>
+                    </select>
                   </div>
 
                   <button
@@ -532,7 +532,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted,watch } from 'vue';
 import { Plus, Search, Edit2, Trash2, Eye, BookOpen, Tag, Users, FileText } from 'lucide-vue-next';
 import api from '../utils/api';
 import PaymentExtractModal from './PaymentExtractModal.vue';
@@ -600,6 +600,8 @@ const emit = defineEmits<{
 const tunisianLevels = TUNISIAN_LEVELS;
 const students = ref<Student[]>([]);
 const teachers = ref<Teacher[]>([]);
+const groups = ref<any[]>([]);
+const allSubjects = ref<any[]>([]);
 const searchTerm = ref('');
 const loading = ref(false);
 const submitting = ref(false);
@@ -662,6 +664,24 @@ const formData = ref<{
 
 const suggestedGroups = computed(() => {
   return getSuggestedGroups(formData.value.level);
+});
+
+const groupOptions = computed(() => {
+  const set = new Set<string>();
+  for (const g of groups.value) {
+    const name = g.group_name || g.name;
+    if (name) set.add(name);
+  }
+  for (const g of suggestedGroups.value) {
+    if (g) set.add(g);
+  }
+  for (const s of students.value) {
+    if (s.group_name) set.add(s.group_name);
+  }
+  if (formData.value.group_name) {
+    set.add(formData.value.group_name);
+  }
+  return Array.from(set).sort();
 });
 
 const availableLevelSubjects = computed(() => {
@@ -746,12 +766,16 @@ function feeValue(student: Student): number {
 async function loadData() {
   loading.value = true;
   try {
-    const [studentsRes, teachersRes] = await Promise.all([
+    const [studentsRes, teachersRes, groupsRes, subjectsRes] = await Promise.all([
       api.get('/api/students'),
       api.get('/api/teachers'),
+      api.get('/api/groups').catch(() => ({ data: [] })),
+      api.get('/api/subjects').catch(() => ({ data: [] })),
     ]);
     students.value = studentsRes.data;
     teachers.value = teachersRes.data;
+    groups.value = groupsRes.data || [];
+    allSubjects.value = subjectsRes.data || [];
   } catch (e: any) {
     console.error('Erreur chargement:', e);
   } finally {
@@ -792,11 +816,23 @@ function handleStudentGroupChanged(event: CustomEvent) {
 }
 
 function getSubjectsForTeacher(teacherId?: number): string[] {
-  if (!teacherId) return availableLevelSubjects.value;
-  const t = teachers.value.find(teach => teach.id === teacherId);
-  if (!t) return availableLevelSubjects.value;
-  const list = teacherSubjectList(t);
-  return list.length > 0 ? list : (t.subject ? [t.subject] : availableLevelSubjects.value);
+  const set = new Set<string>();
+  if (teacherId) {
+    const t = teachers.value.find(teach => teach.id === teacherId);
+    if (t) {
+      const list = teacherSubjectList(t);
+      if (list.length > 0) list.forEach(s => set.add(s));
+      else if (t.subject) set.add(t.subject);
+    }
+  }
+  for (const s of allSubjects.value) {
+    const name = s.name || s.subject;
+    if (name) set.add(name);
+  }
+  for (const s of availableLevelSubjects.value) {
+    if (s) set.add(s);
+  }
+  return Array.from(set).sort();
 }
 
 function onTeacherChange(sub: { subject_name: string; teacher_id?: number; sessions_per_month?: number; price_per_month?: number; price_per_session?: number }) {

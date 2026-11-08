@@ -70,7 +70,7 @@
               type="text"
               required
               placeholder="ex: Bac M1, Groupe 3ème Math B, 9B1..."
-              class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all placeholder:text-gray-400"
+              class="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all placeholder:text-gray-400"
             />
           </div>
           <!-- Suggestions cliquables -->
@@ -101,7 +101,7 @@
             <select
               v-model="form.level"
               required
-              class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer font-medium"
+              class="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer font-medium"
             >
               <option disabled value="">Sélectionnez un niveau scolaire</option>
 
@@ -160,7 +160,7 @@
             <select
               v-model="form.subject"
               required
-              class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer"
+              class="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer font-medium"
             >
               <option disabled value="">Sélectionnez la matière</option>
               <option v-for="subj in normalizedSubjects" :key="subj" :value="subj">
@@ -245,6 +245,7 @@ const emit = defineEmits<{
 const loading = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
+const dbSubjects = ref<string[]>([]);
 
 // Groupement structuré des niveaux scolaires tunisiens
 const collegeLevels = computed(() => TUNISIAN_LEVELS.filter(l => l.cycle === 'college'));
@@ -263,23 +264,40 @@ const normalizedSubjects = computed(() => {
   if (props.subjects && props.subjects.length > 0) {
     return props.subjects;
   }
+  const set = new Set<string>();
+  for (const s of dbSubjects.value) {
+    if (s) set.add(s);
+  }
   // Sujet recommandé pour le niveau sélectionné selon le cursus tunisien
   const levelSubjects = getSubjectsForLevel(form.level);
-  if (levelSubjects.length > 0) {
-    return levelSubjects;
+  for (const s of levelSubjects) {
+    if (s) set.add(s);
   }
-  return [
-    'Mathématiques',
-    'Sciences Physiques',
-    'Sciences de la Vie et de la Terre (SVT)',
-    'Français',
-    'Anglais',
-    'Informatique',
-    'Économie & Gestion',
-    'Philosophie',
-    'Arabe',
-  ];
+  if (set.size === 0) {
+    [
+      'Mathématiques',
+      'Sciences Physiques',
+      'Sciences de la Vie et de la Terre (SVT)',
+      'Français',
+      'Anglais',
+      'Informatique',
+      'Économie & Gestion',
+      'Philosophie',
+      'Arabe',
+    ].forEach(s => set.add(s));
+  }
+  return Array.from(set);
 });
+
+async function loadSubjects() {
+  try {
+    const res = await api.get('/api/subjects');
+    const list = res.data || [];
+    dbSubjects.value = list.map((s: any) => s.name || s.subject).filter(Boolean);
+  } catch (err) {
+    console.error('Erreur chargement matières:', err);
+  }
+}
 
 const form = reactive({
   name: '',
@@ -307,6 +325,7 @@ watch(
   () => props.isOpen,
   (open) => {
     if (open) {
+      loadSubjects();
       errorMessage.value = '';
       successMessage.value = '';
       form.name = '';

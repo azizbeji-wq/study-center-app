@@ -98,7 +98,7 @@
             <select
               v-model="selectedGroup"
               @change="onGroupChange"
-              class="w-full text-xs font-semibold px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+              class="w-full text-xs font-semibold px-3 py-2.5 min-h-[44px] bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none cursor-pointer"
             >
               <option value="" disabled>-- Choisir un groupe --</option>
               <option v-for="g in groupsList" :key="g.group_name" :value="g.group_name">
@@ -113,12 +113,16 @@
               <BookOpen class="w-3.5 h-3.5 text-violet-600" />
               <span>Matière Enseignée</span>
             </label>
-            <input
+            <select
               v-model="selectedSubject"
-              type="text"
-              placeholder="Ex: Mathématiques, Physique..."
-              class="w-full text-xs font-semibold px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
-            />
+              @change="fetchStudents"
+              class="w-full text-xs font-semibold px-3 py-2.5 min-h-[44px] bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none cursor-pointer"
+            >
+              <option value="" disabled>-- Choisir une matière --</option>
+              <option v-for="subj in availableSubjects" :key="subj" :value="subj">
+                {{ subj }}
+              </option>
+            </select>
           </div>
 
           <!-- Sélecteur de Date -->
@@ -131,7 +135,7 @@
               v-model="sessionDate"
               type="date"
               @change="fetchStudents"
-              class="w-full text-xs font-semibold px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+              class="w-full text-xs font-semibold px-3 py-2.5 min-h-[44px] bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
             />
           </div>
         </div>
@@ -661,8 +665,30 @@ const selectedSubject = ref(props.initialSubject || '');
 const sessionDate = ref(new Date().toISOString().split('T')[0]);
 
 const groupsList = ref<any[]>([]);
+const dbSubjects = ref<string[]>([]);
 const studentsList = ref<any[]>([]);
 const historyList = ref<any[]>([]);
+
+const availableSubjects = computed(() => {
+  const set = new Set<string>();
+  const currentGroup = groupsList.value.find(g => g.group_name === selectedGroup.value);
+  if (currentGroup) {
+    if (currentGroup.subject) set.add(currentGroup.subject);
+    if (Array.isArray(currentGroup.subjects)) currentGroup.subjects.forEach((s: string) => set.add(s));
+  }
+  for (const g of groupsList.value) {
+    if (g.subject) set.add(g.subject);
+    if (Array.isArray(g.subjects)) g.subjects.forEach((s: string) => set.add(s));
+  }
+  for (const s of dbSubjects.value) {
+    if (s) set.add(s);
+  }
+  if (selectedSubject.value) set.add(selectedSubject.value);
+  if (set.size === 0) {
+    ['Mathématiques', 'Sciences Physiques', 'SVT', 'Français', 'Anglais', 'Informatique'].forEach(s => set.add(s));
+  }
+  return Array.from(set).sort();
+});
 
 const loadingStudents = ref(false);
 const loadingHistory = ref(false);
@@ -817,11 +843,13 @@ function formatStatusLabel(status: string): string {
 
 async function fetchGroups() {
   try {
-    const [groupsRes, schedRes] = await Promise.all([
+    const [groupsRes, schedRes, subsRes] = await Promise.all([
       api.get('/api/teacher/groups'),
       api.get('/api/teacher/schedule').catch(() => ({ data: [] })),
+      api.get('/api/subjects').catch(() => ({ data: [] })),
     ]);
     groupsList.value = groupsRes.data || [];
+    dbSubjects.value = (subsRes.data || []).map((s: any) => s.name || s.subject).filter(Boolean);
     const schedules = schedRes.data || [];
 
     // Préselection intelligente selon l'emploi du temps du jour et l'heure actuelle

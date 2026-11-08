@@ -401,13 +401,16 @@
               <label class="block text-xs font-bold text-gray-700">
                 Matière Enseignée <span class="text-red-500">*</span>
               </label>
-              <input
+              <select
                 v-model="form.subject"
-                type="text"
                 required
-                placeholder="Mathématiques, Physique..."
-                class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all"
-              />
+                class="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer font-medium"
+              >
+                <option value="" disabled>Sélectionner la matière...</option>
+                <option v-for="subj in availableSubjects" :key="subj" :value="subj">
+                  {{ subj }}
+                </option>
+              </select>
             </div>
 
             <div class="space-y-1.5">
@@ -498,7 +501,7 @@ import {
   Plus, Pencil, Trash2, X, AlertCircle, CheckCircle2, Loader2
 } from 'lucide-vue-next';
 import api from '../utils/api';
-import { TUNISIAN_LEVELS } from '../utils/tunisianEducation';
+import { TUNISIAN_LEVELS, getSubjectsForLevel } from '../utils/tunisianEducation';
 
 const props = defineProps<{
   teacherName?: string;
@@ -524,7 +527,31 @@ const loading = ref(false);
 const submitting = ref(false);
 const scheduleList = ref<ScheduleItem[]>([]);
 const teacherGroups = ref<any[]>([]);
+const dbSubjects = ref<string[]>([]);
 const selectedDay = ref('');
+
+const availableSubjects = computed(() => {
+  const set = new Set<string>();
+  if (props.subjects && props.subjects.length > 0) {
+    props.subjects.forEach(s => set.add(s));
+  }
+  for (const g of teacherGroups.value) {
+    if (g.subject) set.add(g.subject);
+    if (Array.isArray(g.subjects)) g.subjects.forEach((s: string) => set.add(s));
+  }
+  for (const s of dbSubjects.value) {
+    if (s) set.add(s);
+  }
+  if (form.level) {
+    const levelSubs = getSubjectsForLevel(form.level);
+    for (const s of levelSubs) set.add(s);
+  }
+  if (form.subject) set.add(form.subject);
+  if (set.size === 0) {
+    ['Mathématiques', 'Sciences Physiques', 'SVT', 'Français', 'Anglais', 'Informatique'].forEach(s => set.add(s));
+  }
+  return Array.from(set).sort();
+});
 
 const toastMessage = ref('');
 const toastType = ref<'success' | 'error'>('success');
@@ -630,13 +657,17 @@ async function fetchSchedule() {
   }
 }
 
-// 2. Charger les groupes de l'enseignant
+// 2. Charger les groupes et les matières de l'enseignant
 async function fetchTeacherGroups() {
   try {
-    const res = await api.get('/api/teacher/groups');
-    teacherGroups.value = res.data || [];
+    const [groupsRes, subsRes] = await Promise.all([
+      api.get('/api/teacher/groups'),
+      api.get('/api/subjects').catch(() => ({ data: [] }))
+    ]);
+    teacherGroups.value = groupsRes.data || [];
+    dbSubjects.value = (subsRes.data || []).map((s: any) => s.name || s.subject).filter(Boolean);
   } catch (err) {
-    console.error('Erreur chargement groupes enseignant:', err);
+    console.error('Erreur chargement groupes/matières enseignant:', err);
   }
 }
 

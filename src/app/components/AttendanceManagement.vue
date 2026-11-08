@@ -289,7 +289,7 @@
                 type="date"
                 v-model="batchForm.session_date"
                 required
-                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
@@ -299,7 +299,7 @@
                 v-model="batchForm.group_name"
                 @change="onBatchGroupChange"
                 required
-                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
               >
                 <option value="" disabled>Choisir un groupe</option>
                 <option v-for="grp in allAvailableGroups" :key="grp" :value="grp">{{ grp }}</option>
@@ -312,7 +312,7 @@
                 v-model="batchForm.subject_name"
                 @change="onBatchSubjectChange"
                 required
-                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500"
+                class="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 font-medium"
               >
                 <option value="" disabled>Choisir la matière</option>
                 <option v-for="sub in activeGroupSubjects" :key="sub" :value="sub">{{ sub }}</option>
@@ -324,7 +324,7 @@
               <select
                 v-model="batchForm.teacher_id"
                 :disabled="!batchForm.subject_name || batchTeacherOptions.list.length === 0"
-                class="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
+                class="w-full px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 font-medium"
               >
                 <option :value="undefined">
                   {{ !batchForm.subject_name

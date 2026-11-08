@@ -123,7 +123,7 @@
               <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Jour *</label>
               <select
                 v-model="formData.day"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               >
                 <option v-for="d in days" :key="d" :value="d">{{ d }}</option>
               </select>
@@ -135,7 +135,7 @@
                 type="text"
                 required
                 placeholder="Ex: 08:00 - 10:00"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
           </div>
@@ -145,10 +145,10 @@
               <select
                 v-model="formData.subject"
                 required
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium text-gray-900"
+                class="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium text-gray-900"
               >
                 <option value="" disabled>Sélectionner une matière</option>
-                <option v-for="sub in tunisianSubjects " :key="sub" :value="sub">
+                <option v-for="sub in subjectOptions" :key="sub" :value="sub">
                   {{ sub }}
                 </option>
               </select>
@@ -160,7 +160,7 @@
               v-model="formData.teacher"
               required
               :disabled="!formData.subject || (teacherSuggestions.length === 0 && !formData.teacher)"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 font-medium"
+              class="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400 font-medium"
             >
               <option value="" disabled>
                 {{ !formData.subject
@@ -199,7 +199,7 @@
                 type="text"
                 required
                 placeholder="Ex: 7ème"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
             <div>
@@ -209,25 +209,24 @@
                 type="text"
                 required
                 placeholder="Ex: Salle 101"
-                class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Groupe</label>
-            <input
+            <select
               v-model="formData.group_name"
-              list="schedule-groups"
-              type="text"
-              placeholder="Ex: M1 (laisser vide pour tout le niveau)"
-              class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
-            <datalist id="schedule-groups">
-              <option v-for="g in groupSuggestions" :key="g" :value="g" />
-            </datalist>
+              class="w-full px-3.5 py-2.5 min-h-[44px] border border-gray-300 rounded-lg text-base bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium"
+            >
+              <option value="">-- Aucun groupe spécifique / Tout le niveau --</option>
+              <option v-for="g in groupSuggestions" :key="g" :value="g">
+                {{ g }}
+              </option>
+            </select>
             <p class="text-[11px] text-gray-500 mt-1">
-              Choisissez le nom exactement comme dans la fiche des élèves (M1 et m1 sont deux groupes différents).
+              Alimenté par la liste des groupes enregistrés.
             </p>
           </div>
 
@@ -301,6 +300,8 @@ const selectedLevel = ref('Tous');
 const selectedGroup = ref('');
 const allTeachers = ref<Array<{ name: string; subject?: string; subjects?: string[] }>>([]);
 const studentGroups = ref<string[]>([]);
+const registeredGroups = ref<string[]>([]);
+const dbSubjects = ref<string[]>([]);
 const conflictMessage = ref('');
 
 const showModal = ref(false);
@@ -334,22 +335,39 @@ async function loadSchedules() {
 
 async function loadLookups() {
   try {
-    const [tRes, sRes] = await Promise.all([
+    const [tRes, sRes, gRes, subRes] = await Promise.all([
       api.get('/api/teachers').catch(() => ({ data: [] })),
-      api.get('/api/students').catch(() => ({ data: [] }))
+      api.get('/api/students').catch(() => ({ data: [] })),
+      api.get('/api/groups').catch(() => ({ data: [] })),
+      api.get('/api/subjects').catch(() => ({ data: [] }))
     ]);
     allTeachers.value = tRes.data || [];
     studentGroups.value = Array.from(
       new Set((sRes.data || []).map((s: any) => s.group_name).filter(Boolean))
     ) as string[];
+    registeredGroups.value = Array.from(
+      new Set((gRes.data || []).map((g: any) => g.group_name || g.name).filter(Boolean))
+    ) as string[];
+    dbSubjects.value = Array.from(
+      new Set((subRes.data || []).map((sub: any) => sub.name || sub.subject).filter(Boolean))
+    ) as string[];
   } catch (e) {
-    console.error('Erreur chargement enseignants / groupes:', e);
+    console.error('Erreur chargement enseignants / groupes / matières:', e);
   }
 }
 
 onMounted(() => {
   loadSchedules();
   loadLookups();
+});
+
+// Matières disponibles (base de données + catalogue tunisien)
+const subjectOptions = computed(() => {
+  const set = new Set<string>();
+  for (const s of dbSubjects.value) set.add(s);
+  for (const s of tunisianSubjects) set.add(s);
+  if (formData.value.subject) set.add(formData.value.subject);
+  return Array.from(set).sort();
 });
 
 // Groupes présents dans l'emploi du temps (pour le filtre)
@@ -375,10 +393,16 @@ watch(() => formData.value.subject, (newSub) => {
   }
 });
 
-// Suggestions dans le formulaire : groupes des élèves + groupes usuels
-const groupSuggestions = computed(() =>
-  Array.from(new Set([...studentGroups.value, ...groupOptions.value, ...COMMON_TUNISIAN_GROUPS]))
-);
+// Suggestions dans le formulaire : groupes enregistrés en base + groupes des élèves + groupes usuels
+const groupSuggestions = computed(() => {
+  const set = new Set<string>();
+  for (const g of registeredGroups.value) set.add(g);
+  for (const g of studentGroups.value) set.add(g);
+  for (const g of groupOptions.value) set.add(g);
+  for (const g of COMMON_TUNISIAN_GROUPS) set.add(g);
+  if (formData.value.group_name) set.add(formData.value.group_name);
+  return Array.from(set).sort();
+});
 
 const filteredSchedule = computed(() => {
   return schedules.value.filter((item) => {

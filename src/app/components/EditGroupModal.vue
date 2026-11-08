@@ -57,7 +57,7 @@
               type="text"
               required
               placeholder="ex: Bac M1, Groupe 3ème Math B..."
-              class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all"
+              class="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all"
             />
           </div>
         </div>
@@ -71,7 +71,7 @@
             <select
               v-model="form.level"
               required
-              class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer font-medium"
+              class="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer font-medium"
             >
               <optgroup label="🎓 Baccalauréat (4ème Année)">
                 <option v-for="lvl in bacLevels" :key="lvl.id" :value="lvl.name">{{ lvl.name }}</option>
@@ -99,13 +99,16 @@
             Matière enseignée <span class="text-red-500">*</span>
           </label>
           <div class="relative">
-            <input
+            <select
               v-model="form.subject"
-              type="text"
               required
-              placeholder="Mathématiques, Physique..."
-              class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all"
-            />
+              class="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer font-medium"
+            >
+              <option disabled value="">Sélectionnez la matière</option>
+              <option v-for="subj in availableSubjects" :key="subj" :value="subj">
+                {{ subj }}
+              </option>
+            </select>
           </div>
         </div>
 
@@ -160,10 +163,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed, watch, onMounted } from 'vue';
 import { Pencil, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-vue-next';
 import api from '../utils/api';
-import { TUNISIAN_LEVELS } from '../utils/tunisianEducation';
+import { TUNISIAN_LEVELS, getSubjectsForLevel } from '../utils/tunisianEducation';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -177,12 +180,29 @@ const emit = defineEmits<{
 
 const loading = ref(false);
 const errorMessage = ref('');
+const dbSubjects = ref<string[]>([]);
 
 const collegeLevels = computed(() => TUNISIAN_LEVELS.filter(l => l.cycle === 'college'));
 const lyceeCommonLevels = computed(() => TUNISIAN_LEVELS.filter(l => l.id.startsWith('1_')));
 const lycee2Levels = computed(() => TUNISIAN_LEVELS.filter(l => l.id.startsWith('2_')));
 const lycee3Levels = computed(() => TUNISIAN_LEVELS.filter(l => l.id.startsWith('3_')));
 const bacLevels = computed(() => TUNISIAN_LEVELS.filter(l => l.id.startsWith('4_bac')));
+
+const availableSubjects = computed(() => {
+  const set = new Set<string>();
+  for (const s of dbSubjects.value) {
+    if (s) set.add(s);
+  }
+  const levelSubs = getSubjectsForLevel(form.level);
+  for (const s of levelSubs) {
+    if (s) set.add(s);
+  }
+  if (form.subject) set.add(form.subject);
+  if (set.size === 0) {
+    ['Mathématiques', 'Sciences Physiques', 'SVT', 'Français', 'Anglais', 'Informatique'].forEach(s => set.add(s));
+  }
+  return Array.from(set).sort();
+});
 
 const form = reactive({
   name: '',
@@ -192,16 +212,33 @@ const form = reactive({
   notes: '',
 });
 
+async function loadSubjects() {
+  try {
+    const res = await api.get('/api/subjects');
+    const list = res.data || [];
+    dbSubjects.value = list.map((s: any) => s.name || s.subject).filter(Boolean);
+  } catch (err) {
+    console.error('Erreur chargement matières:', err);
+  }
+}
+
+onMounted(() => {
+  loadSubjects();
+});
+
 watch(
   () => props.isOpen,
   (open) => {
-    if (open && props.group) {
-      errorMessage.value = '';
-      form.name = props.group.group_name || props.group.name || '';
-      form.level = props.group.level || '4ème Année Bac Mathématiques';
-      form.subject = props.group.subjects?.[0] || props.group.subject || 'Mathématiques';
-      form.max_capacity = props.group.max_capacity || 15;
-      form.notes = props.group.notes || '';
+    if (open) {
+      loadSubjects();
+      if (props.group) {
+        errorMessage.value = '';
+        form.name = props.group.group_name || props.group.name || '';
+        form.level = props.group.level || '4ème Année Bac Mathématiques';
+        form.subject = props.group.subjects?.[0] || props.group.subject || 'Mathématiques';
+        form.max_capacity = props.group.max_capacity || 15;
+        form.notes = props.group.notes || '';
+      }
     }
   },
   { immediate: true }
