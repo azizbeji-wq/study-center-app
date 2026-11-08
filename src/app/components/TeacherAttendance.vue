@@ -53,20 +53,35 @@
       </div>
     </div>
 
-    <!-- Notification de succès / erreur -->
+    <!-- Notification de succès / erreur avec Annuler 10s -->
     <div
       v-if="toastMessage"
       :class="[
-        'p-4 rounded-2xl text-xs font-bold flex items-center gap-2.5 shadow-md animate-in fade-in',
-        toastType === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+        'p-4 rounded-2xl text-xs font-bold flex flex-wrap items-center justify-between gap-3 shadow-md animate-in fade-in',
+        toastType === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
       ]"
     >
-      <CheckCircle2 v-if="toastType === 'success'" class="w-5 h-5 shrink-0" />
-      <AlertCircle v-else class="w-5 h-5 shrink-0" />
-      <span class="flex-1">{{ toastMessage }}</span>
-      <button @click="toastMessage = ''" class="text-white/80 hover:text-white p-1">
-        <X class="w-4 h-4" />
-      </button>
+      <div class="flex items-center gap-2.5">
+        <CheckCircle2 v-if="toastType === 'success'" class="w-5 h-5 shrink-0" />
+        <AlertCircle v-else class="w-5 h-5 shrink-0" />
+        <span>{{ toastMessage }}</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          v-if="undoCountdown > 0"
+          type="button"
+          @click="undoAttendance"
+          class="min-h-[44px] px-3.5 py-1.5 bg-white text-emerald-900 hover:bg-emerald-50 rounded-xl font-black text-xs transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          <RotateCcw class="w-3.5 h-3.5 text-emerald-700" />
+          <span>Annuler ({{ undoCountdown }}s)</span>
+        </button>
+
+        <button @click="toastMessage = ''; undoCountdown = 0" class="text-white/80 hover:text-white p-1 cursor-pointer">
+          <X class="w-4 h-4" />
+        </button>
+      </div>
     </div>
 
     <!-- ONGLET 1 : SAISIE DE LA SÉANCE -->
@@ -122,36 +137,34 @@
         </div>
       </div>
 
-      <!-- Barre de Statistiques & Actions Rapides -->
+      <!-- Barre de Synthèse Mise à jour en Direct (aria-live="polite") -->
       <div
         v-if="selectedGroup && studentsList.length > 0"
-        class="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4"
+        aria-live="polite"
+        class="bg-white rounded-2xl p-4 border border-violet-100 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4"
       >
-        <!-- Compteurs -->
-        <div class="flex flex-wrap items-center gap-3 text-xs">
-          <div class="flex items-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-xl font-bold">
+        <!-- Compteurs et Synthèse dynamique -->
+        <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-gray-800">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 text-gray-700">
             <Users class="w-3.5 h-3.5" />
-            <span>Total : {{ studentsList.length }}</span>
-          </div>
-          <div class="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl font-bold border border-emerald-200/60">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>Présents : {{ countStatus('present') }}</span>
-          </div>
-          <div class="flex items-center gap-1.5 bg-red-50 text-red-700 px-3 py-1.5 rounded-xl font-bold border border-red-200/60">
-            <span class="w-2 h-2 rounded-full bg-red-500"></span>
-            <span>Absents : {{ countStatus('absent') }}</span>
-          </div>
-          <div class="flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-xl font-bold border border-amber-200/60">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span>Retards : {{ countStatus('late') }}</span>
-          </div>
-          <div class="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-xl font-bold border border-blue-200/60">
-            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-            <span>Excusés : {{ countStatus('excused') }}</span>
-          </div>
-          <div class="text-[11px] font-bold text-gray-500">
-            Taux : {{ attendanceRate }}%
-          </div>
+            <span>{{ studentsList.length }} élèves</span>
+          </span>
+          <span class="text-gray-300">•</span>
+          <span class="text-emerald-700 font-extrabold bg-emerald-50 px-2.5 py-1.5 rounded-xl border border-emerald-200">
+            {{ countStatus('present') }} présent{{ countStatus('present') > 1 ? 's' : '' }}
+          </span>
+          <span class="text-gray-300">•</span>
+          <span class="text-amber-800 font-extrabold bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-200">
+            {{ countStatus('late') }} en retard
+          </span>
+          <span class="text-gray-300">•</span>
+          <span class="text-rose-800 font-extrabold bg-rose-50 px-2.5 py-1.5 rounded-xl border border-rose-200">
+            {{ countStatus('absent') }} absent{{ countStatus('absent') > 1 ? 's' : '' }}
+          </span>
+          <span class="text-gray-300">•</span>
+          <span class="text-blue-800 font-extrabold bg-blue-50 px-2.5 py-1.5 rounded-xl border border-blue-200">
+            {{ countStatus('excused') }} excusé{{ countStatus('excused') > 1 ? 's' : '' }}
+          </span>
         </div>
 
         <!-- Raccourcis d'appel & Export PDF -->
@@ -159,25 +172,19 @@
           <button
             type="button"
             @click="openPdfModal"
-            class="px-3 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 border border-violet-200/70 cursor-pointer shadow-2xs"
+            class="min-h-[44px] px-3.5 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 border border-violet-200/70 cursor-pointer shadow-2xs focus:outline-none focus:ring-2 focus:ring-violet-500"
             title="Aperçu et impression de la fiche d'appel en PDF"
           >
             <Printer class="w-3.5 h-3.5 text-violet-600" />
             <span>Imprimer / PDF</span>
           </button>
           <button
+            type="button"
             @click="markAll('present')"
-            class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+            class="min-h-[44px] px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <CheckCheck class="w-3.5 h-3.5" />
             <span>Tous Présents</span>
-          </button>
-          <button
-            @click="markAll('absent')"
-            class="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
-          >
-            <RotateCcw class="w-3.5 h-3.5" />
-            <span>Réinitialiser</span>
           </button>
         </div>
       </div>
@@ -253,70 +260,19 @@
                 </div>
               </div>
 
-              <!-- Statut de présence (Boutons radio ergonomiques) & Notes -->
+              <!-- Statut de présence : Bouton unique 44px avec bascule au toucher & Notes -->
               <div class="flex flex-col sm:flex-row sm:items-center gap-3 shrink-0">
-                <!-- Boutons de Statut -->
-                <div class="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200/80 gap-1">
-                  <!-- Présent -->
-                  <button
-                    type="button"
-                    @click="student.current_status = 'present'"
-                    :class="[
-                      'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
-                      student.current_status === 'present'
-                        ? 'bg-emerald-600 text-white shadow-xs'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                    ]"
-                  >
-                    <Check class="w-3.5 h-3.5" />
-                    <span>Présent</span>
-                  </button>
-
-                  <!-- Absent -->
-                  <button
-                    type="button"
-                    @click="student.current_status = 'absent'"
-                    :class="[
-                      'px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer',
-                      student.current_status === 'absent'
-                        ? 'bg-red-600 text-white shadow-xs'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                    ]"
-                  >
-                    <X class="w-3.5 h-3.5" />
-                    <span>Absent</span>
-                  </button>
-
-                  <!-- En Retard -->
-                  <button
-                    type="button"
-                    @click="student.current_status = 'late'"
-                    :class="[
-                      'px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer',
-                      student.current_status === 'late'
-                        ? 'bg-amber-500 text-white shadow-xs'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                    ]"
-                  >
-                    <Clock class="w-3.5 h-3.5" />
-                    <span>Retard</span>
-                  </button>
-
-                  <!-- Excusé -->
-                  <button
-                    type="button"
-                    @click="student.current_status = 'excused'"
-                    :class="[
-                      'px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer',
-                      student.current_status === 'excused'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
-                    ]"
-                  >
-                    <ShieldAlert class="w-3.5 h-3.5" />
-                    <span>Excusé</span>
-                  </button>
-                </div>
+                <!-- Bouton unique 44px cyclique (Présent -> Absent -> En retard -> Excusé) -->
+                <button
+                  type="button"
+                  @click="cycleStudentStatus(student)"
+                  class="min-h-[44px] min-w-[135px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs border-2 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  :class="getStatusTheme(student.current_status || 'present')"
+                  :aria-label="`${student.name} : ${formatStatusLabel(student.current_status || 'present').toLowerCase()}. Toucher pour changer.`"
+                >
+                  <component :is="getStatusIcon(student.current_status || 'present')" class="w-4 h-4 shrink-0" />
+                  <span>{{ formatStatusLabel(student.current_status || 'present') }}</span>
+                </button>
 
                 <!-- Champ Note / Observation -->
                 <div class="relative w-full sm:w-44">
@@ -324,7 +280,8 @@
                     v-model="student.current_notes"
                     type="text"
                     placeholder="Motif / observation..."
-                    class="w-full text-[11px] px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                    class="w-full min-h-[44px] text-xs px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                    :aria-label="`Observation pour ${student.name}`"
                   />
                 </div>
               </div>
@@ -332,19 +289,21 @@
           </div>
         </div>
 
-        <!-- Bouton de Sauvegarde Flottant / Bas de page -->
-        <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-200/90 shadow-md">
-          <div class="text-xs text-gray-500">
+        <!-- Barre fixe en bas : Enregistrer la feuille d'appel -->
+        <div class="sticky bottom-0 bg-white/95 backdrop-blur-xs p-4 rounded-2xl border border-gray-200 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 z-20">
+          <div class="text-xs text-gray-600">
             Séance du <span class="font-bold text-gray-900">{{ sessionDate }}</span> pour <span class="font-bold text-violet-700">{{ selectedGroup }}</span> ({{ selectedSubject }})
           </div>
           <button
+            type="button"
             @click="submitAttendance"
             :disabled="saving"
-            class="px-6 py-3 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-extrabold rounded-xl text-xs transition-all flex items-center gap-2 shadow-lg shadow-violet-600/25 cursor-pointer"
+            class="min-h-[44px] px-6 py-2.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 disabled:opacity-50 text-white font-extrabold rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md shadow-violet-600/25 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-600"
+            aria-label="Enregistrer la feuille d'appel"
           >
             <span v-if="saving" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             <Save v-else class="w-4 h-4" />
-            <span>{{ saving ? 'Validation en cours...' : 'Enregistrer et valider l\'appel' }}</span>
+            <span>{{ saving ? 'Validation en cours...' : 'Enregistrer la feuille d\'appel' }}</span>
           </button>
         </div>
       </div>
@@ -711,6 +670,94 @@ const saving = ref(false);
 
 const toastMessage = ref('');
 const toastType = ref<'success' | 'error'>('success');
+const undoCountdown = ref(0);
+let undoTimer: ReturnType<typeof setInterval> | null = null;
+let previousSnapshot: Array<{ student_id: number; status: string; notes?: string }> = [];
+
+function cycleStudentStatus(student: any) {
+  const current = student.current_status || 'present';
+  const cycle: Record<string, string> = {
+    present: 'absent',
+    absent: 'late',
+    late: 'excused',
+    excused: 'present',
+  };
+  student.current_status = cycle[current] || 'present';
+}
+
+function getStatusTheme(status: string): string {
+  switch (status) {
+    case 'present':
+      return 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 focus:ring-emerald-500';
+    case 'absent':
+      return 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 focus:ring-rose-500';
+    case 'late':
+      return 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 focus:ring-amber-500';
+    case 'excused':
+      return 'bg-blue-50 text-blue-900 border-blue-300 hover:bg-blue-100 focus:ring-blue-500';
+    default:
+      return 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 focus:ring-emerald-500';
+  }
+}
+
+function getStatusIcon(status: string) {
+  switch (status) {
+    case 'present': return Check;
+    case 'absent': return X;
+    case 'late': return Clock;
+    case 'excused': return ShieldAlert;
+    default: return Check;
+  }
+}
+
+function findBestScheduleSlot(schedules: any[]): any | null {
+  if (!schedules || schedules.length === 0) return null;
+  const dayIndex = new Date().getDay();
+  const dayMap: Record<number, string> = {
+    0: 'Dimanche', 1: 'Lundi', 2: 'Mardi', 3: 'Mercredi', 4: 'Jeudi', 5: 'Vendredi', 6: 'Samedi'
+  };
+  const todayDay = dayMap[dayIndex].toLowerCase();
+  const todayItems = schedules.filter(s => (s.day || '').trim().toLowerCase() === todayDay);
+  if (todayItems.length === 0) return null;
+
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  function parseTimeSlot(timeStr: string): { start: number; end: number } {
+    if (!timeStr) return { start: 0, end: 0 };
+    const parts = timeStr.split(/[-–àa]/).map(p => p.trim());
+    function toMinutes(t: string): number {
+      const match = t.match(/(\d{1,2})[h:]?(\d{2})?/i);
+      if (!match) return 0;
+      const h = parseInt(match[1], 10);
+      const m = match[2] ? parseInt(match[2], 10) : 0;
+      return h * 60 + m;
+    }
+    const start = toMinutes(parts[0] || '0');
+    const end = parts[1] ? toMinutes(parts[1]) : start + 120;
+    return { start, end };
+  }
+
+  for (const item of todayItems) {
+    const { start, end } = parseTimeSlot(item.time);
+    if (currentMinutes >= start && currentMinutes <= end) {
+      return item;
+    }
+  }
+
+  let bestItem = todayItems[0];
+  let minDiff = Infinity;
+  for (const item of todayItems) {
+    const { start } = parseTimeSlot(item.time);
+    const diff = Math.abs(currentMinutes - start);
+    if (diff < minDiff) {
+      minDiff = diff;
+      bestItem = item;
+    }
+  }
+
+  return bestItem;
+}
 
 // État pour la modale d'aperçu et d'impression PDF
 const showPdfModal = ref(false);
@@ -770,21 +817,38 @@ function formatStatusLabel(status: string): string {
 
 async function fetchGroups() {
   try {
-    const res = await api.get('/api/teacher/groups');
-    groupsList.value = res.data || [];
+    const [groupsRes, schedRes] = await Promise.all([
+      api.get('/api/teacher/groups'),
+      api.get('/api/teacher/schedule').catch(() => ({ data: [] })),
+    ]);
+    groupsList.value = groupsRes.data || [];
+    const schedules = schedRes.data || [];
 
-    // Si un groupe par défaut est passé ou premier groupe disponible
+    // Préselection intelligente selon l'emploi du temps du jour et l'heure actuelle
+    if (!selectedGroup.value && schedules.length > 0) {
+      const bestSlot = findBestScheduleSlot(schedules);
+      if (bestSlot && bestSlot.group_name) {
+        selectedGroup.value = bestSlot.group_name;
+        if (bestSlot.subject) {
+          selectedSubject.value = bestSlot.subject;
+        }
+      }
+    }
+
+    // Si toujours aucun groupe sélectionné mais des groupes disponibles
     if (!selectedGroup.value && groupsList.value.length > 0) {
       selectedGroup.value = groupsList.value[0].group_name;
       if (!selectedSubject.value && groupsList.value[0].subjects?.length > 0) {
         selectedSubject.value = groupsList.value[0].subjects[0];
       }
-      fetchStudents();
-    } else if (selectedGroup.value) {
+    } else if (selectedGroup.value && !selectedSubject.value) {
       const match = groupsList.value.find(g => g.group_name === selectedGroup.value);
-      if (match && !selectedSubject.value && match.subjects?.length > 0) {
+      if (match && match.subjects?.length > 0) {
         selectedSubject.value = match.subjects[0];
       }
+    }
+
+    if (selectedGroup.value) {
       fetchStudents();
     }
   } catch (err) {
@@ -810,7 +874,14 @@ async function fetchStudents() {
         subject_name: selectedSubject.value,
       },
     });
-    studentsList.value = res.data || [];
+    const list = res.data || [];
+    // Tous les élèves sont "Présent" par défaut
+    studentsList.value = list.map((st: any) => ({
+      ...st,
+      current_status: st.current_status || 'present',
+      previous_status: st.current_status || 'present',
+      previous_notes: st.current_notes || '',
+    }));
   } catch (err) {
     console.error('Erreur chargement élèves du groupe:', err);
   } finally {
@@ -823,6 +894,13 @@ async function submitAttendance() {
     showToast('Veuillez sélectionner un groupe et une matière valide.', 'error');
     return;
   }
+
+  // Enregistrer le snapshot pour annulation 10s
+  previousSnapshot = studentsList.value.map(s => ({
+    student_id: s.id,
+    status: s.previous_status || 'present',
+    notes: s.previous_notes || undefined,
+  }));
 
   saving.value = true;
   try {
@@ -838,12 +916,61 @@ async function submitAttendance() {
     };
 
     const res = await api.post('/api/teacher/attendance/batch', payload);
-    showToast(`Appel enregistré avec succès (${res.data.count} élèves pointés).`, 'success');
+
+    // Mettre à jour l'historique local pour un nouvel éventuel undo
+    studentsList.value.forEach(s => {
+      s.previous_status = s.current_status;
+      s.previous_notes = s.current_notes;
+    });
+
+    startUndoCountdown();
+    showToast(`Feuille d'appel enregistrée (${res.data.count} élèves pointés).`, 'success');
   } catch (err: any) {
     console.error('Erreur enregistrement appel:', err);
     showToast(err.response?.data?.message || 'Erreur lors de l\'enregistrement de l\'appel.', 'error');
   } finally {
     saving.value = false;
+  }
+}
+
+function startUndoCountdown() {
+  undoCountdown.value = 10;
+  if (undoTimer) clearInterval(undoTimer);
+  undoTimer = setInterval(() => {
+    undoCountdown.value--;
+    if (undoCountdown.value <= 0) {
+      if (undoTimer) clearInterval(undoTimer);
+      undoTimer = null;
+    }
+  }, 1000);
+}
+
+async function undoAttendance() {
+  if (undoTimer) clearInterval(undoTimer);
+  undoCountdown.value = 0;
+
+  try {
+    const payload = {
+      session_date: sessionDate.value,
+      subject_name: selectedSubject.value,
+      group_name: selectedGroup.value,
+      records: previousSnapshot,
+    };
+    await api.post('/api/teacher/attendance/batch', payload);
+
+    // Rétablir localement
+    previousSnapshot.forEach(p => {
+      const match = studentsList.value.find(s => s.id === p.student_id);
+      if (match) {
+        match.current_status = p.status;
+        match.current_notes = p.notes || '';
+      }
+    });
+
+    showToast('Feuille d\'appel rétablie (Annulation réussie).', 'success');
+  } catch (err) {
+    console.error('Erreur lors de l\'annulation de l\'appel:', err);
+    showToast('Impossible d\'annuler la feuille d\'appel.', 'error');
   }
 }
 

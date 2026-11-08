@@ -20,6 +20,37 @@
       </div>
     </div>
 
+    <!-- Toast de confirmation avec Annuler 10s -->
+    <div
+      v-if="toastMessage"
+      :class="[
+        'p-4 rounded-2xl text-xs font-bold flex flex-wrap items-center justify-between gap-3 shadow-md animate-in fade-in',
+        toastType === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+      ]"
+    >
+      <div class="flex items-center gap-2.5">
+        <CheckCircle2 v-if="toastType === 'success'" class="w-5 h-5 shrink-0" />
+        <XCircle v-else class="w-5 h-5 shrink-0" />
+        <span>{{ toastMessage }}</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          v-if="undoCountdown > 0"
+          type="button"
+          @click="undoAttendance"
+          class="min-h-[44px] px-3.5 py-1.5 bg-white text-emerald-900 hover:bg-emerald-50 rounded-xl font-black text-xs transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          <RotateCcw class="w-3.5 h-3.5 text-emerald-700" />
+          <span>Annuler ({{ undoCountdown }}s)</span>
+        </button>
+
+        <button @click="toastMessage = ''; undoCountdown = 0" class="text-white/80 hover:text-white p-1 cursor-pointer">
+          <X class="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+
     <!-- Overview Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs">
@@ -312,107 +343,98 @@
             </div>
           </div>
 
-          <!-- Students List for Attendance -->
+          <!-- Live Synthesis & Students List for Attendance -->
           <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Liste des Élèves du Groupe ({{ studentsInSelectedGroup.length }})
-              </label>
-              <div class="flex gap-2">
+            <!-- Synthèse mise à jour en direct (aria-live="polite") -->
+            <div
+              v-if="studentsInSelectedGroup.length > 0"
+              aria-live="polite"
+              class="mb-3 p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-gray-800"
+            >
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-gray-500 font-semibold">{{ studentsInSelectedGroup.length }} élèves :</span>
+                <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 font-black">
+                  {{ batchCountStatus('present') }} présent{{ batchCountStatus('present') > 1 ? 's' : '' }}
+                </span>
+                <span>•</span>
+                <span class="text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 font-black">
+                  {{ batchCountStatus('late') }} en retard
+                </span>
+                <span>•</span>
+                <span class="text-rose-800 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 font-black">
+                  {{ batchCountStatus('absent') }} absent{{ batchCountStatus('absent') > 1 ? 's' : '' }}
+                </span>
+                <span>•</span>
+                <span class="text-blue-800 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 font-black">
+                  {{ batchCountStatus('excused') }} excusé{{ batchCountStatus('excused') > 1 ? 's' : '' }}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-2">
                 <button
                   type="button"
                   @click="markAllStudents('present')"
-                  class="text-xs px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded font-medium border border-green-200"
+                  class="min-h-[44px] px-3 py-1.5 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 rounded-xl font-bold border border-emerald-300 transition-colors cursor-pointer flex items-center gap-1"
                 >
-                  Tous Présents
-                </button>
-                <button
-                  type="button"
-                  @click="markAllStudents('absent')"
-                  class="text-xs px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 rounded font-medium border border-red-200"
-                >
-                  Tous Absents
+                  <CheckCircle2 class="w-3.5 h-3.5" />
+                  <span>Tous Présents</span>
                 </button>
               </div>
             </div>
 
-            <div v-if="studentsInSelectedGroup.length === 0" class="p-6 text-center bg-gray-50 border rounded-xl text-gray-500 text-sm">
-              Aucun élève trouvé pour le groupe "{{ batchForm.group_name }}".<br>
-              Vérifiez les groupes attribués aux élèves dans l'onglet "Élèves".
+            <div v-if="studentsInSelectedGroup.length === 0" class="p-8 text-center bg-gray-50 border rounded-2xl text-gray-500 text-sm space-y-1">
+              <Users class="w-8 h-8 mx-auto text-gray-300" />
+              <p class="font-bold">Aucun élève trouvé pour le groupe « {{ batchForm.group_name }} ».</p>
+              <p class="text-xs text-gray-400">Vérifiez les groupes attribués aux élèves dans l'onglet « Élèves ».</p>
             </div>
 
-            <div v-else class="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <div v-else class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
               <div
                 v-for="st in studentsInSelectedGroup"
                 :key="st.id"
-                class="flex items-center justify-between p-3 border rounded-xl hover:bg-gray-50 transition-colors"
+                class="flex items-center justify-between p-3 border border-gray-200/90 rounded-xl hover:bg-gray-50/70 transition-colors gap-3"
               >
-                <div>
-                  <p class="text-sm font-semibold text-gray-900">{{ st.name }}</p>
+                <div class="min-w-0">
+                  <p class="text-sm font-bold text-gray-900 truncate">{{ st.name }}</p>
                   <p class="text-xs text-gray-500">
                     {{ st.level }}
-                    <span v-if="st.is_remise" class="text-amber-600 font-medium ml-1">
+                    <span v-if="st.is_remise" class="text-amber-600 font-semibold ml-1">
                       (Remise: {{ st.remise }}{{ st.discount_type === 'percentage' ? '%' : ' TND' }})
                     </span>
                   </p>
                 </div>
 
-                <div class="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    @click="batchRecords[st.id] = 'present'"
-                    :class="[
-                      'px-3 py-1 text-xs font-semibold rounded-lg border transition-colors',
-                      batchRecords[st.id] === 'present'
-                        ? 'bg-green-600 text-white border-green-600 shadow-xs'
-                        : 'bg-white text-gray-600 border-gray-300 hover:bg-green-50'
-                    ]"
-                  >
-                    Présent
-                  </button>
-                  <button
-                    type="button"
-                    @click="batchRecords[st.id] = 'absent'"
-                    :class="[
-                      'px-3 py-1 text-xs font-semibold rounded-lg border transition-colors',
-                      batchRecords[st.id] === 'absent'
-                        ? 'bg-red-600 text-white border-red-600 shadow-xs'
-                        : 'bg-white text-gray-600 border-gray-300 hover:bg-red-50'
-                    ]"
-                  >
-                    Absent
-                  </button>
-                  <button
-                    type="button"
-                    @click="batchRecords[st.id] = 'excused'"
-                    :class="[
-                      'px-3 py-1 text-xs font-semibold rounded-lg border transition-colors',
-                      batchRecords[st.id] === 'excused'
-                        ? 'bg-yellow-500 text-white border-yellow-500 shadow-xs'
-                        : 'bg-white text-gray-600 border-gray-300 hover:bg-yellow-50'
-                    ]"
-                  >
-                    Excusé
-                  </button>
-                </div>
+                <!-- Bouton unique 44px cyclique (Présent -> Absent -> En retard -> Excusé) -->
+                <button
+                  type="button"
+                  @click="cycleBatchRecord(st.id)"
+                  class="min-h-[44px] min-w-[135px] px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 shrink-0"
+                  :class="getBatchStatusTheme(batchRecords[st.id] || 'present')"
+                  :aria-label="`${st.name} : ${formatBatchStatusLabel(batchRecords[st.id] || 'present').toLowerCase()}. Toucher pour changer.`"
+                >
+                  <component :is="getBatchStatusIcon(batchRecords[st.id] || 'present')" class="w-4 h-4 shrink-0" />
+                  <span>{{ formatBatchStatusLabel(batchRecords[st.id] || 'present') }}</span>
+                </button>
               </div>
             </div>
           </div>
 
-          <div class="flex justify-end gap-2 pt-3 border-t border-gray-100">
+          <!-- Barre fixe en bas du formulaire : Enregistrer la feuille d'appel -->
+          <div class="sticky bottom-0 bg-white/95 backdrop-blur-xs pt-3 pb-1 border-t border-gray-100 flex items-center justify-between gap-3 z-10">
             <button
               type="button"
               @click="closeBatchModal"
-              class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50"
+              class="min-h-[44px] px-4 py-2 border border-gray-300 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
             >
               Annuler
             </button>
             <button
               type="submit"
               :disabled="submitting || studentsInSelectedGroup.length === 0"
-              class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+              class="min-h-[44px] px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl disabled:opacity-50 transition-all shadow-md shadow-indigo-600/20 cursor-pointer flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600"
             >
-              {{ submitting ? 'Enregistrement...' : 'Enregistrer la séance' }}
+              <CheckCircle2 class="w-4 h-4" />
+              <span>{{ submitting ? 'Enregistrement...' : 'Enregistrer la feuille d\'appel' }}</span>
             </button>
           </div>
         </form>
@@ -488,7 +510,11 @@ import {
   UserCheck,
   Search,
   Trash2,
-  FileText
+  FileText,
+  RotateCcw,
+  Check,
+  X,
+  ShieldAlert
 } from 'lucide-vue-next';
 import api from '../utils/api';
 import { TUNISIAN_LEVELS, COMMON_TUNISIAN_GROUPS, getSubjectsForLevel } from '../utils/tunisianEducation';
@@ -553,9 +579,115 @@ interface AttendanceRecord {
 const attendances = ref<AttendanceRecord[]>([]);
 const students = ref<Student[]>([]);
 const teachers = ref<Teacher[]>([]);
+const schedules = ref<any[]>([]);
+
+const toastMessage = ref('');
+const toastType = ref<'success' | 'error'>('success');
+const undoCountdown = ref(0);
+let undoTimer: ReturnType<typeof setInterval> | null = null;
+let previousSnapshot: Array<{ student_id: number; status: 'present' | 'absent' | 'excused' | 'late' }> = [];
 
 const loading = ref(false);
 const submitting = ref(false);
+
+function cycleBatchRecord(studentId: number) {
+  const current = batchRecords.value[studentId] || 'present';
+  const cycle: Record<string, 'present' | 'absent' | 'late' | 'excused'> = {
+    present: 'absent',
+    absent: 'late',
+    late: 'excused',
+    excused: 'present',
+  };
+  batchRecords.value[studentId] = cycle[current] || 'present';
+}
+
+function formatBatchStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    present: 'Présent',
+    absent: 'Absent',
+    late: 'En retard',
+    excused: 'Excusé',
+  };
+  return map[status] || status;
+}
+
+function getBatchStatusTheme(status: string): string {
+  switch (status) {
+    case 'present':
+      return 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 focus:ring-emerald-500';
+    case 'absent':
+      return 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 focus:ring-rose-500';
+    case 'late':
+      return 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100 focus:ring-amber-500';
+    case 'excused':
+      return 'bg-blue-50 text-blue-900 border-blue-300 hover:bg-blue-100 focus:ring-blue-500';
+    default:
+      return 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 focus:ring-emerald-500';
+  }
+}
+
+function getBatchStatusIcon(status: string) {
+  switch (status) {
+    case 'present': return CheckCircle2;
+    case 'absent': return XCircle;
+    case 'late': return Clock;
+    case 'excused': return ShieldAlert;
+    default: return CheckCircle2;
+  }
+}
+
+function batchCountStatus(status: 'present' | 'absent' | 'late' | 'excused'): number {
+  return studentsInSelectedGroup.value.filter(s => (batchRecords.value[s.id] || 'present') === status).length;
+}
+
+function findBestScheduleSlot(schedulesList: any[]): any | null {
+  if (!schedulesList || schedulesList.length === 0) return null;
+  const dayIndex = new Date().getDay();
+  const dayMap: Record<number, string> = {
+    0: 'Dimanche', 1: 'Lundi', 2: 'Mardi', 3: 'Mercredi', 4: 'Jeudi', 5: 'Vendredi', 6: 'Samedi'
+  };
+  const todayDay = dayMap[dayIndex].toLowerCase();
+  const todayItems = schedulesList.filter(s => (s.day || '').trim().toLowerCase() === todayDay);
+  if (todayItems.length === 0) return null;
+
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  function parseTimeSlot(timeStr: string): { start: number; end: number } {
+    if (!timeStr) return { start: 0, end: 0 };
+    const parts = timeStr.split(/[-–àa]/).map(p => p.trim());
+    function toMinutes(t: string): number {
+      const match = t.match(/(\d{1,2})[h:]?(\d{2})?/i);
+      if (!match) return 0;
+      const h = parseInt(match[1], 10);
+      const m = match[2] ? parseInt(match[2], 10) : 0;
+      return h * 60 + m;
+    }
+    const start = toMinutes(parts[0] || '0');
+    const end = parts[1] ? toMinutes(parts[1]) : start + 120;
+    return { start, end };
+  }
+
+  for (const item of todayItems) {
+    const { start, end } = parseTimeSlot(item.time);
+    if (currentMinutes >= start && currentMinutes <= end) {
+      return item;
+    }
+  }
+
+  let bestItem = todayItems[0];
+  let minDiff = Infinity;
+  for (const item of todayItems) {
+    const { start } = parseTimeSlot(item.time);
+    const diff = Math.abs(currentMinutes - start);
+    if (diff < minDiff) {
+      minDiff = diff;
+      bestItem = item;
+    }
+  }
+
+  return bestItem;
+}
 
 // Filters
 const filterGroup = ref('');
@@ -643,14 +775,16 @@ const filteredAttendances = computed(() => {
 async function loadData() {
   loading.value = true;
   try {
-    const [attRes, stRes, teaRes] = await Promise.all([
+    const [attRes, stRes, teaRes, schedRes] = await Promise.all([
       api.get('/api/attendances').catch(() => ({ data: [] })),
       api.get('/api/students').catch(() => ({ data: [] })),
       api.get('/api/teachers').catch(() => ({ data: [] })),
+      api.get('/api/schedules').catch(() => ({ data: [] })),
     ]);
     attendances.value = attRes.data || [];
     students.value = stRes.data || [];
     teachers.value = teaRes.data || [];
+    schedules.value = schedRes.data || [];
   } catch (err) {
     console.error('Error fetching data', err);
   } finally {
@@ -680,6 +814,24 @@ function resetFilters() {
 
 function openBatchModal() {
   showBatchModal.value = true;
+
+  // Préselection automatique d'après l'emploi du temps du jour et l'heure actuelle
+  if (schedules.value.length > 0) {
+    const bestSlot = findBestScheduleSlot(schedules.value);
+    if (bestSlot && bestSlot.group_name) {
+      batchForm.value.group_name = bestSlot.group_name;
+      if (bestSlot.subject) {
+        batchForm.value.subject_name = bestSlot.subject;
+      }
+      if (bestSlot.teacher) {
+        const tMatch = teachers.value.find(t => t.name === bestSlot.teacher || (t.name && bestSlot.teacher.includes(t.name)));
+        if (tMatch) {
+          batchForm.value.teacher_id = tMatch.id;
+        }
+      }
+    }
+  }
+
   onBatchGroupChange();
 }
 
@@ -690,6 +842,7 @@ function closeBatchModal() {
 
 function onBatchGroupChange() {
   batchRecords.value = {};
+  // Tous les élèves sont "Présent" par défaut
   studentsInSelectedGroup.value.forEach(s => {
     batchRecords.value[s.id] = 'present';
   });
@@ -719,6 +872,12 @@ async function submitBatchAttendance() {
   if (studentsInSelectedGroup.value.length === 0) return;
   submitting.value = true;
 
+  // Snapshot pour annulation pendant 10 secondes
+  previousSnapshot = studentsInSelectedGroup.value.map(s => ({
+    student_id: s.id,
+    status: batchRecords.value[s.id] || 'present',
+  }));
+
   try {
     const payload = {
       session_date: batchForm.value.session_date,
@@ -734,12 +893,55 @@ async function submitBatchAttendance() {
     await api.post('/api/attendances/batch', payload);
     await loadData();
     showBatchModal.value = false;
-  } catch (err) {
+    startUndoCountdown();
+    showToast(`Feuille d'appel enregistrée (${studentsInSelectedGroup.value.length} élèves pointés).`, 'success');
+  } catch (err: any) {
     console.error('Failed to submit batch attendance', err);
-    alert('Erreur lors de l\'enregistrement des présences');
+    showToast(err.response?.data?.message || 'Erreur lors de l\'enregistrement des présences', 'error');
   } finally {
     submitting.value = false;
   }
+}
+
+function startUndoCountdown() {
+  undoCountdown.value = 10;
+  if (undoTimer) clearInterval(undoTimer);
+  undoTimer = setInterval(() => {
+    undoCountdown.value--;
+    if (undoCountdown.value <= 0) {
+      if (undoTimer) clearInterval(undoTimer);
+      undoTimer = null;
+    }
+  }, 1000);
+}
+
+async function undoAttendance() {
+  if (undoTimer) clearInterval(undoTimer);
+  undoCountdown.value = 0;
+
+  try {
+    const payload = {
+      session_date: batchForm.value.session_date,
+      group_name: batchForm.value.group_name,
+      subject_name: batchForm.value.subject_name,
+      teacher_id: batchForm.value.teacher_id || null,
+      records: previousSnapshot,
+    };
+    await api.post('/api/attendances/batch', payload);
+    await loadData();
+    showToast('Feuille d\'appel rétablie avec succès (Annulation effectuée).', 'success');
+  } catch (err) {
+    console.error('Erreur annulation appel:', err);
+    showToast('Impossible d\'annuler la feuille d\'appel.', 'error');
+  }
+}
+
+function showToast(msg: string, type: 'success' | 'error' = 'success') {
+  toastMessage.value = msg;
+  toastType.value = type;
+  setTimeout(() => {
+    toastMessage.value = '';
+  }, 4500);
 }
 
 async function deleteAttendance(id: number) {
