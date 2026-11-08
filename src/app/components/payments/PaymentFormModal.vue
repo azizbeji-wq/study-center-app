@@ -5,7 +5,7 @@
         {{ isEditing ? 'Modifier le paiement' : 'Enregistrer un paiement' }}
       </h3>
 
-      <form @submit.prevent="handleSubmit" class="space-y-4">
+      <form @submit.prevent="handleSubmit(false)" class="space-y-4">
         <!-- ===== Création ===== -->
         <template v-if="!isEditing">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2">

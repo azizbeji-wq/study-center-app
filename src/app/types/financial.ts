@@ -13,6 +13,7 @@ export interface ExpenseItem {
   is_recurring: boolean;
   notes?: string;
   created_at?: string;
+  creator?: { id?: number; name?: string; role?: string } | null;
 }
 
 export interface TeacherAccountingItem {
