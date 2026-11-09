@@ -295,9 +295,20 @@
         <!-- ─────────────────────────────────────────────────────────────────── -->
         <div v-else class="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gray-50/60">
           <div class="bg-violet-50 rounded-2xl p-3 border border-violet-100 text-xs text-violet-800">
-            <div class="flex items-center gap-2 font-bold mb-1">
-              <GraduationCap class="w-4 h-4 text-violet-600" />
-              <span>Guide interactif — Espace {{ roleName }}</span>
+            <div class="flex items-center justify-between font-bold mb-1">
+              <div class="flex items-center gap-2">
+                <GraduationCap class="w-4 h-4 text-violet-600" />
+                <span>Guide interactif — Espace {{ roleName }}</span>
+              </div>
+              <a
+                href="/guide_utilisation.html"
+                target="_blank"
+                class="text-[10px] bg-violet-600 text-white px-2 py-0.5 rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-1 font-bold no-underline"
+                title="Ouvrir le manuel officiel complet dans un nouvel onglet"
+              >
+                <span>Manuel HTML</span>
+                <span>↗</span>
+              </a>
             </div>
             <p class="text-[11px] text-violet-700/90 leading-relaxed">
               Consultez les procédures types pour naviguer et maîtriser l'application Study Center en toute autonomie.
