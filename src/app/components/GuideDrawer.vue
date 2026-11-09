@@ -179,19 +179,21 @@
             </div>
           </div>
 
-          <!-- ── Section 4 : Besoin d'aide (chat IA) ── -->
+          <!-- ── Section 4 : Manuel complet (HTML) ── -->
           <div class="px-5 py-4">
-            <h3 class="text-sm font-bold text-gray-900 mb-2">Besoin d'aide ?</h3>
+            <h3 class="text-sm font-bold text-gray-900 mb-2">Manuel complet</h3>
             <p class="text-xs text-gray-500 mb-3">
-              Posez votre question a l'assistant IA qui connait l'application.
+              Consultez le guide officiel complet de l'application dans un nouvel onglet.
             </p>
-            <button
-              @click="openAiAssistant"
-              class="w-full min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#1F3A33] text-[#1F3A33] font-bold text-sm rounded-xl hover:bg-[#1F3A33]/5 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1F3A33]"
+            <a
+              href="/guide_utilisation.html"
+              target="_blank"
+              class="w-full min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#1F3A33] text-[#1F3A33] font-bold text-sm rounded-xl hover:bg-[#1F3A33]/5 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1F3A33] no-underline"
             >
-              <MessageCircle class="w-4 h-4" />
-              Ouvrir l'assistant IA
-            </button>
+              <BookOpen class="w-4 h-4" />
+              <span>Ouvrir le manuel officiel</span>
+              <span>↗</span>
+            </a>
           </div>
 
         </div><!-- fin corps -->
@@ -202,7 +204,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
-import { BookOpen, X, Check, ChevronDown, Play, MessageCircle } from 'lucide-vue-next';
+import { BookOpen, X, Check, ChevronDown, Play } from 'lucide-vue-next';
 import { useGuide } from '../guide/useGuide';
 import type { UserRole, TabKey } from '../guide/types';
 
@@ -218,7 +220,6 @@ const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'start-tour'): void;
   (e: 'navigate-tab', tab: TabKey): void;
-  (e: 'open-ai'): void;
 }>();
 
 // ─── Guide composable ─────────────────────────────────────────
@@ -282,12 +283,6 @@ function startTour() {
 function navigateToTab(tab: TabKey) {
   emit('navigate-tab', tab);
   close();
-}
-
-function openAiAssistant() {
-  emit('open-ai');
-  close();
-  window.dispatchEvent(new CustomEvent('open-ai-chat'));
 }
 
 // ─── Fermeture sur clic extérieur (gérée par le fond) ────────

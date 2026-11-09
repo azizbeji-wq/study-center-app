@@ -222,7 +222,6 @@
       @close="isGuideOpen = false"
       @start-tour="startTour"
       @navigate-tab="(tab) => selectTab(tab as Tab)"
-      @open-ai="isGuideOpen = false"
     />
 
     <!-- Visite guidée -->
