@@ -98,6 +98,7 @@
             <select
               v-model="selectedGroup"
               @change="onGroupChange"
+              data-tour="teacher-attendance-group"
               class="w-full text-xs font-semibold px-3 py-2.5 min-h-[44px] bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-violet-500 focus:outline-none cursor-pointer"
             >
               <option value="" disabled>-- Choisir un groupe --</option>
@@ -229,7 +230,7 @@
 
       <!-- Liste des élèves & Pointage -->
       <div v-else class="space-y-4">
-        <div class="bg-white rounded-2xl border border-gray-200/90 shadow-xs overflow-hidden">
+        <div data-tour="teacher-attendance-list" class="bg-white rounded-2xl border border-gray-200/90 shadow-xs overflow-hidden">
           <div class="divide-y divide-gray-100">
             <div
               v-for="(student, index) in studentsList"

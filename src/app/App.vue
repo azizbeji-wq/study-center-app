@@ -26,6 +26,12 @@
         @switch-back="switchPortal(user.role)"
         @logout="handleLogout"
       />
+
+      <!-- Assistant IA Gemini & Relais Guide -->
+      <AiTutorialWidget
+        :user-role="activePortal || user.role"
+        :user-name="user.name"
+      />
     </template>
   </div>
 </template>
@@ -36,6 +42,7 @@ import LoginPage from './components/LoginPage.vue';
 import DirectorDashboard from './components/DirectorDashboard.vue';
 import SecretaryDashboard from './components/SecretaryDashboard.vue';
 import TeacherDashboard from './components/TeacherDashboard.vue';
+import AiTutorialWidget from './components/AiTutorialWidget.vue';
 import api from './utils/api';
 import {
   checkSessionValidity,

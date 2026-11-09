@@ -26,10 +26,10 @@
       </div>
 
       <!-- Navigation Links -->
-      <div class="px-3 pt-3 pb-1 shrink-0">
+      <div class="px-3 pt-3 pb-1 shrink-0 flex items-center gap-1.5">
         <button
           @click="isSearchOpen = true"
-          class="w-full min-h-[44px] px-3 py-2 rounded-xl bg-violet-50/70 hover:bg-violet-100/70 border border-violet-200/80 text-violet-800 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer group shadow-2xs focus:outline-none focus:ring-2 focus:ring-violet-500"
+          class="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-violet-50/70 hover:bg-violet-100/70 border border-violet-200/80 text-violet-800 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer group shadow-2xs focus:outline-none focus:ring-2 focus:ring-violet-500"
           aria-label="Recherche rapide d'élèves (Touche /)"
         >
           <div class="flex items-center gap-2">
@@ -37,6 +37,15 @@
             <span>Rechercher...</span>
           </div>
           <kbd class="px-1.5 py-0.5 text-[10px] bg-white border border-violet-200 rounded text-violet-700 font-mono shadow-2xs">/</kbd>
+        </button>
+        <button
+          @click="isGuideOpen = true"
+          class="min-h-[44px] min-w-[44px] px-2.5 rounded-xl bg-[#1F3A33]/10 hover:bg-[#1F3A33]/20 border border-[#1F3A33]/20 text-[#1F3A33] text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#1F3A33]"
+          aria-label="Guide d'utilisation (Touche ?)"
+          title="Guide d'utilisation (Touche ?)"
+        >
+          <BookOpen class="w-4 h-4" />
+          <span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-black rounded-full bg-[#1F3A33] text-[#F4F1E8]">?</span>
         </button>
       </div>
 
@@ -144,6 +153,8 @@
             <span class="text-xs">Rechercher</span>
           </button>
 
+          <GuideButton color-scheme="violet" keyboard-hint="Touche ?" @open="isGuideOpen = true" />
+
           <button
             v-if="primaryRole !== 'teacher'"
             @click="$emit('switch-back')"
@@ -245,6 +256,13 @@
 
       <!-- Content Area -->
       <div class="flex-1 overflow-auto p-4 md:p-6 relative">
+        <NewHereBanner
+          :tab="activeTab as TabKey"
+          role="teacher"
+          :has-tour-steps="currentTourSteps.length > 0"
+          @start-tour="startTour"
+        />
+
         <!-- Onglet 0 : Mes Séances d'Aujourd'hui (Accueil) -->
         <div v-if="activeTab === 'today'" class="space-y-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -271,7 +289,7 @@
           </div>
 
           <!-- Liste des cartes de séances du jour -->
-          <div v-if="todaySessions.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div v-if="todaySessions.length > 0" data-tour="teacher-today-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <div
               v-for="session in todaySessions"
               :key="session.id"
@@ -300,6 +318,7 @@
               <div class="pt-4 mt-2 border-t border-gray-100">
                 <button
                   @click="handleTakeAttendanceFromSchedule({ group_name: session.group_name, subject_name: session.subject })"
+                  data-tour="teacher-attendance-btn"
                   class="min-h-[44px] w-full px-4 py-2.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm shadow-violet-600/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-600 cursor-pointer"
                   :aria-label="`Faire l'appel pour le cours de ${session.subject} avec le groupe ${session.group_name}`"
                 >
@@ -413,7 +432,7 @@
           </div>
 
           <!-- Liste des cartes de groupe -->
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div v-else data-tour="teacher-groups-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <div
               v-for="grp in groupsList"
               :key="grp.group_name"
@@ -548,6 +567,25 @@
       @statement-student="() => {}"
       @view-teacher="() => {}"
     />
+
+    <!-- Tiroir Guide -->
+    <GuideDrawer
+      :is-open="isGuideOpen"
+      role="teacher"
+      :current-tab="activeTab as TabKey"
+      @close="isGuideOpen = false"
+      @start-tour="startTour"
+      @navigate-tab="(tab) => selectTab(tab as Tab)"
+      @open-ai="isGuideOpen = false"
+    />
+
+    <!-- Visite guidée -->
+    <TourOverlay
+      :steps="currentTourSteps"
+      :active="isTourActive"
+      @finish="onTourFinish"
+      @skip="isTourActive = false"
+    />
   </div>
 </template>
 
@@ -555,7 +593,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
   LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw, Plus, UserPlus,
-  Pencil, Trash2, Sparkles, Clock, Search
+  Pencil, Trash2, Sparkles, Clock, Search, BookOpen
 } from 'lucide-vue-next';
 import TeacherSchedule from './TeacherSchedule.vue';
 import TeacherAttendance from './TeacherAttendance.vue';
@@ -564,6 +602,12 @@ import CreateGroupModal from './CreateGroupModal.vue';
 import EditGroupModal from './EditGroupModal.vue';
 import GroupStudentsModal from './GroupStudentsModal.vue';
 import GlobalSearchModal from './GlobalSearchModal.vue';
+import GuideDrawer from './GuideDrawer.vue';
+import GuideButton from './GuideButton.vue';
+import NewHereBanner from './NewHereBanner.vue';
+import TourOverlay from './TourOverlay.vue';
+import { useGuide, loadProgress } from '../guide/useGuide';
+import type { TabKey } from '../guide/types';
 import api from '../utils/api';
 
 const props = withDefaults(
@@ -590,6 +634,24 @@ const showGroupStudentsModal = ref(false);
 const selectedGroupForStudents = ref<any>(null);
 const isMobileMenuOpen = ref(false);
 const isSearchOpen = ref(false);
+const isGuideOpen = ref(false);
+const isTourActive = ref(false);
+
+// ─── Guide ───────────────────────────────────────────────────────
+const { getTourSteps, completeTour } = useGuide('teacher');
+const currentTourSteps = computed(() => getTourSteps(activeTab.value as TabKey));
+
+function startTour() {
+  if (currentTourSteps.value.length > 0) {
+    isTourActive.value = true;
+  }
+}
+
+async function onTourFinish() {
+  isTourActive.value = false;
+  await completeTour(activeTab.value as TabKey);
+}
+// ─────────────────────────────────────────────────────────────────
 
 function handleSearchStudentView(student: any) {
   selectTab('groups');
@@ -609,6 +671,20 @@ function onGlobalKeydown(e: KeyboardEvent) {
     }
     e.preventDefault();
     isSearchOpen.value = true;
+  }
+  if (e.key === '?' && !isGuideOpen.value) {
+    const target = e.target as HTMLElement;
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+    e.preventDefault();
+    isGuideOpen.value = true;
   }
 }
 
@@ -815,18 +891,25 @@ const syncFromHash = () => {
   }
 };
 
+function onOpenGuideEvent() {
+  isGuideOpen.value = true;
+}
+
 onMounted(() => {
   syncFromHash();
   window.addEventListener('hashchange', syncFromHash);
   window.addEventListener('keydown', onGlobalKeydown);
+  window.addEventListener('open-guide-drawer', onOpenGuideEvent);
   fetchProfile();
   fetchGroups();
   fetchScheduleData();
+  loadProgress();
 });
 
 onUnmounted(() => {
   window.removeEventListener('hashchange', syncFromHash);
   window.removeEventListener('keydown', onGlobalKeydown);
+  window.removeEventListener('open-guide-drawer', onOpenGuideEvent);
 });
 
 watch(activeTab, (newTab) => {

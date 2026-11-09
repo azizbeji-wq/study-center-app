@@ -291,54 +291,34 @@
         </div>
 
         <!-- ─────────────────────────────────────────────────────────────────── -->
-        <!-- VUE 2 : GUIDE & TUTORIEL CONTEXTUALISÉ                               -->
+        <!-- VUE 2 : BOUTON VERS LE TIROIR DU GUIDE                             -->
         <!-- ─────────────────────────────────────────────────────────────────── -->
-        <div v-else class="flex-1 overflow-y-auto p-4 space-y-3.5 bg-gray-50/60">
-          <div class="bg-violet-50 rounded-2xl p-3 border border-violet-100 text-xs text-violet-800">
-            <div class="flex items-center justify-between font-bold mb-1">
-              <div class="flex items-center gap-2">
-                <GraduationCap class="w-4 h-4 text-violet-600" />
-                <span>Guide interactif — Espace {{ roleName }}</span>
-              </div>
-              <a
-                href="/guide_utilisation.html"
-                target="_blank"
-                class="text-[10px] bg-violet-600 text-white px-2 py-0.5 rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-1 font-bold no-underline"
-                title="Ouvrir le manuel officiel complet dans un nouvel onglet"
-              >
-                <span>Manuel HTML</span>
-                <span>↗</span>
-              </a>
-            </div>
-            <p class="text-[11px] text-violet-700/90 leading-relaxed">
-              Consultez les procédures types pour naviguer et maîtriser l'application Study Center en toute autonomie.
+        <div v-else class="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 bg-gray-50/60">
+          <div class="w-14 h-14 rounded-2xl bg-[#1F3A33] text-[#F4F1E8] flex items-center justify-center shadow-md">
+            <BookOpen class="w-7 h-7" />
+          </div>
+          <div>
+            <h4 class="text-base font-bold text-gray-900 mb-1">Guide d'utilisation interactif</h4>
+            <p class="text-xs text-gray-600 max-w-xs leading-relaxed">
+              Consultez les procédures types de l'Espace {{ roleName }}, la liste pour démarrer et lancez les visites guidées pas à pas.
             </p>
           </div>
-
-          <div
-            v-for="guide in activeGuides"
-            :key="guide.id"
-            class="bg-white rounded-2xl p-4 border border-gray-200/90 shadow-2xs hover:border-violet-300 transition-all space-y-2.5"
+          <button
+            type="button"
+            @click="handleOpenGuideDrawer"
+            class="min-h-[44px] px-5 py-2.5 bg-[#1F3A33] hover:bg-[#1F3A33]/90 text-[#F4F1E8] font-bold text-xs rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1F3A33]"
           >
-            <div class="flex items-center gap-3">
-              <div :class="['w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-2xs', guide.bgClass]">
-                <component :is="guide.icon" :class="['w-4.5 h-4.5', guide.iconClass]" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <span class="text-[10px] font-extrabold text-violet-600 uppercase tracking-wider block">Étape {{ guide.step }}</span>
-                <h4 class="text-xs font-bold text-gray-900 truncate">{{ guide.title }}</h4>
-              </div>
-            </div>
-
-            <p class="text-[11px] text-gray-600 leading-relaxed">{{ guide.description }}</p>
-
-            <ul class="space-y-1.5 text-[11px] text-gray-700 bg-gray-50/70 p-2.5 rounded-xl border border-gray-100">
-              <li v-for="(point, pIdx) in guide.points" :key="pIdx" class="flex items-start gap-2">
-                <CheckCircle2 class="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                <span>{{ point }}</span>
-              </li>
-            </ul>
-          </div>
+            <BookOpen class="w-4 h-4" />
+            <span>Ouvrir le tiroir du guide</span>
+          </button>
+          <a
+            href="/guide_utilisation.html"
+            target="_blank"
+            class="text-[11px] text-gray-500 hover:text-gray-900 underline flex items-center gap-1"
+          >
+            <span>Consulter le manuel complet (HTML)</span>
+            <span>↗</span>
+          </a>
         </div>
       </div>
     </transition>
@@ -346,7 +326,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted } from 'vue';
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 import {
   Sparkles, Bot, GraduationCap, Zap, Send, Copy, RotateCcw, X,
   BookOpen, FileText, MessageSquare, CheckCircle2, ChevronRight,
@@ -364,6 +344,10 @@ const props = withDefaults(
     userName: 'Utilisateur',
   }
 );
+
+const emit = defineEmits<{
+  (e: 'open-guide'): void;
+}>();
 
 // État d'ouverture du widget flottant
 const isOpen = ref(false);
@@ -783,7 +767,23 @@ function scrollToBottom() {
   });
 }
 
+function handleOpenGuideDrawer() {
+  isOpen.value = false;
+  window.dispatchEvent(new CustomEvent('open-guide-drawer'));
+}
+
+function handleOpenAiChat() {
+  isOpen.value = true;
+  activeView.value = 'assistant';
+  showTooltip.value = false;
+}
+
 onMounted(() => {
   initWelcomeMessage();
+  window.addEventListener('open-ai-chat', handleOpenAiChat);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('open-ai-chat', handleOpenAiChat);
 });
 </script>

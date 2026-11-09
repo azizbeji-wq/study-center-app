@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\TeacherPortalController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\GroupController;
 use App\Http\Controllers\Api\SearchController;
+use App\Http\Controllers\Api\GuideController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,6 +45,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Recherche globale sécurisée (Élèves, Enseignants)
     Route::get('/search', [SearchController::class, 'search']);
+
+    // Guide d'utilisation — progression par utilisateur (3 routes)
+    Route::get('/guide/progress', [GuideController::class, 'progress']);
+    Route::post('/guide/progress/{key}', [GuideController::class, 'markDone']);
+    Route::delete('/guide/progress/{key}', [GuideController::class, 'markUndone']);
 
     // Profil utilisateur & Changement de mot de passe (Directeur & Secrétaire)
     Route::get('/profile', [UserController::class, 'profile']);

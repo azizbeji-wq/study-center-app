@@ -31,6 +31,7 @@
 
         <button
           @click="openAddModal"
+          data-tour="teachers-add-btn"
           class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm cursor-pointer"
         >
           <Plus class="w-4 h-4" />
@@ -111,7 +112,7 @@
     </div>
 
     <!-- Teachers Grid -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-else data-tour="teachers-table" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <TeacherCard
         v-for="teacher in filteredTeachers"
         :key="teacher.id"

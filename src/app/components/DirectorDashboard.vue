@@ -26,10 +26,10 @@
       </div>
 
       <!-- Navigation Links -->
-      <div class="px-3 pt-3 pb-1 shrink-0">
+      <div class="px-3 pt-3 pb-1 shrink-0 flex items-center gap-1.5">
         <button
           @click="isSearchOpen = true"
-          class="w-full min-h-[44px] px-3 py-2 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 border border-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer group shadow-2xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          class="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-gray-100/90 hover:bg-gray-200/90 border border-gray-200 text-gray-600 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer group shadow-2xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
           aria-label="Recherche globale rapide (Touche /)"
         >
           <div class="flex items-center gap-2">
@@ -37,6 +37,15 @@
             <span>Rechercher...</span>
           </div>
           <kbd class="px-1.5 py-0.5 text-[10px] bg-white border border-gray-300 rounded text-gray-500 font-mono shadow-2xs">/</kbd>
+        </button>
+        <button
+          @click="isGuideOpen = true"
+          class="min-h-[44px] min-w-[44px] px-2.5 rounded-xl bg-[#1F3A33]/10 hover:bg-[#1F3A33]/20 border border-[#1F3A33]/20 text-[#1F3A33] text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#1F3A33]"
+          aria-label="Guide d'utilisation (Touche ?)"
+          title="Guide d'utilisation (Touche ?)"
+        >
+          <BookOpen class="w-4 h-4" />
+          <span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-black rounded-full bg-[#1F3A33] text-[#F4F1E8]">?</span>
         </button>
       </div>
 
@@ -128,6 +137,8 @@
             <span class="text-xs">Rechercher</span>
           </button>
 
+          <GuideButton color-scheme="indigo" keyboard-hint="Touche ?" @open="isGuideOpen = true" />
+
           <button
             @click="$emit('switch-portal', 'teacher')"
             class="px-2.5 py-1.5 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold flex items-center gap-1 hover:bg-violet-100 transition-colors shadow-2xs cursor-pointer min-h-[44px]"
@@ -141,6 +152,13 @@
 
       <!-- Content Area -->
       <div class="flex-1 overflow-auto p-4 md:p-6 relative">
+        <NewHereBanner
+          :tab="activeTab as TabKey"
+          role="director"
+          :has-tour-steps="currentTourSteps.length > 0"
+          @start-tour="startTour"
+        />
+
         <DashboardOverview
           v-if="activeTab === 'dashboard'"
           role="director"
@@ -193,11 +211,30 @@
       @statement-student="handleSearchStudentStatement"
       @view-teacher="handleSearchTeacherView"
     />
+
+    <!-- Tiroir Guide -->
+    <GuideDrawer
+      :is-open="isGuideOpen"
+      role="director"
+      :current-tab="activeTab as TabKey"
+      @close="isGuideOpen = false"
+      @start-tour="startTour"
+      @navigate-tab="(tab) => selectTab(tab as Tab)"
+      @open-ai="isGuideOpen = false"
+    />
+
+    <!-- Visite guidée -->
+    <TourOverlay
+      :steps="currentTourSteps"
+      :active="isTourActive"
+      @finish="onTourFinish"
+      @skip="isTourActive = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import {
   LogOut, Users, DollarSign, Calendar, BookOpen, BarChart3, UserPlus,
   LayoutDashboard, Baby, UserCheck, UserCog, Menu, Search
@@ -213,6 +250,12 @@ import FinancialReports from './FinancialReports.vue';
 import SchoolCalendar from './SchoolCalendar.vue';
 import AccountManagementModal from './AccountManagementModal.vue';
 import GlobalSearchModal from './GlobalSearchModal.vue';
+import GuideDrawer from './GuideDrawer.vue';
+import GuideButton from './GuideButton.vue';
+import NewHereBanner from './NewHereBanner.vue';
+import TourOverlay from './TourOverlay.vue';
+import { useGuide, loadProgress } from '../guide/useGuide';
+import type { TabKey } from '../guide/types';
 
 const props = defineProps<{
   userName: string;
@@ -227,6 +270,24 @@ const currentDisplayName = ref(props.userName);
 const showAccountModal = ref(false);
 const isMobileMenuOpen = ref(false);
 const isSearchOpen = ref(false);
+const isGuideOpen = ref(false);
+const isTourActive = ref(false);
+
+// ─── Guide ───────────────────────────────────────────────────────
+const { getTourSteps, completeTour } = useGuide('director');
+const currentTourSteps = computed(() => getTourSteps(activeTab.value as TabKey));
+
+function startTour() {
+  if (currentTourSteps.value.length > 0) {
+    isTourActive.value = true;
+  }
+}
+
+async function onTourFinish() {
+  isTourActive.value = false;
+  await completeTour(activeTab.value as TabKey);
+}
+// ─────────────────────────────────────────────────────────────────
 
 const searchSelectedStudentId = ref<number | undefined>(undefined);
 const searchCollectStudentId = ref<number | undefined>(undefined);
@@ -265,6 +326,21 @@ function onGlobalKeydown(e: KeyboardEvent) {
     }
     e.preventDefault();
     isSearchOpen.value = true;
+  }
+  // Touche ? : ouvrir le guide (hors champ de saisie)
+  if (e.key === '?' && !isGuideOpen.value) {
+    const target = e.target as HTMLElement;
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+    e.preventDefault();
+    isGuideOpen.value = true;
   }
 }
 
@@ -325,15 +401,22 @@ const syncFromHash = () => {
   }
 };
 
+function onOpenGuideEvent() {
+  isGuideOpen.value = true;
+}
+
 onMounted(() => {
   syncFromHash();
   window.addEventListener('hashchange', syncFromHash);
   window.addEventListener('keydown', onGlobalKeydown);
+  window.addEventListener('open-guide-drawer', onOpenGuideEvent);
+  loadProgress();
 });
 
 onUnmounted(() => {
   window.removeEventListener('hashchange', syncFromHash);
   window.removeEventListener('keydown', onGlobalKeydown);
+  window.removeEventListener('open-guide-drawer', onOpenGuideEvent);
 });
 
 watch(activeTab, (newTab) => {

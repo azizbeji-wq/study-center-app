@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide d'Utilisation Officiel — Centre d'Études & Garderie Périscolaire</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: #eef2ff;
+      --primary-border: #c7d2fe;
+      --secondary: #059669;
+      --secondary-light: #ecfdf5;
+      --accent: #7c3aed;
+      --accent-light: #f5f3ff;
+      --dark: #0f172a;
+      --gray-900: #111827;
+      --gray-800: #1f2937;
+      --gray-700: #374151;
+      --gray-600: #4b5563;
+      --gray-500: #6b7280;
+      --gray-400: #9ca3af;
+      --gray-300: #d1d5db;
+      --gray-200: #e5e7eb;
+      --gray-100: #f3f4f6;
+      --gray-50: #f9fafb;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --sidebar-width: 290px;
+      --header-height: 70px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 15px;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      color: var(--gray-800);
+      background-color: var(--gray-50);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Navigation Bar */
+    header.top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: var(--header-height);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--gray-900);
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: white;
+      border: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--gray-900);
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box input {
+      padding: 8px 16px 8px 38px;
+      border-radius: 9999px;
+      border: 1px solid var(--gray-300);
+      background: var(--gray-100);
+      font-size: 0.85rem;
+      font-family: inherit;
+      width: 240px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .search-box input:focus {
+      width: 320px;
+      background: white;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--gray-400);
+      pointer-events: none;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    .btn-outline {
+      background: white;
+      border-color: var(--gray-300);
+      color: var(--gray-700);
+    }
+
+    .btn-outline:hover {
+      background: var(--gray-50);
+      border-color: var(--gray-400);
+    }
+
+    /* Layout */
+    .layout-wrapper {
+      display: flex;
+      min-height: calc(100vh - var(--header-height));
+    }
+
+    /* Sidebar Navigation */
+    aside.sidebar {
+      width: var(--sidebar-width);
+      position: sticky;
+      top: var(--header-height);
+      height: calc(100vh - var(--header-height));
+      overflow-y: auto;
+      background: white;
+      border-right: 1px solid var(--gray-200);
+      padding: 1.5rem 1rem 3rem 1rem;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--gray-400);
+      padding: 0 0.75rem;
+      margin: 1.25rem 0 0.5rem 0;
+    }
+
+    .sidebar-section-title:first-child {
+      margin-top: 0;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-col: column;
+      gap: 2px;
+    }
+
+    .nav-item a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      color: var(--gray-600);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .nav-item a:hover {
+      background: var(--gray-100);
+      color: var(--gray-900);
+    }
+
+    .nav-item a.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .nav-item a .nav-icon {
+      font-size: 1.1rem;
+      width: 22px;
+      text-align: center;
+    }
+
+    .role-badge-pill {
+      margin-left: auto;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+
+    .role-dir {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    .role-sec {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .role-ens {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    .role-all {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    /* Role Filter Selector in Sidebar */
+    .role-filter-box {
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      margin-bottom: 1.25rem;
+    }
+
+    .role-filter-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .role-filter-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .role-filter-btn {
+      padding: 5px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid var(--gray-300);
+      background: white;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .role-filter-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Main Documentation Content */
+    main.doc-content {
+      flex: 1;
+      padding: 2.5rem 3.5rem 5rem 3.5rem;
+      max-width: 1080px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #8b5cf6 100%);
+      color: white;
+      border-radius: var(--radius-xl);
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -10%;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+    }
+
+    .hero-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: rgba(255, 255, 255, 0.9);
+      max-width: 720px;
+      line-height: 1.5;
+    }
+
+    /* Content Typography & Sections */
+    section.doc-section {
+      margin-bottom: 3.5rem;
+      scroll-margin-top: calc(var(--header-height) + 1.5rem);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 2px solid var(--gray-200);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    h2.section-title {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--gray-900);
+    }
+
+    h3.sub-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 1.75rem 0 0.75rem 0;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    p {
+      color: var(--gray-700);
+      margin-bottom: 1rem;
+      font-size: 0.96rem;
+    }
+
+    /* Callout Boxes */
+    .callout {
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      border-left: 4px solid;
+      background: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .callout-title {
+      font-weight: 800;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .callout-info {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e40af;
+    }
+    .callout-info .callout-title { color: #1e3a8a; }
+
+    .callout-tip {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+    .callout-tip .callout-title { color: #064e3b; }
+
+    .callout-warning {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+    .callout-warning .callout-title { color: #78350f; }
+
+    .callout-danger {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+    .callout-danger .callout-title { color: #7f1d1d; }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--gray-300);
+      transform: translateY(-2px);
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-desc {
+      font-size: 0.88rem;
+      color: var(--gray-600);
+      line-height: 1.5;
+    }
+
+    /* Steps List (Numbered timeline) */
+    .steps-container {
+      margin: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 16px;
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .step-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .step-body {
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+
+    .step-text {
+      font-size: 0.9rem;
+      color: var(--gray-600);
+      margin-bottom: 0;
+    }
+
+    /* Matrix / Comparison Tables */
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    table.custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    table.custom-table th {
+      background: var(--gray-100);
+      color: var(--gray-800);
+      font-weight: 700;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    table.custom-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--gray-200);
+      color: var(--gray-700);
+      vertical-align: middle;
+    }
+
+    table.custom-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.custom-table tr:hover td {
+      background: var(--gray-50);
+    }
+
+    .check-yes {
+      color: var(--secondary);
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+
+    .check-no {
+      color: var(--gray-400);
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .badge-success { background: #dcfce7; color: #15803d; }
+    .badge-warning { background: #fef3c7; color: #b45309; }
+    .badge-danger { background: #fee2e2; color: #b91c1c; }
+    .badge-info { background: #e0e7ff; color: #4338ca; }
+    .badge-purple { background: #f3e8ff; color: #7e22ce; }
+
+    /* Code Blocks & Inline Code */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      background: var(--gray-100);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #be185d;
+      border: 1px solid var(--gray-200);
+    }
+
+    pre {
+      background: var(--gray-900);
+      color: #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      margin: 1rem 0;
+      line-height: 1.5;
+    }
+
+    /* Accordions / FAQ */
+    .faq-item {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .faq-question {
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      color: var(--gray-900);
+      background: white;
+      transition: background 0.2s;
+      user-select: none;
+    }
+
+    .faq-question:hover {
+      background: var(--gray-50);
+    }
+
+    .faq-arrow {
+      transition: transform 0.2s ease;
+      font-size: 0.85rem;
+      color: var(--gray-400);
+    }
+
+    .faq-item.open .faq-arrow {
+      transform: rotate(180deg);
+      color: var(--primary);
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 1.25rem;
+      border-top: 1px solid var(--gray-200);
+      background: var(--gray-50);
+      font-size: 0.92rem;
+      color: var(--gray-700);
+    }
+
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+
+    /* Mock Reçu Preview Box */
+    .receipt-mock {
+      max-width: 420px;
+      margin: 1.5rem auto;
+      background: white;
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius-md);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-md);
+      font-family: var(--font-sans);
+    }
+
+    .receipt-header {
+      text-align: center;
+      border-bottom: 1px solid var(--gray-200);
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .receipt-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--gray-900);
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+    }
+
+    .receipt-total {
+      border-top: 2px solid var(--gray-900);
+      margin-top: 10px;
+      padding-top: 8px;
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Printable Styles */
+    @media print {
+      header.top-nav, aside.sidebar, .header-actions, .role-filter-box, .btn {
+        display: none !important;
+      }
+      .layout-wrapper {
+        display: block !important;
+      }
+      main.doc-content {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .hero-banner {
+        background: #4338ca !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .callout, .card, .step-item, .faq-item {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+      }
+      .faq-answer {
+        display: block !important;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      aside.sidebar {
+        display: none;
+      }
+      main.doc-content {
+        padding: 1.5rem 1rem;
+      }
+      .hero-title {
+        font-size: 1.75rem;
+      }
+      .search-box input {
+        width: 160px;
+      }
+      .search-box input:focus {
+        width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <a href="#" class="brand">
+      <div class="brand-logo">
+        <img src="logo.png" alt="Logo" onerror="this.src='/logo.png'">
+      </div>
+      <div>
+        <div class="brand-title">Centre d'Études & Garderie</div>
+        <div class="brand-subtitle">Manuel & Guide d'Utilisation Officiel</div>
+      </div>
+    </a>
+
+    <div class="header-actions">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Rechercher une fonction (ex: reçu, appel)..." onkeyup="filterGuide()">
+      </div>
+
+      <button class="btn btn-outline" onclick="window.print()">
+        <span>🖨️</span> Imprimer / PDF
+      </button>
+
+      <a href="/login" class="btn btn-primary" target="_blank">
+        <span>🚀</span> Ouvrir l'Application
+      </a>
+    </div>
+  </header>
+
+  <div class="layout-wrapper">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <!-- Role Filter -->
+      <div class="role-filter-box">
+        <span class="role-filter-label">Filtrer par Profil</span>
+        <div class="role-filter-buttons">
+          <button class="role-filter-btn active" onclick="setRoleFilter('all')">Tous</button>
+          <button class="role-filter-btn" onclick="setRoleFilter('director')">Directeur</button>
+          <button class="role-filter-btn" onclick="setRoleFilter('secretary')">Secrétaire</button>
+          <button class="role-filter-btn" onclick="setRoleFilter('teacher')">Enseignant</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section-title">Introduction</div>
+      <ul class="nav-list">
+        <li class="nav-item"><a href="#presentation" class="active"><span class="nav-icon">📌</span> Présentation Générale</a></li>
+        <li class="nav-item"><a href="#acces-securite"><span class="nav-icon">🔐</span> Accès & Sécurité</a></li>
+        <li class="nav-item"><a href="#profils-rbac"><span class="nav-icon">👥</span> Les 3 Espaces (RBAC)</a></li>
+      </ul>
+
+      <div class="sidebar-section-title">Modules de Gestion</div>
+      <ul class="nav-list">
+        <li class="nav-item" data-role="all"><a href="#dashboard"><span class="nav-icon">📊</span> Tableau de Bord</a></li>
+        <li class="nav-item" data-role="director secretary"><a href="#eleves"><span class="nav-icon">🎓</span> Gestion des Élèves</a></li>
+        <li class="nav-item" data-role="all"><a href="#presences"><span class="nav-icon">📝</span> Présences & Groupes</a></li>
+        <li class="nav-item" data-role="director secretary"><a href="#garderie"><span class="nav-icon">🧸</span> Garderie Périscolaire</a></li>
+        <li class="nav-item" data-role="director secretary"><a href="#enseignants"><span class="nav-icon">👨‍🏫</span> Corps Enseignant</a></li>
+        <li class="nav-item" data-role="all"><a href="#emploi-temps"><span class="nav-icon">📅</span> Emplois du Temps</a></li>
+        <li class="nav-item" data-role="director secretary"><a href="#calendrier"><span class="nav-icon">🗓️</span> Calendrier Officiel</a></li>
+      </ul>
+
+      <div class="sidebar-section-title">Finances & Facturation</div>
+      <ul class="nav-list">
+        <li class="nav-item" data-role="director secretary"><a href="#paiements"><span class="nav-icon">💳</span> Paiements & Reçus</a></li>
+        <li class="nav-item" data-role="director secretary"><a href="#moteur-creances"><span class="nav-icon">⚡</span> Moteur d'Impayés</a></li>
+        <li class="nav-item" data-role="director"><a href="#comptabilite"><span class="nav-icon">📈</span> Comptabilité & Bilans</a></li>
+      </ul>
+
+      <div class="sidebar-section-title">Assistance & Outils</div>
+      <ul class="nav-list">
+        <li class="nav-item" data-role="all"><a href="#assistant-ia"><span class="nav-icon">✨</span> Assistant IA Gemini</a></li>
+        <li class="nav-item" data-role="all"><a href="#gestion-comptes"><span class="nav-icon">⚙️</span> Gestion des Comptes</a></li>
+        <li class="nav-item" data-role="all"><a href="#faq"><span class="nav-icon">❓</span> FAQ & Dépannage</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="doc-content">
+
+      <!-- Hero Header -->
+      <div class="hero-banner">
+        <div class="hero-meta">
+          <span class="hero-badge">⭐ Version 1.2.0</span>
+          <span class="hero-badge">🇹🇳 Conforme Programme Tunisien</span>
+          <span class="hero-badge">💰 Monnaie : Dinar Tunisien (TND)</span>
+        </div>
+        <h1 class="hero-title">Guide d'Utilisation de l'Application</h1>
+        <p class="hero-subtitle">
+          Bienvenue dans le manuel officiel du système de gestion intégrée du Centre d'Études et de la Garderie Périscolaire. Ce guide vous accompagne pas à pas dans toutes les étapes quotidiennes.
+        </p>
+      </div>
+
+      <!-- SECTION 1 : PRÉSENTATION GÉNÉRALE -->
+      <section id="presentation" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">1</div>
+          <h2 class="section-title">Présentation Générale du Système</h2>
+        </div>
+        <p>
+          L'application a été conçue sur mesure pour automatiser et digitaliser l'ensemble des activités pédagogiques, administratives et financières d'un centre d'études privé en Tunisie.
+        </p>
+
+        <div class="cards-grid">
+          <div class="card">
+            <div class="card-icon" style="background:#eff6ff; color:#3b82f6;">📚</div>
+            <h4 class="card-title">Soutien Scolaire</h4>
+            <p class="card-desc">
+              Du collège au lycée (de la 7ème année de base jusqu'au Baccalauréat toutes sections). Gestion des matières, inscriptions par groupe, fiches de présence et calcul des tarifs de cours.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon" style="background:#ecfdf5; color:#10b981;">🧸</div>
+            <h4 class="card-title">Garderie Périscolaire</h4>
+            <p class="card-desc">
+              Accueil et suivi des jeunes enfants : formules périscolaires, demi-pension avec repas, goûter et temps plein. Facturation mensuelle automatisée avec gestion des réductions fraternelles.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-icon" style="background:#f5f3ff; color:#8b5cf6;">🧾</div>
+            <h4 class="card-title">Caisse & Reçus Immédiats</h4>
+            <p class="card-desc">
+              Génération de reçus officiels imprimables à chaque encaissement (numérotés, signés avec cachet), suivi en direct des impayés selon le nombre exact de séances suivies.
+            </p>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">💡 Devise & Spécificités Régionales</div>
+          Toutes les transactions financières, forfaits mensuels et tarifs de séances sont exprimés en <strong>Dinars Tunisiens (TND / DT)</strong>. Le système intègre la nomenclature officielle des collèges et lycées tunisiens (Maths, Physique-Chimie, SVT, Arabe, Français, Anglais, Économie-Gestion, Informatique, Technique, etc.).
+        </div>
+      </section>
+
+      <!-- SECTION 2 : ACCÈS ET SÉCURITÉ -->
+      <section id="acces-securite" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">2</div>
+          <h2 class="section-title">Accès, Connexion & Règles de Sécurité</h2>
+        </div>
+        <p>
+          L'application utilise une sécurité renforcée basée sur <strong>Laravel Sanctum</strong> avec jetons d'authentification Bearer, protection contre les attaques par force brute (limite à 10 tentatives/minute) et fermeture automatique de session.
+        </p>
+
+        <h3 class="sub-title">Comptes de Démonstration & Rôles Préconfigurés</h3>
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Rôle</th>
+                <th>Adresse E-mail</th>
+                <th>Mot de Passe Initial</th>
+                <th>Droits Principaux</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge-info">Directeur</span></td>
+                <td><code>director@studycenter.com</code></td>
+                <td><code>director123</code></td>
+                <td>Accès complet, comptabilité, suppression définitive, gestion du personnel.</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-success">Secrétaire</span></td>
+                <td><code>secretary@studycenter.com</code></td>
+                <td><code>secretary123</code></td>
+                <td>Inscriptions, pointage des présences, encaissements, reçus, emplois du temps.</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge-purple">Enseignant</span></td>
+                <td>Compte créé par la direction</td>
+                <td>Défini à la création</td>
+                <td>Pointage de ses propres classes, consultation de son planning et régularisations.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub-title">Règles d'Expiration de Session (Protection des données)</h3>
+        <p>Afin de protéger la confidentialité des fiches élèves et de la caisse :</p>
+        <div class="steps-container">
+          <div class="step-item">
+            <div class="step-badge">1h</div>
+            <div class="step-body">
+              <div class="step-title">Fermeture de l'onglet ou du navigateur</div>
+              <p class="step-text">Si vous fermez votre onglet ou navigateur pendant plus d'une heure, la session est automatiquement révoquée à la réouverture.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">2h</div>
+            <div class="step-body">
+              <div class="step-title">Inactivité prolongée</div>
+              <p class="step-text">Si la page reste ouverte sans aucune interaction pendant 2 heures consécutives, l'utilisateur est déconnecté avec une alerte de sécurité.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-warning">
+          <div class="callout-title">⚠️ Sauvegarde automatique et Déconnexion manuelle</div>
+          À la fin de votre journée de travail, cliquez toujours sur <strong>Déconnexion</strong> dans le menu latéral pour libérer le jeton de sécurité de votre poste.
+        </div>
+      </section>
+
+      <!-- SECTION 3 : LES 3 ESPACES (RBAC) -->
+      <section id="profils-rbac" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">3</div>
+          <h2 class="section-title">Les 3 Espaces & Matrice des Droits (RBAC)</h2>
+        </div>
+        <p>
+          L'interface s'adapte automatiquement selon le profil de l'utilisateur connecté :
+        </p>
+
+        <div class="cards-grid">
+          <div class="card" style="border-top: 4px solid var(--primary);">
+            <div class="card-icon" style="background:#e0e7ff; color:#3730a3;">🏢</div>
+            <h4 class="card-title">1. Espace Directeur</h4>
+            <p class="card-desc">
+              Le centre de contrôle général. Le directeur visualise la santé financière du centre, gère les enseignants, configure les comptes du personnel, et dispose du droit exclusif de suppression définitive (SoftDelete).
+            </p>
+          </div>
+
+          <div class="card" style="border-top: 4px solid var(--secondary);">
+            <div class="card-icon" style="background:#d1fae5; color:#065f46;">📋</div>
+            <h4 class="card-title">2. Espace Secrétaire / Personnel</h4>
+            <p class="card-desc">
+              Orienté sur la rapidité opérationnelle au guichet : inscrire un élève en 30 secondes, pointer les présences, encaisser un règlement et imprimer le reçu immédiatement pour le parent.
+            </p>
+          </div>
+
+          <div class="card" style="border-top: 4px solid var(--accent);">
+            <div class="card-icon" style="background:#ede9fe; color:#5b21b6;">👨‍🏫</div>
+            <h4 class="card-title">3. Espace Enseignant</h4>
+            <p class="card-desc">
+              Interface épurée et mobile-friendly. L'enseignant voit ses groupes, son emploi du temps hebdomadaire, fait l'appel en un tap sur son smartphone et vérifie ses honoraires.
+            </p>
+          </div>
+        </div>
+
+        <h3 class="sub-title">Passerelle Double-Rôle (Directeur ou Secrétaire ↔ Enseignant)</h3>
+        <p>
+          Si le directeur ou la secrétaire dispense également des cours, un bouton violet <strong>« Mode Enseignant »</strong> situé en bas du menu latéral permet de basculer instantanément dans le portail prof sans avoir à se déconnecter ! Un bandeau supérieur permet de revenir à l'espace administratif à tout moment.
+        </p>
+
+        <h3 class="sub-title">Matrice Comparatice des Droits</h3>
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Fonctionnalité</th>
+                <th>Secrétaire</th>
+                <th>Directeur</th>
+                <th>Enseignant</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Consulter le tableau de bord</td>
+                <td><span class="check-yes">✓</span></td>
+                <td><span class="check-yes">✓</span></td>
+                <td><span class="badge badge-purple">Vue prof</span></td>
+              </tr>
+              <tr>
+                <td>Inscrire / Modifier un élève</td>
+                <td><span class="check-yes">✓</span></td>
+                <td><span class="check-yes">✓</span></td>
+                <td><span class="check-no">✕</span></td>
+              </tr>
+              <tr>
+                <td>Supprimer définitivement un élève</td>
+                <td><span class="check-no">✕ (403 Interdit)</span></td>
+                <td><span class="check-yes">✓ (SoftDelete)</span></td>
+                <td><span class="check-no">✕</span></td>
+              </tr>
+              <tr>
+                <td>Faire l'appel des présences</td>
+                <td><span class="check-yes">✓ (Tous groupes)</span></td>
+                <td><span class="check-yes">✓ (Tous groupes)</span></td>
+                <td><span class="check-yes">✓ (Ses groupes)</span></td>
+              </tr>
+              <tr>
+                <td>Encaisser et imprimer des reçus</td>
+                <td><span class="check-yes">✓</span></td>
+                <td><span class="check-yes">✓</span></td>
+                <td><span class="check-no">✕</span></td>
+              </tr>
+              <tr>
+                <td>Consulter les rapports comptables et bénéfices</td>
+                <td><span class="check-no">✕</span></td>
+                <td><span class="check-yes">✓</span></td>
+                <td><span class="check-no">✕</span></td>
+              </tr>
+              <tr>
+                <td>Créer / Modifier les comptes employés & permissions</td>
+                <td><span class="check-no">✕</span></td>
+                <td><span class="check-yes">✓</span></td>
+                <td><span class="check-no">✕</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 4 : TABLEAU DE BORD -->
+      <section id="dashboard" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">4</div>
+          <h2 class="section-title">Tableau de Bord Général</h2>
+        </div>
+        <p>
+          Le tableau de bord centralise en un coup d'œil l'ensemble de l'activité du centre en temps réel :
+        </p>
+
+        <div class="cards-grid">
+          <div class="card">
+            <div class="card-icon" style="background:#e0e7ff; color:#4338ca;">👥</div>
+            <h4 class="card-title">Total Élèves Inscrits</h4>
+            <p class="card-desc">Nombre d'élèves actifs en soutien scolaire répartis par niveau scolaire (Collège et Lycée).</p>
+          </div>
+          <div class="card">
+            <div class="card-icon" style="background:#ecfdf5; color:#059669;">👶</div>
+            <h4 class="card-title">Enfants de Garderie</h4>
+            <p class="card-desc">Effectif total des tout-petits inscrits en garderie périscolaire et demi-pension.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon" style="background:#fef3c7; color:#d97706;">💰</div>
+            <h4 class="card-title">Recettes Mensuelles (TND)</h4>
+            <p class="card-desc">Total encaissé sur le mois en cours (soutien + garderie), avec comparatif par rapport au mois précédent.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon" style="background:#fee2e2; color:#dc2626;">🚨</div>
+            <h4 class="card-title">Alertes d'Impayés</h4>
+            <p class="card-desc">Compteur immédiat des élèves présentant des créances de séances ou mensualités non réglées.</p>
+          </div>
+        </div>
+
+        <h3 class="sub-title">Actions Rapides depuis le Dashboard</h3>
+        <ul>
+          <li><strong>Bouton « + Nouvel Élève »</strong> : ouvre directement le formulaire d'inscription rapide.</li>
+          <li><strong>Bouton « Pointer Présences »</strong> : saute directement à la feuille d'appel du jour.</li>
+          <li><strong>Flux d'activité récente</strong> : affiche les 10 derniers événements (nouveaux paiements enregistrés, pointages effectués, nouvelles inscriptions).</li>
+        </ul>
+      </section>
+
+      <!-- SECTION 5 : GESTION DES ÉLÈVES -->
+      <section id="eleves" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">5</div>
+          <h2 class="section-title">Gestion des Élèves & Remises</h2>
+        </div>
+        <p>
+          Ce module gère le dossier complet de chaque élève, ses matières d'inscription, ses enseignants et ses tarifs personnalisés.
+        </p>
+
+        <h3 class="sub-title">Comment inscrire un nouvel élève ?</h3>
+        <div class="steps-container">
+          <div class="step-item">
+            <div class="step-badge">1</div>
+            <div class="step-body">
+              <div class="step-title">Informations de base</div>
+              <p class="step-text">Renseignez le nom & prénom, le numéro de téléphone de l'élève, et impérativement le <strong>numéro du tuteur légal (parent)</strong> pour l'envoi de SMS et reçus.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">2</div>
+            <div class="step-body">
+              <div class="step-title">Niveau & Groupe</div>
+              <p class="step-text">Sélectionnez le niveau tunisien (ex: <em>9ème de base</em> ou <em>Baccalauréat Sciences Exp.</em>) et assignez le groupe pédagogique (ex: <em>Groupe A</em>, <em>B1</em>).</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">3</div>
+            <div class="step-body">
+              <div class="step-title">Sélection des Matières & Enseignants</div>
+              <p class="step-text">Cochez les matières suivies (ex: Mathématiques, Sciences Physiques). Pour chaque matière, associez l'enseignant attitré. Le système pré-remplit le tarif standard par séance ou mensuel.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">4</div>
+            <div class="step-body">
+              <div class="step-title">Gestion des Remises Spéciales (Optionnel)</div>
+              <p class="step-text">
+                Si l'élève bénéficie d'un tarif préférentiel (famille nombreuse, inscription multi-matières) :<br>
+                - <strong>Remise en pourcentage (%)</strong> : ex: <code>20%</code> de réduction sur toutes les matières.<br>
+                - <strong>Remise en montant fixe (TND)</strong> : ex: déduction directe de <code>25 TND</code> sur la mensualité.
+              </p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">5</div>
+            <div class="step-body">
+              <div class="step-title">Validation atomique</div>
+              <p class="step-text">Cliquez sur <strong>« Enregistrer l'élève »</strong>. L'inscription est enregistrée en transaction sécurisée (aucun risque de fiche incomplète en cas de coupure de connexion).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">💡 Recherche et Filtres Instantanés</div>
+          La barre de recherche permet de filtrer en temps réel par <strong>Nom</strong>, par <strong>Niveau scolaire</strong>, par <strong>Groupe</strong>, ou par <strong>Statut de paiement</strong> (À jour, En attente, En retard).
+        </div>
+      </section>
+
+      <!-- SECTION 6 : PRÉSENCES EN LOT -->
+      <section id="presences" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">6</div>
+          <h2 class="section-title">Présences & Groupes (Batch Attendance)</h2>
+        </div>
+        <p>
+          Le module de présence permet de pointer une classe entière en moins de 10 secondes grâce au système de pointage en lot.
+        </p>
+
+        <h3 class="sub-title">Procédure de Pointage Journalier</h3>
+        <div class="steps-container">
+          <div class="step-item">
+            <div class="step-badge">1</div>
+            <div class="step-body">
+              <div class="step-title">Choisir la séance</div>
+              <p class="step-text">Indiquez la date du jour, le groupe (ex: <em>Bac Informatique G1</em>), la matière (<em>Algorithmique</em>) et l'enseignant.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">2</div>
+            <div class="step-body">
+              <div class="step-title">Pointage interactif</div>
+              <p class="step-text">
+                Par défaut, tous les élèves sont marqués <span class="badge badge-success">Présent</span>. Il vous suffit de cliquer sur les exceptions :
+                <span class="badge badge-danger">Absent</span>, 
+                <span class="badge badge-warning">Excusé</span> ou 
+                <span class="badge badge-info">En retard</span>.
+              </p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">3</div>
+            <div class="step-body">
+              <div class="step-title">Validation immédiate</div>
+              <p class="step-text">Cliquez sur <strong>« Enregistrer la feuille d'appel »</strong>. Le moteur met automatiquement à jour le compteur de séances suivies par chaque élève pour le calcul de la facturation.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">ℹ️ Impact direct sur la facturation</div>
+          Chaque statut <strong>Présent</strong> ou <strong>En retard</strong> incrémente le nombre de séances dispensées. Les statuts <strong>Excusé</strong> ou <strong>Absent</strong> ne sont pas facturés à l'élève selon les règles configurées par le centre.
+        </div>
+      </section>
+
+      <!-- SECTION 7 : GARDERIE PÉRISCOLAIRE -->
+      <section id="garderie" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">7</div>
+          <h2 class="section-title">Garderie Périscolaire & Demi-Pension</h2>
+        </div>
+        <p>
+          Ce volet gère les tout-petits et écoliers inscrits aux formules périscolaires :
+        </p>
+        <ul>
+          <li><strong>Formule Matin & Périscolaire</strong> : accueil avant et après l'école primaire.</li>
+          <li><strong>Formule Demi-pension (Déjeuner + Repos)</strong> : gestion du repas de midi, surveillance et activités d'éveil.</li>
+          <li><strong>Formule Complète / Mercredi & Samedi</strong> : prise en charge complète pendant les temps libres.</li>
+        </ul>
+
+        <h3 class="sub-title">Champs de la Fiche Garderie</h3>
+        <p>
+          La fiche d'un enfant de garderie comprend le <strong>Nom de l'enfant</strong>, l'<strong>Âge</strong>, les <strong>Coordonnées des parents</strong> (téléphones d'urgence), les <strong>Remarques de santé / allergies alimentaires</strong>, et le <strong>Tarif forfaitaire mensuel en TND</strong>.
+        </p>
+      </section>
+
+      <!-- SECTION 8 : ENSEIGNANTS -->
+      <section id="enseignants" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">8</div>
+          <h2 class="section-title">Corps Enseignant & Rémunérations</h2>
+        </div>
+        <p>
+          Permet de superviser les professeurs partenaires, leurs matières enseignées, leurs volumes horaires et le mode de calcul de leurs honoraires.
+        </p>
+
+        <h3 class="sub-title">Modes de Rémunération Pris en Charge</h3>
+        <div class="cards-grid">
+          <div class="card">
+            <h4 class="card-title">1. Tarif Fixe par Séance (TND)</h4>
+            <p class="card-desc">L'enseignant perçoit un montant fixe pour chaque cours dispensé (ex: <em>30 TND / séance</em>), quel que soit le nombre d'élèves présents.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon" style="background:#fdf2f8; color:#db2777;">%</div>
+            <h4 class="card-title">2. Pourcentage sur Recettes (%)</h4>
+            <p class="card-desc">L'enseignant reçoit un pourcentage convenu (ex: <em>60%</em> ou <em>70%</em>) des cotisations réglées par les élèves de ses groupes, le solde revenant au centre.</p>
+          </div>
+        </div>
+
+        <p>
+          Le système comptabilise automatiquement le total des séances validées par chaque professeur et fournit l'état de régularisation (<strong>« Rémunéré »</strong> ou <strong>« En attente »</strong>).
+        </p>
+      </section>
+
+      <!-- SECTION 9 : EMPLOIS DU TEMPS -->
+      <section id="emploi-temps" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">9</div>
+          <h2 class="section-title">Emplois du Temps & Affectation des Salles</h2>
+        </div>
+        <p>
+          Visualisez l'occupation des salles de cours et des créneaux horaires tout au long de la semaine :
+        </p>
+        <ul>
+          <li>Vue hebdomadaire du <strong>Lundi au Dimanche</strong>.</li>
+          <li>Créneaux horaires standards : matinée, après-midi et soirées.</li>
+          <li>Affichage clair : Nom du groupe, Matière, Professeur assigné et Salle de cours.</li>
+          <li>Possibilité d'imprimer la grille hebdomadaire pour affichage dans le hall du centre.</li>
+        </ul>
+      </section>
+
+      <!-- SECTION 10 : CALENDRIER SCOLAIRE -->
+      <section id="calendrier" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">10</div>
+          <h2 class="section-title">Calendrier Officiel & Emplois du Temps Écoles</h2>
+        </div>
+        <p>
+          Ce module offre deux outils essentiels pour l'organisation pédagogique :
+        </p>
+        <div class="steps-container">
+          <div class="step-item">
+            <div class="step-badge">A</div>
+            <div class="step-body">
+              <div class="step-title">Calendrier Scolaire National (Ministère de l'Éducation)</div>
+              <p class="step-text">Dates officielles de la rentrée, des vacances scolaires (mi-trimestre, vacances d'hiver, vacances de printemps) et des examens nationaux (Concours 9ème, Baccalauréat).</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">B</div>
+            <div class="step-body">
+              <div class="step-title">Import des Emplois du Temps des Écoles Primaires</div>
+              <p class="step-text">Possibilité de téléverser (PDF, JPG, PNG) les emplois du temps officiels des écoles des élèves pour synchroniser les créneaux de garderie et de soutien sans conflit.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 11 : PAIEMENTS & REÇUS -->
+      <section id="paiements" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">11</div>
+          <h2 class="section-title">Paiements, Caisse & Reçus Imprimables</h2>
+        </div>
+        <p>
+          L'encaissement et la remise d'un reçu au parent tuteur sont au cœur du fonctionnement de l'établissement.
+        </p>
+
+        <h3 class="sub-title">Comment encaisser un paiement et remettre un reçu ?</h3>
+        <div class="steps-container">
+          <div class="step-item">
+            <div class="step-badge">1</div>
+            <div class="step-body">
+              <div class="step-title">Sélectionner l'élève ou l'enfant</div>
+              <p class="step-text">Dans l'onglet <strong>Paiements</strong>, recherchez l'élève. Sa fiche indique immédiatement le solde dû calculé par le système.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">2</div>
+            <div class="step-body">
+              <div class="step-title">Renseigner le règlement</div>
+              <p class="step-text">Indiquez le montant perçu en <strong>TND</strong>, le nombre de séances réglées (ex: 4 séances = 1 mois), la matière/professeur concerné et le mode de règlement (Espèces, Chèque, Virement).</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">3</div>
+            <div class="step-body">
+              <div class="step-title">Édition instantanée du Reçu Officiel</div>
+              <p class="step-text">À la validation, le système génère un reçu officiel avec numéro séquentiel unique (ex: <code>REC-2026-084</code>).</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">4</div>
+            <div class="step-body">
+              <div class="step-title">Impression en 1 clic</div>
+              <p class="step-text">Cliquez sur <strong>« Imprimer le Reçu »</strong>. Une mise en page spéciale A5 / ticket avec le logo, le tampon du centre et la ligne de signature s'ouvre directement sans aucun menu parasite.</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="sub-title">Aperçu du Format de Reçu Imprimé</h3>
+        <div class="receipt-mock">
+          <div class="receipt-header">
+            <div class="receipt-title">CENTRE D'ÉTUDES & GARDERIE</div>
+            <p style="font-size:0.75rem; color:#6b7280; margin:0;">Reçu officiel de paiement — N° REC-2026-0142</p>
+          </div>
+          <div class="receipt-row">
+            <span>Date :</span>
+            <strong>08/11/2026</strong>
+          </div>
+          <div class="receipt-row">
+            <span>Élève :</span>
+            <strong>Youssef Ben Salem</strong>
+          </div>
+          <div class="receipt-row">
+            <span>Niveau :</span>
+            <span>Baccalauréat Sciences</span>
+          </div>
+          <div class="receipt-row">
+            <span>Prestation :</span>
+            <span>Mathématiques (Prof: M. Karim)</span>
+          </div>
+          <div class="receipt-row">
+            <span>Volume réglé :</span>
+            <span>4 séances (Forfait mensuel)</span>
+          </div>
+          <div class="receipt-total">
+            <span>Total Encaissé :</span>
+            <span>120.000 TND</span>
+          </div>
+          <div style="margin-top:1.25rem; display:flex; justify-content:space-between; font-size:0.75rem; color:#6b7280; border-top:1px dashed #d1d5db; padding-top:10px;">
+            <span>Cachet du Centre</span>
+            <span>Signature Direction</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 12 : MOTEUR D'IMPAYÉS -->
+      <section id="moteur-creances" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">12</div>
+          <h2 class="section-title">Le Moteur de Calcul des Créances & Impayés</h2>
+        </div>
+        <p>
+          Contrairement aux logiciels classiques avec facturation théorique, notre application calcule les créances réelles via l'API <code>/api/payment-dues</code> :
+        </p>
+
+        <pre>Séances Dues = Séances Réellement Pointées (Présent/Retard) - Séances Déjà Réglées</pre>
+
+        <h3 class="sub-title">Alertes Visuelles de Solde</h3>
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Statut</th>
+                <th>Couleur</th>
+                <th>Condition Déclenchante</th>
+                <th>Action Recommandée</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>À Jour</strong></td>
+                <td><span class="badge badge-success">Vert</span></td>
+                <td>0 séance impayée (tous les cours suivis sont soldés)</td>
+                <td>Aucune action requise.</td>
+              </tr>
+              <tr>
+                <td><strong>En Attente</strong></td>
+                <td><span class="badge badge-warning">Jaune</span></td>
+                <td>Dès 4 séances impayées (~ 1 mois de cours non soldé)</td>
+                <td>Rappel courtois lors du prochain passage de l'élève.</td>
+              </tr>
+              <tr>
+                <td><strong>En Retard Critique</strong></td>
+                <td><span class="badge badge-danger">Rouge</span></td>
+                <td>Plus de 7 séances impayées (> 2 mois de retard)</td>
+                <td>Contact téléphonique direct avec le tuteur légal.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub-title">Consultation de l'Extrait de Compte</h3>
+        <p>
+          En cliquant sur le bouton <strong>« Extrait de compte »</strong> en face d'un élève, une modale détaillée liste l'historique chronologique complet : chaque séance suivie avec son enseignant, et chaque paiement effectué avec son numéro de reçu.
+        </p>
+      </section>
+
+      <!-- SECTION 13 : COMPTABILITÉ (DIRECTEUR) -->
+      <section id="comptabilite" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">13</div>
+          <h2 class="section-title">Comptabilité, Rentabilité & Bilans (Directeur)</h2>
+        </div>
+        <p>
+          Ce module confidentiel est strictement réservé au compte <strong>Directeur</strong>. Il fournit les états financiers détaillés de l'établissement :
+        </p>
+
+        <div class="cards-grid">
+          <div class="card">
+            <h4 class="card-title">Chiffre d'Affaires Brut</h4>
+            <p class="card-desc">Somme de toutes les rentrées de fonds (cotisations cours particuliers + forfaits garderie) sur la période choisie.</p>
+          </div>
+          <div class="card">
+            <h4 class="card-title">Honoraires Enseignants</h4>
+            <p class="card-desc">Part totale reversée aux professeurs partenaires selon leurs barèmes respectifs (au pourcentage ou à la séance).</p>
+          </div>
+          <div class="card">
+            <h4 class="card-title">Marge Nette du Centre</h4>
+            <p class="card-desc">Bénéfice opérationnel net restant pour le centre d'études après déduction des rémunérations des enseignants.</p>
+          </div>
+          <div class="card">
+            <h4 class="card-title">Charges d'Exploitation</h4>
+            <p class="card-desc">Saisie et suivi des dépenses du centre : loyer, électricité, fournitures scolaires, goûters garderie, maintenance.</p>
+          </div>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-title">📊 Filtres & Exports</div>
+          Vous pouvez filtrer le bilan comptable par <strong>Mois</strong>, par <strong>Trimestre scolaire</strong> ou par <strong>Année complète</strong>, et exporter les bilans au format tableur (Excel/CSV) ou PDF.
+        </div>
+      </section>
+
+      <!-- SECTION 14 : ASSISTANT IA GEMINI -->
+      <section id="assistant-ia" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">14</div>
+          <h2 class="section-title">Assistant Virtuel Intelligent Gemini</h2>
+        </div>
+        <p>
+          Un tuteur virtuel propulsé par <strong>Google Gemini</strong> est accessible en permanence via la bulle flottante violette située en bas à droite de l'écran.
+        </p>
+
+        <h3 class="sub-title">Fonctionnalités de l'Assistant</h3>
+        <ul>
+          <li><strong>Bilingue Français & Dialecte Tunisien (Dérja)</strong> : Vous pouvez lui parler normalement en français ou en dérja tunisienne (ex: <em>« Kifeh nchouf les impayés mta3 el bac ? »</em>).</li>
+          <li><strong>Aide contextuelle selon votre rôle</strong> : Il adapte ses conseils selon que vous êtes Directeur, Secrétaire ou Enseignant.</li>
+          <li><strong>Guide pas-à-pas interactif</strong> : Accédez à des fiches mémo rapides pour accomplir n'importe quelle action (inscrire un élève, faire l'appel, imprimer un reçu).</li>
+          <li><strong>Mode Tuteur Local (Fallback)</strong> : Si Internet est indisponible, un moteur local prend le relais pour répondre aux questions fréquentes sur le centre.</li>
+        </ul>
+      </section>
+
+      <!-- SECTION 15 : GESTION DES COMPTES -->
+      <section id="gestion-comptes" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">15</div>
+          <h2 class="section-title">Gestion des Comptes & Personnel</h2>
+        </div>
+        <p>
+          Accessible via le lien <strong>« Mon Compte »</strong> en bas du menu latéral :
+        </p>
+        <div class="steps-container">
+          <div class="step-item">
+            <div class="step-badge">👤</div>
+            <div class="step-body">
+              <div class="step-title">Pour tout utilisateur</div>
+              <p class="step-text">Mettre à jour son nom d'affichage, vérifier son adresse e-mail et changer son mot de passe en toute autonomie.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-badge">🛡️</div>
+            <div class="step-body">
+              <div class="step-title">Pour le Directeur uniquement</div>
+              <p class="step-text">
+                Gestion des collaborateurs :<br>
+                - Créer un nouveau compte employé (Secrétaire, Personnel d'accueil, Enseignant).<br>
+                - <strong>Permissions granulaires d'onglets</strong> : Activer ou masquer certains onglets (ex: masquer l'onglet Paiements pour un personnel chargé uniquement des présences).<br>
+                - Réinitialiser le mot de passe d'un employé en cas d'oubli.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 16 : FAQ & DÉPANNAGE -->
+      <section id="faq" class="doc-section">
+        <div class="section-header">
+          <div class="section-number">16</div>
+          <h2 class="section-title">Foire Aux Questions & Dépannage</h2>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>1. Pourquoi le bouton de suppression affiche-t-il une erreur "Accès refusé" ?</span>
+            <span class="faq-arrow">▼</span>
+          </div>
+          <div class="faq-answer">
+            Seul le profil <strong>Directeur</strong> a l'autorisation de supprimer définitivement un élève, un enseignant ou un paiement. Si vous êtes connecté avec le compte Secrétaire, cette restriction est une sécurité voulue pour éviter toute perte accidentelle de données ou d'historique de caisse.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>2. Le reçu de paiement s'imprime avec les barres de menus du navigateur, comment faire ?</span>
+            <span class="faq-arrow">▼</span>
+          </div>
+          <div class="faq-answer">
+            Dans la fenêtre d'impression de votre navigateur (Chrome, Edge ou Firefox), décochez l'option <strong>« En-têtes et pieds de page »</strong> (Headers & Footers) et cochez <strong>« Graphiques d'arrière-plan »</strong> (Background graphics). Le reçu sortira au format propre et net.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>3. Un élève a manqué plusieurs séances, pourquoi est-il marqué comme redevable ?</span>
+            <span class="faq-arrow">▼</span>
+          </div>
+          <div class="faq-answer">
+            Vérifiez la feuille d'appel dans l'onglet <strong>Présences</strong>. Si l'élève a été pointé comme « Présent » par erreur, rectifiez son statut en « Absent » ou « Excusé ». Le moteur de calcul recalculera immédiatement le solde dû.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>4. Comment retrouver la page où j'étais si j'actualise mon navigateur ?</span>
+            <span class="faq-arrow">▼</span>
+          </div>
+          <div class="faq-answer">
+            L'application utilise un système de navigation par ancre (Hash Routing). L'adresse dans la barre du navigateur contient l'onglet actif (ex: <code>#payments</code>, <code>#students</code>, <code>#attendance</code>). Un rafraîchissement (touche F5) ou l'utilisation des flèches Précédent/Suivant de votre navigateur conserve parfaitement votre écran.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="toggleFaq(this)">
+            <span>5. Que faire si la session se déconnecte toute seule ?</span>
+            <span class="faq-arrow">▼</span>
+          </div>
+          <div class="faq-answer">
+            C'est une mesure de sécurité automatique : après 1 heure si le navigateur a été fermé, ou après 2 heures d'inactivité continue, l'application verrouille l'accès pour protéger les données du centre. Il vous suffit de saisir à nouveau votre mot de passe pour reprendre votre travail.
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer style="margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--gray-200); text-align: center; color: var(--gray-500); font-size: 0.85rem;">
+        <p><strong>Centre d'Études & Garderie Périscolaire</strong> — Document Officiel d'Exploitation</p>
+        <p>© 2026 Tous droits réservés. Développé avec Vue.js 3, Tailwind CSS & Laravel 12.</p>
+      </footer>
+
+    </main>
+  </div>
+
+  <script>
+    // FAQ Accordion Toggle
+    function toggleFaq(element) {
+      const parent = element.parentElement;
+      parent.classList.toggle('open');
+    }
+
+    // Role Filter Function
+    function setRoleFilter(role) {
+      // Update filter button styling
+      document.querySelectorAll('.role-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Update sidebar nav items
+      const navItems = document.querySelectorAll('aside.sidebar .nav-item[data-role]');
+      navItems.forEach(item => {
+        const roles = item.getAttribute('data-role');
+        if (role === 'all' || roles.includes(role)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    // Live search filter across the document
+    function filterGuide() {
+      const input = document.getElementById('searchInput').value.toLowerCase();
+      const sections = document.querySelectorAll('.doc-section');
+
+      sections.forEach(sec => {
+        const text = sec.innerText.toLowerCase();
+        if (text.includes(input)) {
+          sec.style.display = 'block';
+        } else {
+          sec.style.display = 'none';
+        }
+      });
+    }
+
+    // Active link highlighting on scroll
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('.doc-section');
+      const navLinks = document.querySelectorAll('.nav-list a');
+
+      let currentId = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 120;
+        if (window.scrollY >= sectionTop) {
+          currentId = section.getAttribute('id');
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === `#${currentId}`) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

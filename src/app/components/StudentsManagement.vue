@@ -19,6 +19,7 @@
 
         <button
           @click="openAddModal"
+          data-tour="students-add-btn"
           class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
         >
           <Plus class="w-4 h-4" />
@@ -28,12 +29,13 @@
     </div>
 
     <!-- Search & Filter -->
-    <div class="relative">
+    <div class="relative" data-tour="students-search">
       <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
       <input
         type="text"
         placeholder="Rechercher par nom ou niveau..."
         v-model="searchTerm"
+        data-tour="students-filter"
         class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base shadow-sm"
       />
     </div>
@@ -44,7 +46,7 @@
     </div>
 
     <!-- Students Table -->
-    <div v-else class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+    <div v-else data-tour="students-table" class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
       <div class="w-full overflow-x-auto pb-4"><table class="w-full whitespace-nowrap">
         <thead class="bg-gray-50/75 border-b border-gray-200">
           <tr>
@@ -342,9 +344,15 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">
-                  Valeur de la remise ({{ formData.discount_type === 'percentage' ? '%' : 'TND' }}) *
-                </label>
+                <div class="flex items-center gap-1.5 mb-1">
+                  <label class="block text-xs font-semibold text-gray-700">
+                    Valeur de la remise ({{ formData.discount_type === 'percentage' ? '%' : 'TND' }}) *
+                  </label>
+                  <HintButton
+                    label="Remise accordée"
+                    text="La remise réduit le montant facturé à l'élève. Selon la règle du centre, la rémunération de l'enseignant reste préservée."
+                  />
+                </div>
                 <input
                   v-model.number="formData.remise"
                   type="number"
@@ -536,6 +544,7 @@ import { ref, computed, onMounted, onUnmounted,watch } from 'vue';
 import { Plus, Search, Edit2, Trash2, Eye, BookOpen, Tag, Users, FileText } from 'lucide-vue-next';
 import api from '../utils/api';
 import PaymentExtractModal from './PaymentExtractModal.vue';
+import HintButton from './HintButton.vue';
 import { filterTeachersBySubject, teacherSubjectList } from '../utils/teacherSubjects';
 import {
   TUNISIAN_LEVELS,

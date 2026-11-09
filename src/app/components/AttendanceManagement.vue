@@ -12,6 +12,7 @@
       <div class="flex items-center gap-2">
         <button
           @click="openBatchModal"
+          data-tour="attendance-take-btn"
           class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
         >
           <UserCheck class="w-4 h-4" />
@@ -167,7 +168,7 @@
     </div>
 
     <!-- Attendance Table -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
+    <div data-tour="attendance-table" class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-xs">
       <div class="w-full overflow-x-auto pb-4"><table class="w-full whitespace-nowrap">
         <thead class="bg-gray-50/75 border-b border-gray-200">
           <tr>

@@ -9,6 +9,7 @@
       <div class="flex items-center gap-3">
         <button
           @click="openAddModal"
+          data-tour="schedule-add-btn"
           class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
         >
           <Plus class="w-4 h-4" />
@@ -52,7 +53,7 @@
     </div>
 
     <!-- Schedule Grid -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-else data-tour="schedule-table" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
         v-for="daySchedule in scheduleByDay"
         :key="daySchedule.day"

@@ -43,10 +43,26 @@
           <tr>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Élève</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Enseignant</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Séances non payées</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <div class="flex items-center gap-1.5">
+                <span>Séances non payées</span>
+                <HintButton
+                  label="Séances dues"
+                  text="Nombre de séances suivies par l'élève qui n'ont pas encore fait l'objet d'un règlement."
+                />
+              </div>
+            </th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Prix / séance</th>
             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Montant dû</th>
-            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+            <th data-tour="payments-status" class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <div class="flex items-center gap-1.5">
+                <span>Statut</span>
+                <HintButton
+                  label="Statuts de paiement"
+                  text="À jour : moins de 4 séances dues. En attente : dès 4 séances dues. En retard : au-delà de 7 séances dues."
+                />
+              </div>
+            </th>
             <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
           </tr>
         </thead>
@@ -105,6 +121,7 @@
                     :href="getWhatsAppLink(row) || undefined"
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-tour="payments-whatsapp"
                     class="inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-300 text-xs font-semibold rounded-lg transition-colors focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     title="Envoyer un rappel par WhatsApp"
                   >
@@ -115,6 +132,7 @@
                     v-else
                     type="button"
                     disabled
+                    data-tour="payments-whatsapp"
                     class="inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] bg-gray-100 text-gray-400 border border-gray-200 text-xs font-medium rounded-lg cursor-not-allowed"
                     title="Numéro du parent manquant"
                     aria-label="Numéro du parent manquant"
@@ -127,6 +145,7 @@
                 <button
                   type="button"
                   @click="$emit('collectStudent', { studentId: row.studentId, teacherId: row.teacherId })"
+                  data-tour="payments-collect-btn"
                   class="inline-flex items-center justify-center px-3.5 py-2 min-h-[44px] bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   Encaisser
@@ -230,6 +249,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Clock, AlertCircle, CheckCircle, FileText, MessageCircle } from 'lucide-vue-next';
+import HintButton from '../HintButton.vue';
 import type { Dues, Kind, DueStudent, DueDaycare } from '../../types/payments';
 
 const props = defineProps<{
