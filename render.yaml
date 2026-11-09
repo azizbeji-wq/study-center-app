@@ -1,6 +1,6 @@
 services:
   # ---------------------------------------------
-  # 1. API BACKEND (Laravel 12 + Docker + Aiven MySQL)
+  # 1. API BACKEND (Laravel 12 + Docker + TiDB)
   # ---------------------------------------------
   - type: web
     name: study-center-api
@@ -19,25 +19,24 @@ services:
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
-        value: mysql-4ee79c3-azizbeji32-1336.e.aivencloud.com
+        value: gateway01.eu-central-1.prod.aws.tidbcloud.com
       - key: DB_PORT
-        value: "21609"
+        value: "4000"
       - key: DB_DATABASE
-        value: defaultdb
+        value: study_center
       - key: DB_USERNAME
-        value: avnadmin
+        value: qr9m6YrkdD6p9dT.root
       - key: DB_PASSWORD
-        value: AVNS_DxCbUyb6QYdoYDCBSQE
+        value: MyGnC9OcPZqSWlbA
       - key: DB_SSL_MODE
         value: REQUIRED
       - key: MYSQL_ATTR_SSL_VERIFY_SERVER_CERT
         value: "false"
+      - key: MYSQL_ATTR_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
       - key: APP_KEY
         generateValue: true
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: GEMINI_MODEL
-        value: gemini-3.5-flash
+     
 
   # ---------------------------------------------
   # 2. FRONTEND (Vue 3 + Vite Static Site)
@@ -54,4 +53,3 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://study-center-api.onrender.com
-
