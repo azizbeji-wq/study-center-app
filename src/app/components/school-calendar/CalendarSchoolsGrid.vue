@@ -60,8 +60,9 @@
             </span>
           </div>
 
-          <p v-if="school.address" class="text-xs text-gray-600 mt-3 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-            📍 {{ school.address }}
+          <p v-if="school.address" class="text-xs text-gray-600 mt-3 bg-gray-50 p-2.5 rounded-lg border border-gray-100 flex items-center gap-1.5">
+            <MapPin class="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            <span>{{ school.address }}</span>
           </p>
         </div>
 

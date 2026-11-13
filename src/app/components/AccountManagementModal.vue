@@ -235,8 +235,9 @@
               </div>
 
               <div class="flex items-center justify-between pt-2">
-                <span class="text-[11px] text-gray-500 italic">
-                  💡 En cas d'oubli, contactez le Directeur qui peut réinitialiser votre accès.
+                <span class="text-[11px] text-gray-500 italic inline-flex items-center gap-1.5">
+                  <Info class="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>En cas d'oubli, contactez le Directeur qui peut réinitialiser votre accès.</span>
                 </span>
 
                 <button
@@ -714,7 +715,7 @@ import { ref, watch, onMounted } from 'vue';
 import {
   UserCog, User, Users, ShieldCheck, ShieldAlert, KeyRound,
   Lock, Save, RefreshCw, X, AlertCircle, CheckCircle2,
-  UserPlus, Pencil, Trash2, Eye, EyeOff, UserCheck
+  UserPlus, Pencil, Trash2, Eye, EyeOff, UserCheck, Info
 } from 'lucide-vue-next';
 import api from '../utils/api';
 import { PERMISSION_CATEGORIES, PRESET_PROFILES } from '../utils/permissions';

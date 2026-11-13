@@ -62,8 +62,8 @@
           v-else-if="!loading && hasSearched && totalResults === 0"
           class="py-12 text-center text-gray-500 space-y-3"
         >
-          <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto text-xl">
-            🔍
+          <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+            <Search class="w-6 h-6 stroke-[1.5]" />
           </div>
           <div class="space-y-1">
             <h4 class="text-sm font-bold text-gray-800">Aucun résultat. Essayez un mot plus court.</h4>

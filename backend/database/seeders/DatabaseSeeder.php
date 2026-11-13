@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -9,13 +10,11 @@ use Illuminate\Support\Facades\Hash;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
-     * Ne conserve STRICTEMENT que les comptes Directeur et Secrétaire, de manière idempotente.
+     * Initialise les comptes administrateur et pédagogique de référence.
+     * Création idempotente pour les rôles Directeur, Secrétaire et Enseignant.
      */
     public function run(): void
     {
-
-
         // Compte Directeur
         User::updateOrCreate(
             ['email' => 'director@studycenter.com'],
@@ -49,8 +48,8 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Lier à un enseignant existant ou en créer un pour test
-        $teacher = \App\Models\Teacher::firstOrCreate(
+        // Fiche Enseignant liée
+        $teacher = Teacher::firstOrCreate(
             ['email' => 'teacher@studycenter.com'],
             [
                 'user_id' => $teacherUser->id,

@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-emerald-200/50">
       <div class="flex items-center gap-2.5">
         <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
-          💰
+          <Coins class="w-5 h-5 text-white" />
         </div>
         <div>
           <h3 class="text-sm font-bold text-gray-900">Espace Directeur • Répartition Financière des Enseignants</h3>
@@ -48,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+import { Coins } from 'lucide-vue-next';
 defineProps<{
   totalGrossRevenue: number;
   totalTeachersShare: number;

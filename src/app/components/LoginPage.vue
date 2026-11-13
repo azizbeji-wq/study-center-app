@@ -107,7 +107,7 @@
           class="min-h-[44px] px-3 py-2 flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100 text-indigo-900 transition-all text-xs font-bold cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           title="Se connecter avec le compte Directeur (director@studycenter.com)"
         >
-          <span class="text-base">👑</span>
+          <Crown class="w-4 h-4 text-indigo-700 shrink-0" />
           <div class="text-left">
             <span class="block leading-tight">Directeur</span>
             <span class="text-[10px] font-normal text-indigo-700/80">Gestion totale</span>
@@ -121,7 +121,7 @@
           class="min-h-[44px] px-3 py-2 flex items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50/80 hover:bg-purple-100 text-purple-900 transition-all text-xs font-bold cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-purple-500 focus:outline-none"
           title="Se connecter avec le compte Secrétaire (secretary@studycenter.com)"
         >
-          <span class="text-base">📋</span>
+          <ClipboardList class="w-4 h-4 text-purple-700 shrink-0" />
           <div class="text-left">
             <span class="block leading-tight">Secrétaire</span>
             <span class="text-[10px] font-normal text-purple-700/80">Accueil & Frais</span>
@@ -135,7 +135,7 @@
           class="min-h-[44px] px-3 py-2 flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-900 transition-all text-xs font-bold cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
           title="Se connecter avec le compte Enseignant (teacher@studycenter.com)"
         >
-          <span class="text-base">👨‍🏫</span>
+          <GraduationCap class="w-4 h-4 text-emerald-700 shrink-0" />
           <div class="text-left">
             <span class="block leading-tight">Enseignant</span>
             <span class="text-[10px] font-normal text-emerald-700/80">Appel & Cours</span>
@@ -152,7 +152,7 @@
             target="_blank"
             class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors hover:underline"
           >
-            <span>📖</span>
+            <BookOpen class="w-3.5 h-3.5" />
             <span>Consulter le Guide d'Utilisation Officiel</span>
           </a>
         </div>
@@ -167,7 +167,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, ShieldCheck, Clock } from 'lucide-vue-next';
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, ShieldCheck, Clock, Crown, ClipboardList, GraduationCap, BookOpen } from 'lucide-vue-next';
 import api from '../utils/api';
 import { setSession, consumeNotice } from '../utils/session';
 

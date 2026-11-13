@@ -11,7 +11,7 @@
       <div class="px-6 py-4 bg-linear-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white flex items-center justify-between no-print shrink-0">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center font-bold text-lg border border-white/20">
-            📑
+            <FileText class="w-5 h-5 text-indigo-200" />
           </div>
           <div>
             <div class="flex items-center gap-2">
@@ -50,7 +50,8 @@
                   : 'text-gray-600 hover:text-gray-900'
               ]"
             >
-              <span>👨‍🏫 Extraits Enseignants</span>
+              <GraduationCap class="w-4 h-4 text-indigo-600" />
+              <span>Extraits Enseignants</span>
               <span class="px-1.5 py-0.2 rounded-full text-[10px]" :class="extractType === 'teachers' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-300/70 text-gray-700'">
                 {{ teachers.length }}
               </span>
@@ -65,7 +66,8 @@
                   : 'text-gray-600 hover:text-gray-900'
               ]"
             >
-              <span>👨‍🎓 Extraits Élèves</span>
+              <Users class="w-4 h-4 text-indigo-600" />
+              <span>Extraits Élèves</span>
               <span class="px-1.5 py-0.2 rounded-full text-[10px]" :class="extractType === 'students' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-300/70 text-gray-700'">
                 {{ students.length }}
               </span>
@@ -231,7 +233,9 @@
           v-else-if="displayedItemsCount === 0"
           class="bg-white rounded-2xl p-12 text-center max-w-md mx-auto shadow-xs border border-gray-200 space-y-3 max-h-[90vh] overflow-y-auto"
         >
-          <div class="text-4xl">📄</div>
+          <div class="flex justify-center text-gray-300">
+            <FileSpreadsheet class="w-12 h-12 stroke-[1.5]" />
+          </div>
           <h3 class="text-base font-bold text-gray-900">Aucun élément sélectionné</h3>
           <p class="text-xs text-gray-500">
             Veuillez choisir « Tous » ou cocher au moins un {{ extractType === 'teachers' ? 'professeur' : 'élève' }} ci-dessus.
@@ -583,7 +587,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import { X, Printer, FileSpreadsheet, RefreshCw } from 'lucide-vue-next';
+import { X, Printer, FileSpreadsheet, RefreshCw, FileText, GraduationCap, Users } from 'lucide-vue-next';
 import api from '../utils/api';
 import { printIsolatedElement } from '../utils/printHelper';
 

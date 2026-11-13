@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MessageCircle } from 'lucide-vue-next';
+import { MessageCircle, CheckCircle } from 'lucide-vue-next';
 
 defineProps<{
   summaryData: any;
@@ -102,7 +102,10 @@ defineProps<{
 
             <tr v-if="!summaryData?.topDebtors?.length">
               <td colspan="7" class="py-8 text-center text-emerald-600 font-semibold">
-                🎉 Aucun retard de paiement détecté ! Tous les comptes sont à jour.
+                <span class="inline-flex items-center gap-2">
+                  <CheckCircle class="w-4 h-4 text-emerald-600 inline" />
+                  <span>Aucun retard de paiement détecté. Tous les comptes sont à jour.</span>
+                </span>
               </td>
             </tr>
           </tbody>

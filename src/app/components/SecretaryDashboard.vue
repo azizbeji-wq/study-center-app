@@ -75,7 +75,7 @@
         >
           <div class="flex items-center gap-2.5 min-w-0">
             <div class="w-7 h-7 rounded-lg bg-violet-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
-              👨‍🏫
+              <GraduationCap class="w-4 h-4" />
             </div>
             <div class="text-left min-w-0">
               <p class="text-xs font-bold text-gray-900 group-hover:text-violet-900 leading-tight truncate">Espace Enseignant</p>
@@ -141,10 +141,10 @@
 
           <button
             @click="$emit('switch-portal', 'teacher')"
-            class="px-2.5 py-1.5 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold flex items-center gap-1 hover:bg-violet-100 transition-colors shadow-2xs cursor-pointer min-h-[44px]"
+            class="px-2.5 py-1.5 rounded-lg bg-violet-50 border border-violet-200 text-violet-700 text-xs font-bold flex items-center gap-1.5 hover:bg-violet-100 transition-colors shadow-2xs cursor-pointer min-h-[44px]"
             title="Basculer vers l'espace enseignant"
           >
-            <span>👨‍🏫</span>
+            <GraduationCap class="w-3.5 h-3.5" />
             <span class="text-[11px]">Mode Prof</span>
           </button>
         </div>
@@ -238,7 +238,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
   LogOut, Users, DollarSign, Calendar, BookOpen, UserPlus, LayoutDashboard,
-  Baby, UserCheck, UserCog, Menu, BarChart3, Search
+  Baby, UserCheck, UserCog, Menu, BarChart3, Search, GraduationCap
 } from 'lucide-vue-next';
 import DashboardOverview from './DashboardOverview.vue';
 import StudentsManagement from './StudentsManagement.vue';

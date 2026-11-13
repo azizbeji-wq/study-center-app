@@ -61,8 +61,8 @@
     </div>
 
     <div class="space-y-1.5 text-xs text-gray-600 bg-gray-50/75 p-3 rounded-lg border border-gray-100">
-      <p class="flex items-center gap-2"><span>📱</span> <span>{{ teacher.phone }}</span></p>
-      <p class="flex items-center gap-2"><span>✉️</span> <span>{{ teacher.email }}</span></p>
+      <p class="flex items-center gap-2"><Phone class="w-3.5 h-3.5 text-gray-400 shrink-0" /> <span>{{ teacher.phone }}</span></p>
+      <p class="flex items-center gap-2"><Mail class="w-3.5 h-3.5 text-gray-400 shrink-0" /> <span>{{ teacher.email }}</span></p>
     </div>
 
     <div class="pt-2 border-t border-gray-100">
@@ -96,7 +96,8 @@
     <div v-if="isDirector" class="p-3 bg-linear-to-r from-emerald-50/90 to-teal-50/90 rounded-xl border border-emerald-200/90 space-y-2">
       <div class="flex items-center justify-between">
         <span class="text-[11px] font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
-          <span>💰 Part du Professeur :</span>
+          <Coins class="w-3.5 h-3.5 text-emerald-600" />
+          <span>Part du Professeur :</span>
         </span>
         <span class="text-sm font-black text-emerald-700 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-200 shadow-2xs">
           {{ getTeacherShare(teacher) }} TND <span class="text-[10px] font-medium text-emerald-600">/ mois</span>
@@ -175,7 +176,7 @@
 </template>
 
 <script setup lang="ts">
-import { FileText, Edit2, Trash2, Check, RotateCcw, Printer } from 'lucide-vue-next';
+import { FileText, Edit2, Trash2, Check, RotateCcw, Printer, Phone, Mail, Coins } from 'lucide-vue-next';
 import type { Teacher } from '../../types/teachers';
 import { useTeachers } from '../../composables/useTeachers';
 

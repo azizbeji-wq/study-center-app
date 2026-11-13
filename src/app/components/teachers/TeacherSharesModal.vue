@@ -11,7 +11,8 @@
       <div class="flex items-center justify-between border-b pb-3 border-gray-100">
         <div>
           <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <span>📊 Bilan Financier & Parts des Professeurs</span>
+            <BarChart3 class="w-5 h-5 text-indigo-600" />
+            <span>Bilan Financier & Parts des Professeurs</span>
           </h3>
           <p class="text-xs text-gray-500 mt-0.5">
             Récapitulatif mensuel des gains de chaque enseignant et de la marge du centre d'études.
@@ -126,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { X, Check, Clock } from 'lucide-vue-next';
+import { X, Check, Clock, BarChart3 } from 'lucide-vue-next';
 import type { Teacher } from '../../types/teachers';
 import { useTeachers } from '../../composables/useTeachers';
 

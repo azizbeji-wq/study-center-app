@@ -199,18 +199,21 @@
           </div>
 
           <!-- Simulation & Règle Remise Absorbée par l'Administration -->
-          <div class="text-[11px] text-emerald-900 bg-white/90 p-3 rounded-lg border border-emerald-200 space-y-1">
-            <div v-if="formData.remuneration_type === 'percentage'">
-              💡 <strong>Formule C (Pourcentage) :</strong> Pour un cours de 4 séances à {{ formData.salary_per_lesson || 25 }} TND (100 TND brut par élève), l'enseignant touche <strong>{{ formData.rate_percentage || 70 }}%</strong> ({{ ((formData.salary_per_lesson || 25) * 4 * (formData.rate_percentage || 70) / 100).toFixed(0) }} TND/élève) et le centre conserve le reste.
+          <div class="text-[11px] text-emerald-900 bg-white/90 p-3 rounded-lg border border-emerald-200 space-y-1.5">
+            <div v-if="formData.remuneration_type === 'percentage'" class="flex items-start gap-1.5">
+              <Info class="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
+              <span><strong>Formule C (Pourcentage) :</strong> Pour un cours de 4 séances à {{ formData.salary_per_lesson || 25 }} TND (100 TND brut par élève), l'enseignant touche <strong>{{ formData.rate_percentage || 70 }}%</strong> ({{ ((formData.salary_per_lesson || 25) * 4 * (formData.rate_percentage || 70) / 100).toFixed(0) }} TND/élève) et le centre conserve le reste.</span>
             </div>
-            <div v-else-if="formData.remuneration_type === 'fixed_center'">
-              💡 <strong>Formule A (Part Fixe Administration) :</strong> L'administration prélève <strong>{{ formData.center_fixed_per_student || 20 }} TND par élève</strong>. L'enseignant touche tout le reste du cours brut (ex: 100 TND - {{ formData.center_fixed_per_student || 20 }} TND = {{ Math.max(0, ((formData.salary_per_lesson || 25) * 4) - (formData.center_fixed_per_student || 20)) }} TND/élève).
+            <div v-else-if="formData.remuneration_type === 'fixed_center'" class="flex items-start gap-1.5">
+              <Info class="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
+              <span><strong>Formule A (Part Fixe Administration) :</strong> L'administration prélève <strong>{{ formData.center_fixed_per_student || 20 }} TND par élève</strong>. L'enseignant touche tout le reste du cours brut (ex: 100 TND - {{ formData.center_fixed_per_student || 20 }} TND = {{ Math.max(0, ((formData.salary_per_lesson || 25) * 4) - (formData.center_fixed_per_student || 20)) }} TND/élève).</span>
             </div>
-            <div v-else>
-              💡 <strong>Formule B (Fixe par élève) :</strong> L'enseignant touche un montant fixe de <strong>{{ formData.fixed_student_rate || 15 }} TND par élève</strong> inscrit chaque mois. Le centre conserve la marge restante.
+            <div v-else class="flex items-start gap-1.5">
+              <Info class="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5" />
+              <span><strong>Formule B (Fixe par élève) :</strong> L'enseignant touche un montant fixe de <strong>{{ formData.fixed_student_rate || 15 }} TND par élève</strong> inscrit chaque mois. Le centre conserve la marge restante.</span>
             </div>
-            <div class="text-amber-800 font-medium pt-1 border-t border-emerald-100 flex items-start gap-1">
-              <span>🛡️</span>
+            <div class="text-amber-800 font-medium pt-1.5 border-t border-emerald-100 flex items-start gap-1.5">
+              <ShieldCheck class="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
               <span><strong>Protection Enseignant :</strong> Toute remise (discount) accordée à un élève est absorbée à 100% par l'administration. La rémunération du professeur reste calculée sur le plein tarif brut.</span>
             </div>
           </div>
@@ -243,6 +246,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { Info, ShieldCheck } from 'lucide-vue-next';
 import api from '../../utils/api';
 import { parseSubjects } from '../../utils/teacherSubjects';
 import TeacherSubjectSelect from './TeacherSubjectSelect.vue';

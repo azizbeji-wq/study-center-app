@@ -11,7 +11,7 @@
         class="min-h-[44px] px-4 py-2 text-xs bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 shadow-xs flex items-center justify-center gap-2 font-bold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer"
         aria-label="Actualiser les données du tableau de bord"
       >
-        <span :class="{ 'animate-spin': loading }">🔄</span>
+        <RotateCw :class="['w-4 h-4 text-gray-600', { 'animate-spin': loading }]" />
         <span>Actualiser les données</span>
       </button>
     </div>
@@ -205,8 +205,9 @@
               <p class="text-sm font-bold text-gray-900 truncate">{{ teacher.name }}</p>
               <p class="text-xs text-indigo-600 font-medium truncate">{{ teacher.subject }}</p>
               <div v-if="showRevenue && teacher.teacher_share !== undefined" class="mt-1 flex items-center gap-2 text-[11px]">
-                <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  💰 Part: {{ teacher.teacher_share }} TND/m
+                <span class="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-flex items-center gap-1">
+                  <Coins class="w-3 h-3 text-emerald-600" />
+                  <span>Part: {{ teacher.teacher_share }} TND/m</span>
                 </span>
                 <span v-if="teacher.center_share !== undefined" class="text-indigo-700 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
                   Centre: +{{ teacher.center_share }} TND
@@ -300,7 +301,7 @@
 import { ref, computed, onMounted } from 'vue';
 import {
   Users, UserPlus, DollarSign, Calendar, TrendingUp, BookOpen, Baby,
-  Activity, User, Clock, Receipt, ShieldCheck, UserCheck, Zap, AlertCircle
+  Activity, User, Clock, Receipt, ShieldCheck, UserCheck, Zap, AlertCircle, RotateCw, Coins
 } from 'lucide-vue-next';
 import api from '../utils/api';
 

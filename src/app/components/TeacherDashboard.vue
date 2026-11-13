@@ -85,7 +85,7 @@
           :title="primaryRole === 'director' ? 'Retourner à l\'espace Direction' : 'Retourner à l\'espace Personnel'"
         >
           <div class="flex items-center gap-2 min-w-0">
-            <span class="text-base shrink-0">{{ primaryRole === 'director' ? '🏢' : '📋' }}</span>
+            <component :is="primaryRole === 'director' ? Building2 : ClipboardList" class="w-4 h-4 text-indigo-700 shrink-0" />
             <div class="text-left min-w-0">
               <p class="text-xs font-bold leading-tight truncate">
                 {{ primaryRole === 'director' ? 'Retour Direction' : 'Retour Secrétariat' }}
@@ -178,8 +178,8 @@
       <div v-if="primaryRole !== 'teacher'" class="px-4 md:px-6 pt-4 shrink-0">
         <div class="bg-linear-to-r from-indigo-800 via-indigo-700 to-violet-700 text-white rounded-2xl p-3.5 px-4.5 shadow-sm border border-indigo-500/30 flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-xl shadow-xs shrink-0">
-              {{ primaryRole === 'director' ? '🏢' : '📋' }}
+            <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white shadow-xs shrink-0">
+              <component :is="primaryRole === 'director' ? Building2 : ClipboardList" class="w-5 h-5" />
             </div>
             <div>
               <div class="flex items-center gap-2">
@@ -334,8 +334,8 @@
             v-else-if="!loadingSchedule"
             class="bg-white rounded-2xl p-8 border border-gray-200/90 text-center max-w-lg mx-auto space-y-4 shadow-xs"
           >
-            <div class="w-16 h-16 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto text-2xl">
-              ☕
+            <div class="w-16 h-16 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center mx-auto">
+              <Coffee class="w-8 h-8 stroke-[1.5]" />
             </div>
             <div class="space-y-1">
               <h3 class="text-lg font-black text-gray-900">Aucune séance aujourd'hui</h3>
@@ -592,7 +592,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import {
   LogOut, Calendar, Users, UserCheck, UserCog, Menu, RotateCw, Plus, UserPlus,
-  Pencil, Trash2, Sparkles, Clock, Search, BookOpen
+  Pencil, Trash2, Sparkles, Clock, Search, BookOpen, Building2, ClipboardList, Coffee
 } from 'lucide-vue-next';
 import TeacherSchedule from './TeacherSchedule.vue';
 import TeacherAttendance from './TeacherAttendance.vue';

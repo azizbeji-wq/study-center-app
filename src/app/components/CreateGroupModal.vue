@@ -106,35 +106,35 @@
               <option disabled value="">Sélectionnez un niveau scolaire</option>
 
               <!-- Baccalauréat -->
-              <optgroup label="🎓 Baccalauréat (4ème Année)">
+              <optgroup label="Baccalauréat (4ème Année)">
                 <option v-for="lvl in bacLevels" :key="lvl.id" :value="lvl.name">
                   {{ lvl.name }}
                 </option>
               </optgroup>
 
               <!-- 3ème Année -->
-              <optgroup label="📚 3ème Année Secondaire">
+              <optgroup label="3ème Année Secondaire">
                 <option v-for="lvl in lycee3Levels" :key="lvl.id" :value="lvl.name">
                   {{ lvl.name }}
                 </option>
               </optgroup>
 
               <!-- 2ème Année -->
-              <optgroup label="📐 2ème Année Secondaire">
+              <optgroup label="2ème Année Secondaire">
                 <option v-for="lvl in lycee2Levels" :key="lvl.id" :value="lvl.name">
                   {{ lvl.name }}
                 </option>
               </optgroup>
 
               <!-- 1ère Année -->
-              <optgroup label="🌱 1ère Année Secondaire">
+              <optgroup label="1ère Année Secondaire">
                 <option v-for="lvl in lyceeCommonLevels" :key="lvl.id" :value="lvl.name">
                   {{ lvl.name }}
                 </option>
               </optgroup>
 
               <!-- Collège -->
-              <optgroup label="🏫 Collège (Enseignement de Base)">
+              <optgroup label="Collège (Enseignement de Base)">
                 <option v-for="lvl in collegeLevels" :key="lvl.id" :value="lvl.name">
                   {{ lvl.name }}
                 </option>

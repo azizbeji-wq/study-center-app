@@ -176,7 +176,10 @@
         <tbody class="divide-y divide-gray-200">
           <tr v-for="row in filteredDaycareDues" :key="row.key" class="hover:bg-gray-50/80 transition-colors">
             <td class="px-5 py-3.5">
-              <p class="text-sm font-semibold text-gray-900">👶 {{ row.name }}</p>
+              <p class="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                <Baby class="w-4 h-4 text-orange-600 shrink-0" />
+                <span>{{ row.name }}</span>
+              </p>
               <p class="text-xs text-gray-500">Parent : {{ row.parentName }}</p>
             </td>
             <td class="px-5 py-3.5">
@@ -248,7 +251,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Clock, AlertCircle, CheckCircle, FileText, MessageCircle } from 'lucide-vue-next';
+import { Clock, AlertCircle, CheckCircle, FileText, MessageCircle, Baby } from 'lucide-vue-next';
 import HintButton from '../HintButton.vue';
 import type { Dues, Kind, DueStudent, DueDaycare } from '../../types/payments';
 

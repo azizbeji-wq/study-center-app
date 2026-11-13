@@ -20,7 +20,7 @@
       <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-            <span class="text-lg">👶</span>
+            <Baby class="w-5 h-5 text-orange-600" />
           </div>
           <div>
             <p class="text-xs text-gray-500 uppercase font-semibold">Total Garde</p>
@@ -31,7 +31,7 @@
       <div class="bg-white border border-green-200 rounded-xl p-4 shadow-sm">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-            <span class="text-lg">✅</span>
+            <CheckCircle class="w-5 h-5 text-green-600" />
           </div>
           <div>
             <p class="text-xs text-green-700 uppercase font-semibold">Présents</p>
@@ -95,7 +95,7 @@
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-              <span class="text-xl">👶</span>
+              <Baby class="w-6 h-6 text-orange-600" />
             </div>
             <div>
               <h3 class="text-sm font-bold text-gray-900">{{ child.name }}</h3>
@@ -124,15 +124,15 @@
             <span class="font-medium text-gray-900">{{ child.parentName }}</span>
           </div>
           <div class="flex items-center gap-2">
-            <span>📱</span>
+            <Phone class="w-3.5 h-3.5 text-gray-400" />
             <span>{{ child.phone }}</span>
           </div>
           <div class="flex items-center gap-2">
-            <span>⏰</span>
+            <Clock class="w-3.5 h-3.5 text-gray-400" />
             <span>{{ child.schedule }}</span>
           </div>
           <div class="flex items-center gap-2">
-            <span>💰</span>
+            <Coins class="w-3.5 h-3.5 text-amber-500" />
             <span>{{ child.monthlyFee ? child.monthlyFee + ' TND / mois' : 'Tarif mensuel à définir' }}</span>
           </div>
         </div>
@@ -175,7 +175,9 @@
           <button @click="selectedChild = null" class="text-gray-400 hover:text-gray-600">✕</button>
         </div>
         <div class="flex items-center gap-4 bg-orange-50/50 p-4 rounded-xl border border-orange-100">
-          <div class="w-14 h-14 bg-orange-200 rounded-full flex items-center justify-center text-2xl">👶</div>
+          <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
+            <Baby class="w-8 h-8" />
+          </div>
           <div>
             <h4 class="text-lg font-bold text-gray-900">{{ selectedChild.name }}</h4>
             <p class="text-sm font-semibold text-orange-600">{{ selectedChild.age }} ans</p>
@@ -337,7 +339,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Plus, Search, Eye, Edit2, Trash2 } from 'lucide-vue-next';
+import { Plus, Search, Eye, Edit2, Trash2, Baby, CheckCircle, Phone, Clock, Coins } from 'lucide-vue-next';
 import api from '../utils/api';
 
 interface DaycareChild {

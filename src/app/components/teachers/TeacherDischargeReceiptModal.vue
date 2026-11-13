@@ -11,7 +11,7 @@
         <div class="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-xs">
-              🎓
+              <GraduationCap class="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 class="text-base font-black text-gray-900 tracking-tight uppercase">Centre d'Études & de Formation</h2>
@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { Printer } from 'lucide-vue-next';
+import { Printer, GraduationCap } from 'lucide-vue-next';
 import type { Teacher } from '../../types/teachers';
 import { useTeachers } from '../../composables/useTeachers';
 

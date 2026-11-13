@@ -1,59 +1,130 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Study Center API (Backend)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend RESTful sécurisé propulsé par **Laravel 12** pour la gestion administrative, financière et pédagogique du centre d'études et de garderie périscolaire.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Architecture & Technologies
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Framework** : Laravel 12 (PHP 8.2+)
+- **Authentification & Sécurité** : Laravel Sanctum (jetons porteurs avec expiration et gestion de session active)
+- **Base de données** : 
+  - Production : TiDB Cloud (Serverless MySQL 8.0 avec chiffrement TLS/SSL obligatoire)
+  - Développement local : SQLite / MySQL
+  - Tests automatisés : SQLite `:memory:`
+- **Conteneurisation & Déploiement** : Docker (Alpine Linux) sur Render
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Rôles & Niveaux d'Accès (RBAC)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. **Directeur (`director`)**
+   - Accès intégral à tous les modules opérationnels et financiers.
+   - Droits exclusifs de suppression (`can_delete`) et de validation financière.
+   - Journal de caisse, audit financier, clôtures mensuelles et fiches de paie enseignants.
+   - Possibilité de basculer en mode Enseignant (double rôle).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. **Secrétaire (`secretary`)**
+   - Gestion opérationnelle quotidienne : inscriptions élèves, garderie périscolaire.
+   - Pointage des présences par groupe et par séance.
+   - Encaissements des mensualités et impression immédiate des reçus officiels.
+   - Accès filtré selon les permissions granulaires configurées par la Direction.
 
-## Laravel Sponsors
+3. **Enseignant (`teacher`)**
+   - Portail dédié : consultation de l'emploi du temps hebdomadaire.
+   - Gestion de ses propres groupes d'élèves.
+   - Saisie rapide et feuille d'appel numérique avec calcul d'assiduité.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## Comptes de Démonstration (Seeder)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Initialisés de façon idempotente via `DatabaseSeeder` :
 
-## Contributing
+| Rôle | Email | Mot de passe | Description |
+|---|---|---|---|
+| Directeur | `director@studycenter.com` | `director123` | Accès superviseur complet |
+| Secrétaire | `secretary@studycenter.com` | `secretary123` | Accueil & encaissements |
+| Enseignant | `teacher@studycenter.com` | `teacher123` | Professeur Mohamed (Maths / Physique) |
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## Installation Locale
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 1. Prérequis
+- PHP 8.2 ou supérieur avec extensions `pdo`, `pdo_sqlite`, `pdo_mysql`, `bcmath`, `mbstring`, `curl`.
+- Composer 2.x
 
-## Security Vulnerabilities
+### 2. Démarrage
+```bash
+# Se placer dans le répertoire backend
+cd backend
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Installer les dépendances
+composer install
 
-## License
+# Copier l'environnement
+cp .env.example .env
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Générer la clé d'application
+php artisan key:generate
+
+# Exécuter les migrations et injecter les comptes de départ
+php artisan migrate --seed
+
+# Lancer le serveur de développement
+php artisan serve
+```
+
+L'API est accessible localement sur `http://127.0.0.1:8000`.
+
+---
+
+## Endpoints Principaux
+
+### Authentification & Session
+- `POST /api/login` : Authentification et obtention du jeton Sanctum (limité à 10 tentatives/min).
+- `POST /api/logout` : Révocation du jeton actif.
+- `GET /api/profile` : Consultation du profil utilisateur connecté.
+- `PUT /api/profile` : Mise à jour des informations personnelles.
+- `PUT /api/profile/password` : Changement sécurisé du mot de passe.
+
+### Recherche & Guide Intégré
+- `GET /api/search` : Recherche globale instantanée (élèves, enseignants, groupes).
+- `GET /api/guide/progress` : État d'avancement du guide de l'utilisateur.
+- `POST /api/guide/progress/{key}` : Marquer une étape du guide comme terminée.
+- `DELETE /api/guide/progress/{key}` : Réinitialiser une étape du guide.
+
+### Pédagogie & Présences
+- `apiResource('students', StudentController)` : Fiches élèves et matières suivies.
+- `apiResource('groups', GroupController)` : Groupes par niveau scolaire.
+- `POST /api/groups/{id}/students` : Rattachement dynamique d'un élève à un groupe.
+- `apiResource('attendances', AttendanceController)` : Feuille d'appel et pointage des séances.
+- `POST /api/attendances/batch` : Pointage en lot pour une séance complète.
+
+### Finances & Moteur de Créances
+- `GET /api/payment-dues` : Calcul dynamique des séances dues par élève et mois de garderie impayés.
+- `apiResource('payments', PaymentController)` : Enregistrement des règlements et reçus.
+- `GET /api/payments/extract-teachers` : Extraits officiels consolidés pour le corps professoral.
+- `GET /api/payments/extract-students` : Extraits officiels par élève.
+
+### Comptabilité & Clôtures (Directeur)
+- `GET /api/accounting/summary` : Bilan financier mensuel et synthèse des flux de trésorerie.
+- `apiResource('accounting/expenses')` : Dépenses du centre (loyer, salaires, fournitures).
+- `POST /api/accounting/close-month` : Clôture mensuelle définitive avec scellement de caisse.
+
+---
+
+## Tests Automatisés
+
+Le backend dispose d'une suite complète de tests unitaires et fonctionnels (Unit & Feature) :
+
+```bash
+php artisan test
+```
+
+Vérifie l'intégrité de :
+- L'isolation des données entre rôles.
+- Le calcul de rémunération des enseignants selon les formules (fixe, pourcentage, par élève).
+- La validation des requêtes et permissions granulaires.
+- La progression idempotente du guide utilisateur.

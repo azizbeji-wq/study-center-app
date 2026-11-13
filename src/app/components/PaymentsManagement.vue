@@ -173,6 +173,7 @@ import PaymentFormModal from './payments/PaymentFormModal.vue';
 import PaymentReceiptModal from './payments/PaymentReceiptModal.vue';
 import PaymentExtractModal from './PaymentExtractModal.vue';
 import { usePayments } from '../composables/usePayments';
+import { getStoredUser } from '../utils/session';
 import type { Payment, Kind } from '../types/payments';
 
 const props = withDefaults(defineProps<{
@@ -243,14 +244,10 @@ const extractInitialStudentId = ref<number | null>(null);
 const receiptPayment = ref<Payment | null>(null);
 const showReceiptModal = ref(false);
 
-const currentUser = ref<{ role?: string; name?: string } | null>(null);
-try {
-  const saved = localStorage.getItem('user');
-  if (saved) currentUser.value = JSON.parse(saved);
-} catch {}
+const currentUser = ref(getStoredUser());
 
 const isDirector = computed<boolean>(() => {
-  return Boolean(currentUser.value?.role === 'director' || localStorage.getItem('user')?.includes('director'));
+  return currentUser.value?.role === 'director';
 });
 
 const paidCount = computed(() => {

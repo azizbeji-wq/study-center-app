@@ -73,19 +73,19 @@
               required
               class="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-600 focus:bg-white transition-all cursor-pointer font-medium"
             >
-              <optgroup label="🎓 Baccalauréat (4ème Année)">
+              <optgroup label="Baccalauréat (4ème Année)">
                 <option v-for="lvl in bacLevels" :key="lvl.id" :value="lvl.name">{{ lvl.name }}</option>
               </optgroup>
-              <optgroup label="📚 3ème Année Secondaire">
+              <optgroup label="3ème Année Secondaire">
                 <option v-for="lvl in lycee3Levels" :key="lvl.id" :value="lvl.name">{{ lvl.name }}</option>
               </optgroup>
-              <optgroup label="📐 2ème Année Secondaire">
+              <optgroup label="2ème Année Secondaire">
                 <option v-for="lvl in lycee2Levels" :key="lvl.id" :value="lvl.name">{{ lvl.name }}</option>
               </optgroup>
-              <optgroup label="🌱 1ère Année Secondaire">
+              <optgroup label="1ère Année Secondaire">
                 <option v-for="lvl in lyceeCommonLevels" :key="lvl.id" :value="lvl.name">{{ lvl.name }}</option>
               </optgroup>
-              <optgroup label="🏫 Collège (Enseignement de Base)">
+              <optgroup label="Collège (Enseignement de Base)">
                 <option v-for="lvl in collegeLevels" :key="lvl.id" :value="lvl.name">{{ lvl.name }}</option>
               </optgroup>
               <option value="Autre niveau">Autre niveau</option>
