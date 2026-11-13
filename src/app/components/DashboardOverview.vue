@@ -30,7 +30,7 @@
         <!-- Action 1 : Ajouter un élève -->
         <button
           @click="$emit('quick-action', 'add-student')"
-          class="min-h-[44px] px-4 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 backdrop-blur-md rounded-xl text-left font-bold text-xs text-white border border-white/15 transition-all flex items-center gap-3 shadow-sm hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-900 cursor-pointer"
+          class="min-h-[44px] px-4 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 backdrop-blur-md rounded-xl text-left font-bold text-xs text-white border border-white/15 transition-all flex items-center gap-3 shadow-2xs active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-900 cursor-pointer"
           title="Ouvrir le formulaire d'inscription d'un nouvel élève"
         >
           <div class="w-8 h-8 rounded-lg bg-indigo-500/30 flex items-center justify-center shrink-0 text-white">
@@ -45,7 +45,7 @@
         <!-- Action 2 : Faire l'appel -->
         <button
           @click="$emit('quick-action', 'take-attendance')"
-          class="min-h-[44px] px-4 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 backdrop-blur-md rounded-xl text-left font-bold text-xs text-white border border-white/15 transition-all flex items-center gap-3 shadow-sm hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-900 cursor-pointer"
+          class="min-h-[44px] px-4 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 backdrop-blur-md rounded-xl text-left font-bold text-xs text-white border border-white/15 transition-all flex items-center gap-3 shadow-2xs active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-900 cursor-pointer"
           title="Pointer les présences d'une classe ou séance"
         >
           <div class="w-8 h-8 rounded-lg bg-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-300">
@@ -60,7 +60,7 @@
         <!-- Action 3 : Encaisser un paiement -->
         <button
           @click="$emit('quick-action', 'add-payment')"
-          class="min-h-[44px] px-4 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 backdrop-blur-md rounded-xl text-left font-bold text-xs text-white border border-white/15 transition-all flex items-center gap-3 shadow-sm hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-900 cursor-pointer"
+          class="min-h-[44px] px-4 py-3 bg-white/10 hover:bg-white/20 active:bg-white/25 backdrop-blur-md rounded-xl text-left font-bold text-xs text-white border border-white/15 transition-all flex items-center gap-3 shadow-2xs active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-900 cursor-pointer"
           title="Enregistrer un nouveau paiement et éditer un reçu"
         >
           <div class="w-8 h-8 rounded-lg bg-amber-500/30 flex items-center justify-center shrink-0 text-amber-300">
@@ -87,7 +87,7 @@
             {{ statsData.activeStudents }} actifs
           </span>
         </div>
-        <p class="text-2xl font-black text-gray-900 mb-1">{{ statsData.totalStudents }}</p>
+        <p class="text-2xl font-bold text-gray-900 mb-1 tabular-nums">{{ statsData.totalStudents }}</p>
         <p class="text-xs font-bold text-gray-700">Total Élèves</p>
         <p class="text-[11px] text-gray-400 mt-0.5">{{ statsData.activeStudents }} réguliers</p>
       </div>
@@ -102,7 +102,7 @@
             Garderie
           </span>
         </div>
-        <p class="text-2xl font-black text-gray-900 mb-1">{{ daycareCount }}</p>
+        <p class="text-2xl font-bold text-gray-900 mb-1 tabular-nums">{{ daycareCount }}</p>
         <p class="text-xs font-bold text-gray-700">Élèves de garde</p>
         <p class="text-[11px] text-gray-400 mt-0.5">Enfants inscrits</p>
       </div>
@@ -149,7 +149,7 @@
           </span>
         </div>
 
-        <p class="text-2xl font-black text-gray-900 mb-1">
+        <p class="text-2xl font-bold text-gray-900 mb-1 tabular-nums">
           {{ unpaidAmount.toFixed(2) }} <span class="text-sm font-bold text-gray-500">TND</span>
         </p>
         <p class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
@@ -170,7 +170,7 @@
             Encaissé
           </span>
         </div>
-        <p class="text-2xl font-black text-gray-900 mb-1">{{ Number(statsData.totalRevenue).toFixed(2) }} TND</p>
+        <p class="text-2xl font-bold text-gray-900 mb-1 tabular-nums">{{ Number(statsData.totalRevenue).toFixed(2) }} TND</p>
         <p class="text-xs font-bold text-gray-700">Revenus perçus</p>
         <p class="text-[11px] text-gray-400 mt-0.5">Mois en cours</p>
       </div>
@@ -181,7 +181,7 @@
             <Calendar class="w-5 h-5 text-purple-600" />
           </div>
         </div>
-        <p class="text-2xl font-black text-gray-900 mb-1">{{ statsData.weeklyLessons }}</p>
+        <p class="text-2xl font-bold text-gray-900 mb-1 tabular-nums">{{ statsData.weeklyLessons }}</p>
         <p class="text-xs font-bold text-gray-700">Leçons / Semaine</p>
         <p class="text-[11px] text-gray-400 mt-0.5">Planning d'activités</p>
       </div>
