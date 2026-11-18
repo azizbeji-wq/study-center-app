@@ -44,6 +44,7 @@ services:
   - type: web
     name: study-center-client
     runtime: static
+    rootDir: frontend
     buildCommand: npm install && npx vite build
     staticPublishPath: dist
     routes:
