@@ -38,7 +38,7 @@ export default defineConfig({
   assetsInclude: ['**/*.svg', '**/*.csv'],
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'node',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules', 'dist'],
     coverage: {
