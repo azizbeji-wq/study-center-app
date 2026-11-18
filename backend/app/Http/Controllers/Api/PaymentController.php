@@ -291,7 +291,12 @@ class PaymentController extends Controller
                     $request->ip()
                 );
             } catch (\Throwable $e) {
-                // Ne bloque pas la transaction si l'audit échoue
+                // Ne bloque pas la transaction principale si l'audit échoue
+                \Log::warning('PaymentAuditLog: échec enregistrement audit (store)', [
+                    'error'      => $e->getMessage(),
+                    'payment_id' => $payment->id ?? null,
+                    'user_id'    => $request->user()?->id,
+                ]);
             }
 
             return $payment;
@@ -365,7 +370,13 @@ class PaymentController extends Controller
                 ['payment_id' => $payment->id, 'amount' => $payment->amount, 'student_name' => $payment->student_name],
                 $request->ip()
             );
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            \Log::warning('PaymentAuditLog: échec enregistrement audit (update)', [
+                'error'      => $e->getMessage(),
+                'payment_id' => $payment->id ?? null,
+                'user_id'    => $request->user()?->id,
+            ]);
+        }
 
         return response()->json($this->format($payment, Teacher::pluck('name', 'id')));
     }
@@ -403,7 +414,13 @@ class PaymentController extends Controller
                 ['payment_id' => $id, 'amount' => $oldAmount, 'student_name' => $oldStudent],
                 $request->ip()
             );
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            \Log::warning('PaymentAuditLog: échec enregistrement audit (destroy)', [
+                'error'      => $e->getMessage(),
+                'payment_id' => $id,
+                'user_id'    => $request->user()?->id,
+            ]);
+        }
 
         $payment->delete();
 

@@ -1,0 +1,65 @@
+name: 🧪 Backend Tests (Laravel)
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-tests.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    name: PHPUnit — PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php: ['8.2']
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: sqlite3, pdo_sqlite, mbstring, xml, ctype, fileinfo
+          coverage: none
+
+      - name: 📦 Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ matrix.php }}-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ matrix.php }}-
+
+      - name: 📚 Install Composer dependencies
+        run: cd backend && composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: ⚙️ Configure environment
+        run: |
+          cp backend/.env.example backend/.env
+          cd backend && php artisan key:generate
+
+      - name: 🗄️ Run migrations (SQLite)
+        run: |
+          cd backend && php artisan migrate --env=testing --force
+
+      - name: 🧪 Run PHPUnit tests
+        run: |
+          cd backend && php vendor/bin/phpunit --configuration phpunit.xml \
+            --log-junit storage/logs/test-results.xml \
+            --colors=always
+
+      - name: 📊 Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phpunit-results-php${{ matrix.php }}
+          path: backend/storage/logs/test-results.xml
+          retention-days: 7

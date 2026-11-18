@@ -24,7 +24,11 @@ class GroupPolicy
             return true;
         }
 
-        return $group->teacher_id === $user->id || $group->teacher_id === $user->teacher?->id;
+        if ($group->teacher_id !== null) {
+            return (int) $group->teacher_id === (int) $user->id || (int) $group->teacher_id === (int) $user->teacher?->id;
+        }
+
+        return false;
     }
 
     /**
@@ -49,7 +53,11 @@ class GroupPolicy
             return true;
         }
 
-        return $group->teacher_id === $user->id || $group->teacher_id === $user->teacher?->id;
+        if ($group->teacher_id !== null) {
+            return (int) $group->teacher_id === (int) $user->id || (int) $group->teacher_id === (int) $user->teacher?->id;
+        }
+
+        return false;
     }
 
     /**
@@ -61,6 +69,10 @@ class GroupPolicy
             return true;
         }
 
-        return $group->teacher_id === $user->id || $group->teacher_id === $user->teacher?->id;
+        if ($group->teacher_id !== null) {
+            return (int) $group->teacher_id === (int) $user->id || (int) $group->teacher_id === (int) $user->teacher?->id;
+        }
+
+        return false;
     }
 }

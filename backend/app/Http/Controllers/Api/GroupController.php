@@ -140,6 +140,7 @@ class GroupController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $group = $this->resolveGroupModel($id);
+        Gate::authorize('update', $group);
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:100',
@@ -193,6 +194,7 @@ class GroupController extends Controller
     public function destroy(Request $request, $id): JsonResponse
     {
         $group = $this->resolveGroupModel($id);
+        Gate::authorize('delete', $group);
         $name = $group->name;
 
         // Détacher les élèves de la table pivot
