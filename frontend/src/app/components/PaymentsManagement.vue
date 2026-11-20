@@ -36,6 +36,18 @@
       :overdueCount="dues.totals.overdueCount"
     />
 
+    <!-- Recharts Bar Chart: Monthly Student Payment Revenue Trends -->
+    <div v-if="!loading" data-tour="payments-revenue-chart">
+      <StudentRevenueBarChart
+        :data="studentRevenueSeries"
+        v-model:rangeMonths="chartRangeMonths"
+        :allowRangeToggle="true"
+        title="Tendances Mensuelles des Revenus — Paiements Élèves"
+        subtitle="Montants mensuels encaissés sur les paiements des élèves (hors garderie)"
+        :height="260"
+      />
+    </div>
+
     <div v-if="loadError" class="text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
       {{ loadError }}
     </div>
@@ -172,7 +184,9 @@ import PaymentHistoryTable from './payments/PaymentHistoryTable.vue';
 import PaymentFormModal from './payments/PaymentFormModal.vue';
 import PaymentReceiptModal from './payments/PaymentReceiptModal.vue';
 import PaymentExtractModal from './PaymentExtractModal.vue';
+import StudentRevenueBarChart from './charts/StudentRevenueBarChart.vue';
 import { usePayments } from '../composables/usePayments';
+import { buildMonthlyStudentRevenueSeries } from '../utils/studentRevenueTrend';
 import { getStoredUser } from '../utils/session';
 import type { Payment, Kind } from '../types/payments';
 
@@ -210,6 +224,11 @@ const activeMainTab = ref<'dues' | 'history'>(props.initialMainTab);
 const searchTerm = ref('');
 const duesKind = ref<Kind>('student');
 const duesFilter = ref<'all' | 'pending' | 'overdue'>(props.initialDuesFilter);
+const chartRangeMonths = ref<6 | 12>(6);
+
+const studentRevenueSeries = computed(() =>
+  buildMonthlyStudentRevenueSeries(payments.value, chartRangeMonths.value)
+);
 
 watch(() => props.initialMainTab, (newTab) => {
   if (newTab) activeMainTab.value = newTab;

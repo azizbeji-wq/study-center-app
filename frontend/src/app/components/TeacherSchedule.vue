@@ -14,6 +14,7 @@
       <div class="flex items-center gap-2 shrink-0 flex-wrap">
         <!-- Bouton Nouveau Créneau -->
         <button
+          data-tour="teacher-schedule-add-btn"
           @click="openCreateModal"
           class="px-3.5 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shadow-violet-600/20 cursor-pointer"
         >
@@ -32,6 +33,7 @@
         </button>
 
         <button
+          data-tour="teacher-schedule-print-btn"
           @click="printSchedule"
           class="px-3 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
         >

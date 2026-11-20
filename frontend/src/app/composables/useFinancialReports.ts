@@ -291,6 +291,7 @@ export function useFinancialReports() {
 
       return {
         x,
+        month: t.month,
         label: t.label,
         revenue: t.totalRevenue,
         expenses: t.expenses,

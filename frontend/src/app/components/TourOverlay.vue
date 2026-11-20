@@ -190,9 +190,10 @@ function updateTarget() {
 
   const el = document.querySelector(step.target) as HTMLElement | null;
   if (!el) {
-    // Élément absent : sauter l'étape silencieusement
+    // Élément absent : sauter l'étape silencieusement et passer à la suivante
     if (currentIndex.value < props.steps.length - 1) {
       currentIndex.value++;
+      nextTick(() => updateTarget());
     } else {
       finish();
     }

@@ -1,6 +1,8 @@
 // src/app/guide/types.ts
 // Types du système de guide intégré
 
+import type { AssistantRoleMode } from '../utils/assistantBridge';
+
 export type UserRole = 'director' | 'secretary' | 'teacher';
 
 export type TabKey =
@@ -52,36 +54,81 @@ export interface ChecklistItem {
   targetTab?: TabKey;
 }
 
+/** Une étape d'un scénario métier multi-écrans */
+export interface GuideWorkflowStep {
+  title: string;
+  description: string;
+  targetTab?: TabKey;
+  actionLabel?: string;
+}
+
+/** Un scénario métier "Pas à pas" */
+export interface GuideWorkflow {
+  id: string;
+  title: string;
+  duration: string;
+  summary: string;
+  steps: GuideWorkflowStep[];
+}
+
+/** Suggestion contextuelle pour l'Assistant IA */
+export interface GuideAssistantSuggestion {
+  label: string;
+  prompt: string;
+  roleMode?: AssistantRoleMode;
+}
+
+/** Configuration des suggestions IA pour un onglet */
+export interface GuideAssistantTabConfig {
+  tab: TabKey;
+  contextLabel: string;
+  defaultRoleMode: AssistantRoleMode;
+  suggestions: GuideAssistantSuggestion[];
+}
+
 /** Contenu du guide pour un rôle donné */
 export interface GuideContent {
   role: UserRole;
   checklist: ChecklistItem[];
   pages: GuidePage[];
   tours: TourConfig[];
+  workflows: GuideWorkflow[];
+  assistantByTab: GuideAssistantTabConfig[];
 }
 
 /** Clés valides de progression */
 export const VALID_PROGRESS_KEYS = [
-  // Checklist directeur
+  // Checklist
   'checklist.subjects',
   'checklist.teachers',
   'checklist.pricing',
   'checklist.first_student',
   'checklist.first_attendance',
+  'checklist.first_payment',
+  'checklist.first_expense',
+  'checklist.today_sessions',
   // Visites guidées
+  'tour.dashboard',
   'tour.students',
   'tour.attendance',
   'tour.payments',
   'tour.schedule',
   'tour.teachers',
+  'tour.reports',
+  'tour.daycare',
+  'tour.schoolcalendar',
   'tour.today',
   'tour.groups',
   // Bandeaux "nouveau ici"
+  'banner.dashboard',
   'banner.students',
   'banner.attendance',
   'banner.payments',
   'banner.schedule',
   'banner.teachers',
+  'banner.reports',
+  'banner.daycare',
+  'banner.schoolcalendar',
   'banner.today',
   'banner.groups',
 ] as const;
@@ -94,4 +141,3 @@ export interface ProgressState {
   loading: boolean;
   error: boolean;
 }
-

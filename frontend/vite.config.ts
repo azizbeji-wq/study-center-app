@@ -19,16 +19,14 @@ function figmaAssetResolver() {
 export default defineConfig({
   plugins: [
     figmaAssetResolver(),
-    vue(),
-    tailwindcss(),
+    vue() as any,
+    tailwindcss() as any,
   ],
   server: {
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:8000',
-        changeOrigin: true,
-      }
-    }
+    host: '0.0.0.0',
+    port: 3000,
+    allowedHosts: true,
+    hmr: false,
   },
   resolve: {
     alias: {
@@ -38,7 +36,7 @@ export default defineConfig({
   assetsInclude: ['**/*.svg', '**/*.csv'],
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules', 'dist'],
     coverage: {

@@ -17,7 +17,7 @@
     </div>
 
     <!-- BLOC ACTIONS RAPIDES (Directeur et Secrétaire) -->
-    <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-5 shadow-md border border-indigo-700/50">
+    <div data-tour="dashboard-quick-actions" class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-5 shadow-md border border-indigo-700/50">
       <div class="flex items-center justify-between mb-3.5">
         <div class="flex items-center gap-2">
           <Zap class="w-4 h-4 text-amber-400" />
@@ -109,6 +109,7 @@
 
       <!-- INDICATEUR IMPAYÉS À RELANCER (CLIQUABLE) -->
       <div
+        data-tour="dashboard-unpaid-card"
         role="button"
         tabindex="0"
         @click="$emit('open-unpaid-dues')"
@@ -232,7 +233,7 @@
       </div>
 
       <!-- Recent Activity -->
-      <div class="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-xs">
+      <div data-tour="dashboard-activity" class="bg-white border border-gray-200/90 rounded-2xl p-5 shadow-xs">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
             <Activity class="w-5 h-5 text-indigo-600" />

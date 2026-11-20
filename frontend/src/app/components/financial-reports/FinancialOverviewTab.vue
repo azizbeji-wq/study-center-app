@@ -1,17 +1,29 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import {
   TrendingUp, TrendingDown, DollarSign, Users, CheckCircle2,
   Calendar, Zap
 } from 'lucide-vue-next';
 import { getCategoryLabel } from '../../composables/useFinancialFormatters';
+import StudentRevenueBarChart from '../charts/StudentRevenueBarChart.vue';
+import type { StudentRevenueChartPoint } from '../../utils/renderStudentRevenueRechart';
 
-defineProps<{
+const props = defineProps<{
   kpis: any;
   chartPoints: any[];
   profitLinePath: string;
   expenseCategoriesSummary: any[];
   expenseDonutSlices: any[];
 }>();
+
+const studentRevenueChartData = computed<StudentRevenueChartPoint[]>(() =>
+  (props.chartPoints || []).map((pt: any, idx: number) => ({
+    month: pt.month || String(idx),
+    label: pt.label || '',
+    students: Number(pt.students || 0),
+    daycare: Number(pt.daycare || 0),
+  }))
+);
 </script>
 
 <template>
@@ -99,6 +111,16 @@ defineProps<{
           ARPU: {{ kpis.averageRevenuePerStudent || 0 }} DT / élève
         </p>
       </div>
+    </div>
+
+    <!-- Graphique Recharts : Tendances Mensuelles des Revenus Élèves -->
+    <div data-tour="reports-revenue-chart">
+      <StudentRevenueBarChart
+        :data="studentRevenueChartData"
+        title="Tendances Mensuelles des Revenus — Paiements Élèves"
+        subtitle="Évolution des encaissements mensuels provenant des paiements élèves sur la période sélectionnée"
+        :height="280"
+      />
     </div>
 
     <!-- Graphique Évolution Mensuelle Réelle -->

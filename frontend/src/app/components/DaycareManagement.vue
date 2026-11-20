@@ -7,6 +7,7 @@
         <p class="text-sm text-gray-500 mt-1">Gestion des enfants de 6 à 11 ans</p>
       </div>
       <button
+        data-tour="daycare-add-btn"
         @click="openAddModal"
         class="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors shadow-sm"
       >
@@ -53,7 +54,7 @@
     </div>
 
     <!-- Filters -->
-    <div class="flex flex-col sm:flex-row gap-3">
+    <div data-tour="daycare-filters" class="flex flex-col sm:flex-row gap-3">
       <div class="relative flex-1">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input
@@ -86,7 +87,7 @@
     </div>
 
     <!-- Children Grid -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div v-else data-tour="daycare-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div
         v-for="child in filteredChildren"
         :key="child.id"

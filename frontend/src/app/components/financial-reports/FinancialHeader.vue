@@ -54,7 +54,7 @@ const accountingTabs = computed(() => [
       </div>
 
       <!-- Contrôles Période & Actions Rapides -->
-      <div class="flex flex-wrap items-center gap-2">
+      <div data-tour="reports-period-bar" class="flex flex-wrap items-center gap-2">
         <!-- Sélecteur Mode Période -->
         <div class="flex items-center bg-gray-100 p-1 rounded-xl text-xs font-medium">
           <button
@@ -127,7 +127,7 @@ const accountingTabs = computed(() => [
     </div>
 
     <!-- Navigation par Onglets Métiers -->
-    <div class="flex items-center gap-1 mt-5 pt-3 border-t border-gray-100 overflow-x-auto text-xs">
+    <div data-tour="reports-tabs" class="flex items-center gap-1 mt-5 pt-3 border-t border-gray-100 overflow-x-auto text-xs">
       <button
         v-for="tab in accountingTabs"
         :key="tab.id"

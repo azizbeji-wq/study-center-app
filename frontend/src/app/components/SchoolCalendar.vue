@@ -15,6 +15,7 @@
 
       <div class="flex flex-wrap items-center gap-2.5">
         <button
+          data-tour="schoolcalendar-add-school"
           @click="openSchoolModal()"
           class="flex items-center gap-2 px-3.5 py-2 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors shadow-xs text-sm cursor-pointer"
         >
@@ -23,6 +24,7 @@
         </button>
 
         <button
+          data-tour="schoolcalendar-import-btn"
           @click="openImport()"
           class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm text-sm cursor-pointer"
         >
@@ -77,7 +79,7 @@
     />
 
     <!-- Onglets de navigation : Emplois du temps vs Gestion des écoles -->
-    <div class="flex items-center gap-2 border-b border-gray-200 pb-2">
+    <div data-tour="schoolcalendar-tabs" class="flex items-center gap-2 border-b border-gray-200 pb-2">
       <button
         @click="activeView = 'imports'"
         :class="[

@@ -26,6 +26,10 @@
         @switch-back="switchPortal(user.role)"
         @logout="handleLogout"
       />
+      <GeminiChatbot
+        :user-role="activePortal"
+        :user-name="user.name"
+      />
     </template>
   </div>
 </template>
@@ -36,6 +40,7 @@ import LoginPage from './components/LoginPage.vue';
 import DirectorDashboard from './components/DirectorDashboard.vue';
 import SecretaryDashboard from './components/SecretaryDashboard.vue';
 import TeacherDashboard from './components/TeacherDashboard.vue';
+import GeminiChatbot from './components/GeminiChatbot.vue';
 import api from './utils/api';
 import {
   checkSessionValidity,

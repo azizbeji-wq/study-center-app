@@ -1,0 +1,6 @@
+{
+  "name": "Centre d'Études - Gestion",
+  "description": "Gestion des élèves, des paiements, des présences et des enseignants du centre d'études.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -51,6 +51,8 @@ export async function loadProgress() {
       if (checks.has_pricing) combined.add('checklist.pricing');
       if (checks.has_students) combined.add('checklist.first_student');
       if (checks.has_attendances) combined.add('checklist.first_attendance');
+      if (checks.has_payments) combined.add('checklist.first_payment');
+      if (checks.has_expenses) combined.add('checklist.first_expense');
     }
     completedKeys.value = combined;
     apiAvailable.value = true;
@@ -123,12 +125,18 @@ export function useGuide(role: UserRole, permissions?: string[]) {
       : 0
   );
 
+  const workflows = computed(() => content.value.workflows);
+
   function getPageContent(tab: TabKey) {
     return content.value.pages.find(p => p.tab === tab) ?? null;
   }
 
   function getTourSteps(tab: TabKey) {
     return content.value.tours.find(t => t.tab === tab)?.steps ?? [];
+  }
+
+  function getAssistantConfig(tab: TabKey) {
+    return content.value.assistantByTab.find(a => a.tab === tab) ?? null;
   }
 
   function isDone(key: string) {
@@ -154,12 +162,14 @@ export function useGuide(role: UserRole, permissions?: string[]) {
   return {
     content: readonly(content),
     checklist: readonly(checklist),
+    workflows: readonly(workflows),
     checklistDoneCount: readonly(checklistDoneCount),
     checklistTotal: readonly(checklistTotal),
     checklistProgress: readonly(checklistProgress),
     loading: readonly(loading),
     getPageContent,
     getTourSteps,
+    getAssistantConfig,
     isDone,
     isBannerDismissed,
     dismissBanner,
